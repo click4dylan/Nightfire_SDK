@@ -1,0 +1,4 @@
+E:/nightfire_sdk/amx/compiler/libpc300/out/build/x64-Debug/CMakeFiles/edit_cache.dir
+E:/nightfire_sdk/amx/compiler/libpc300/out/build/x64-Debug/CMakeFiles/pawnc.dir
+E:/nightfire_sdk/amx/compiler/libpc300/out/build/x64-Debug/CMakeFiles/pawncc.dir
+E:/nightfire_sdk/amx/compiler/libpc300/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir

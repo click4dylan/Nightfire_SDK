@@ -1,0 +1,4 @@
+repo: dda740681a9fe89e15d7d59ce34a8b519a20789d
+node: 2ae84f7c0a97a40fbc8cfa77ce4015bdf3655524
+branch: default
+tag: amxmodx-1.8.2

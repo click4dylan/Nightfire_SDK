@@ -1,0 +1,12 @@
+eiface.h
+api_info.h
+engine_api.h
+engine_api.cpp
+meta_eiface.cpp
+enginecallback.h
+api_info.cpp
+mplugin.h
+meta_eiface.h
+
+engine_api.cpp - no instance of constructor "meta_enginefuncs_t::meta_enginefuncs_t" matches the argument list
+is caused by meta_eiface.h. all functions need to be in the same order as engine_api.cpp

@@ -1,0 +1,9 @@
+debug.linux/meta_api.o debug.win32/meta_api.o:  meta_api.cpp plugin.h info_name.h vers_singlep.h \
+ log_plugin.h
+debug.linux/vdate.o debug.win32/vdate.o:  vdate.cpp info_name.h vers_singlep.h
+debug.linux/singlep.o debug.win32/singlep.o:  singlep.cpp singlep.h plugin.h log_plugin.h
+debug.linux/log_plugin.o debug.win32/log_plugin.o:  log_plugin.cpp log_plugin.h plugin.h
+debug.linux/engine_api.o debug.win32/engine_api.o:  engine_api.cpp singlep.h
+debug.linux/sdk_util.o debug.win32/sdk_util.o:  sdk_util.cpp ../metamod/osdep.h ../metamod/types_meta.h \
+ ../metamod/mreg.h ../metamod/log_meta.h ../metamod/sdk_util.h
+debug.linux/h_export.o debug.win32/h_export.o:  h_export.cpp

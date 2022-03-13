@@ -1,0 +1,137 @@
+<!-- vi: set ts=4 sw=4 : -->
+<!-- vim: set tw=75 : -->
+
+<HTML>
+<head>
+<title>Singleplayer support for Metamod</title>
+</head>
+<body>
+
+
+<h1>Singlep plugin
+</h1>
+
+<p> This plugin incorporates code provided by <a href="http://www.racc-ai.com/">Pierre-Marie Baty</a> for using Metamod with
+single-player Half-Life, which came from discussions with <a href="http://planethalflife.com/botman/">Botman</a> on running bots in
+single-player Half-Life.
+
+<p> Download at: <a href="http://metamod.org/files/singlep/">http://metamod.org/files/singlep/</a>
+
+
+<p><br><a name=use>
+<h2>Use of singlep
+</h2></a>
+
+<p> Install it as you would a normal Metamod plugin, and it should solve the
+problems otherwise seen when trying to run Metamod with single-player games
+(savegames not working, game triggers not activating, etc).  For further
+discussion, see <a href="#problem">below</a>.
+
+<p> The plugin provides a single command ("splist") to print out the list
+of function names and addresses, ie:
+
+<pre>
+	ActiveThink@CBaseTurret 92364368
+	AngularMoveDone@CBaseToggle 92322784
+	Animate@CBMortar 91866864
+	Animate@CSquidSpit 91875856
+	AnimateThink@CControllerZapBall 91933600
+	AnimateThink@CSprite 91960848
+	AnimateUntilDead@CSprite 91960928
+</pre>
+
+
+<p><br><a name=problem>
+<h2>The problem 
+</h2></a>
+
+<p> References from Botman's forums:
+<ul>
+   <li> <a href="http://dynamic.gamespy.com/~botman/yabb/YaBB.pl?board=2&action=display&num=2854">about that singleplayer problem...</a>
+   <li> <a href="http://dynamic.gamespy.com/~botman/yabb/YaBB.pl?board=2&action=display&num=2894">single player support in Hpb_bot?</a>
+</ul>
+
+<p> Further discussion of the problem, from Pierre:
+
+<blockquote>
+
+Look at all the functions that are callable inside a game DLL (ie, Valve's
+HL.DLL).  You'll note that you find :
+
+<ul>
+   <li>GetEntityAPI
+   <li>GetEntityAPI2
+   <li>GiveFnptrsToDll
+   <li>the list of entities built by LINK_ENTITY_TO_FUNC (ammo_357, player,
+       env_beam, etc.)
+</ul>
+
+OK, given that, if you can build a DLL that fakes those exports, you have a
+"hook DLL", that is seen by the engine side as a valid GameDLL.  That's what
+bot authors do.  That's what you are doing in metamod too.
+
+<h4>The problem:</h4>
+
+<i>The interfacing is not complete</i>.  With just the above, you are not
+exporting enough functions.  You are missing 50% of the exported functions, ie:
+
+<pre>
+	?AccelerateThink@CApacheHVR@@AAEXXZ
+	?ActiveThink@CBaseTurret@@QAEXXZ
+	?AngularMoveDone@CBaseToggle@@QAEXXZ
+	?Animate@CBMortar@@QAEXXZ
+</pre>
+
+OK, those functions are MS-style exports (starting with '?', containing
+'@@' etc, would not compile under Unix), but <i>they are required for
+single-player gaming</i>.  Not having them exported too is the cause of many
+bizarre behaviours you see in-game when you play single-player MODs with a
+hook DLL between your engine DLL and your MOD DLL.  For example, in
+Half-Life, the barney at the end of the train ride (intro scene) won't come
+to open your door.  In Opposing Force, the barrack's door will refuse to
+open.  In Azure Sheep, you can't use eye scanners.  Everywhere, you can't
+save a game correctly.  I assume that's because some entities have special
+functions interacting on them, that are "outside" their respective class
+(the one interfaced to by the LINK_ENTITY_TO stuff).  For example, I've
+found that the entity "func_tracktrain" must also react to calls to
+"?DeadEnd@CFuncTrackTrain@@QAEXXZ" for functioning correctly in
+single-player.  How and why is that stuff implemented in the genuine DLLs,
+I dunno &amp; I don't give a ****.  But that is.
+
+<h4>My solution (which is basically the same as botman's)</h4>:
+
+When the engine and your hook DLL are exchanging the list of their
+functions, they build a table associating each function to an address in
+memory.  Then, when the engine needs (or is asked for) a function, knowing
+its name, it calls it directly at the right adress.  But since you are not
+exporting half the functions, the table is very incomplete.  <i>Instead of
+letting the engine look in its array for a function it obviously won't
+find, I am doing the work for it</i>.  When the hook DLL loads the game DLL
+using LoadLibrary, I get told what DLL file it is.  So I open it, and build
+myself my own exports--address table.  I look for each export, and store 1)
+its address, and 2) its name (without the MS C++ -style mangled case
+because the engine usually calls these functions by pure alphanumeric
+names).  And so, when the engine asks for a function address or a function
+name of the game DLL using <a
+href="http://metamod.org/engine_notes.html#FunctionFromName">FUNCTION_FROM_NAME()</a> or <a
+href="http://metamod.org/engine_notes.html#NameForFunction">NAME_FOR_FUNCTION()</a>, instead
+of letting those macros do the work, I feed it with my own addresses and my
+own names.  Then the engine looks up at these addresses and finds the
+functions it expects to find.  It doesn't know, and doesn't need to, that
+these functions in memory are located outside the segment where my hook DLL
+is actually loaded, actually <i>instead of finding these functions inside
+the fake DLL that it believes to be the game DLL, it goes and find it
+directly in the right game DLL</i>, because I told it the function it
+requested was located at such an address.  If I'd let FunctionFromName()
+and NameForFunction() work, it would never find those functions since the
+hook DLL doesn't export them.  And such a trick makes the thing work,
+because the interfacing is now fully realized.
+
+</blockquote>
+
+
+<p>
+<hr>
+
+</body>
+</HTML>
