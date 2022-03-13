@@ -1,0 +1,3 @@
+[submodule "MetaAudio"]
+	path = MetaAudio
+	url = https://github.com/click4dylan/MetaAudio
