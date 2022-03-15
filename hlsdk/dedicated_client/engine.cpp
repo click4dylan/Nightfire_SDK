@@ -136,6 +136,7 @@ void linkEngineDll( const char* name )
 		ErrorMessage(-1, "Could not bind engine functions from \"engine.dll\"");
 
 	Fix_Engine_Bugs();
+
 }
 
 /*

@@ -96,40 +96,6 @@ typedef struct physent_s
 	vec3_t			vuser4;
 } physent_t;
 
-#ifndef _DCLIPNODE_DEFINED_
-#define _DCLIPNODE_DEFINED_
-typedef struct
-{
-	int			planenum;
-	short		children[2];	// negative numbers are contents
-} dclipnode_t;
-#endif
-
-#ifndef _MPLANE_DEFINED_
-#define _MPLANE_DEFINED_
-typedef struct mplane_s
-{
-	vec3_t	normal;			// surface normal
-	float	dist;			// closest appoach to origin
-	byte	type;			// for texture axis selection and fast side tests
-	byte	signbits;		// signx + signy<<1 + signz<<1
-	byte	pad[2];
-} mplane_t;
-#endif
-
-#ifndef _HULL_DEFINED_
-#define _HULL_DEFINED_
-typedef struct hull_s
-{
-	dclipnode_t	*clipnodes;
-	mplane_t	*planes;
-	int			firstclipnode;
-	int			lastclipnode;
-	vec3_t		clip_mins;
-	vec3_t		clip_maxs;
-} hull_t;
-#endif
-
 typedef struct playermove_s
 {
 	int				player_index;  // So we don't try to run the PM_CheckStuck nudging too quickly.

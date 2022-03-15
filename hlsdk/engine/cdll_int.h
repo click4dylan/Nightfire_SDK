@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 #include "const.h"
-#include "steam/steamtypes.h"
+//#include "steam/steamtypes.h"
 #include "ref_params.h"
 #include "r_efx.h"
 #include "studio_event.h"
@@ -87,7 +87,7 @@ typedef struct hud_player_info_s
 	short topcolor;
 	short bottomcolor;
 
-	uint64 m_nSteamID;
+	unsigned long long m_nSteamID;
 } hud_player_info_t;
 
 

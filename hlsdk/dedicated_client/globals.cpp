@@ -33,6 +33,7 @@ long g_engineDllHinst = NULL;
 long g_platformDllHinst = NULL;
 long g_hRenderDLL = NULL;
 long g_hRawInputDLL = NULL;
+long* g_clientDllHinst = NULL;
 HANDLE g_hRawInputThread = INVALID_HANDLE_VALUE;
 HANDLE g_hRawInputEvent = INVALID_HANDLE_VALUE;
 

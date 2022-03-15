@@ -97,7 +97,7 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\public;..\dx8sdk;..\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;DEDICATED;LAUNCHERONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Release\Dedicated.pch</PrecompiledHeaderOutputFile>
@@ -166,7 +166,7 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\public;..\dx8sdk;..\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;DEDICATED;LAUNCHERONLY;SWDS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Release\Dedicated.pch</PrecompiledHeaderOutputFile>
@@ -230,7 +230,7 @@
       <WarningLevel>Level3</WarningLevel>
       <MinimalRebuild>true</MinimalRebuild>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\dx8sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\public;..\dx8sdk;..\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;DEDICATED;LAUNCHERONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Debug\Dedicated.pch</PrecompiledHeaderOutputFile>
@@ -279,7 +279,7 @@
       <WarningLevel>Level3</WarningLevel>
       <MinimalRebuild>true</MinimalRebuild>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\dx8sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\public;..\dx8sdk;..\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;DEDICATED;LAUNCHERONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Debug\Dedicated.pch</PrecompiledHeaderOutputFile>
@@ -316,6 +316,12 @@
     <ClCompile Include="fixes.cpp" />
     <ClCompile Include="globals.cpp" />
     <ClCompile Include="keyboard.cpp" />
+    <ClCompile Include="MetaHook.cpp" />
+    <ClCompile Include="MinHook\buffer.c" />
+    <ClCompile Include="MinHook\hde\hde32.c" />
+    <ClCompile Include="MinHook\hde\hde64.c" />
+    <ClCompile Include="MinHook\hook.c" />
+    <ClCompile Include="MinHook\trampoline.c" />
     <ClCompile Include="pattern_scanner.cpp" />
     <ClCompile Include="platformdll.cpp" />
     <ClCompile Include="sys_ded.cpp" />
@@ -336,6 +342,15 @@
     <ClInclude Include="igame.h" />
     <ClInclude Include="keyboard.h" />
     <ClInclude Include="keydefs.h" />
+    <ClInclude Include="MetaHook.h" />
+    <ClInclude Include="MinHook\buffer.h" />
+    <ClInclude Include="MinHook\hde\hde32.h" />
+    <ClInclude Include="MinHook\hde\hde64.h" />
+    <ClInclude Include="MinHook\hde\pstdint.h" />
+    <ClInclude Include="MinHook\hde\table32.h" />
+    <ClInclude Include="MinHook\hde\table64.h" />
+    <ClInclude Include="MinHook\MinHook.h" />
+    <ClInclude Include="MinHook\trampoline.h" />
     <ClInclude Include="pattern_scanner.h" />
     <ClInclude Include="platformdll.h" />
     <ClInclude Include="resource.h" />

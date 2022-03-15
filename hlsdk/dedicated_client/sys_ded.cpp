@@ -434,7 +434,7 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	Init_Timer();
 	InitTime();
 	timeBeginPeriod(1); //Set timer resolution
-
+	
 	linkEngineDll("engine.dll");
 	if (!g_bDedicated)
 		linkGUIDll("gui.dll");

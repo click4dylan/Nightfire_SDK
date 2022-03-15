@@ -1,6 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include <string>
+#include "MinHook/MinHook.h"
 
 __inline void PlaceJMP(BYTE* bt_DetourAddress, DWORD dw_FunctionAddress, DWORD dw_Size)
 {
@@ -36,3 +37,16 @@ inline void PlaceInt(BYTE* bt_DetourAddress, unsigned int data)
 extern uintptr_t FindMemoryPattern(uintptr_t start, uintptr_t end, const char* strpattern, size_t length, bool double_wide = true);
 
 extern uintptr_t FindMemoryPattern(DWORD ModuleHandle, std::string strpattern, bool double_wide = true);
+
+inline bool HookFunctionWithMinHook(LPVOID pFunctionAddress, LPVOID pDetourAddress, LPVOID* ppOriginal, const char* szDebugName = " ") {
+
+	int nCreateHookRet = MH_CreateHook(pFunctionAddress, pDetourAddress, reinterpret_cast<LPVOID*>(ppOriginal));
+	if (nCreateHookRet != MH_OK) 
+	{
+		int nDisableHookRet = MH_DisableHook(pFunctionAddress);
+		if (nDisableHookRet != MH_OK)
+			return false;
+		return false;
+	}
+	return MH_EnableHook(pFunctionAddress) == MH_OK;
+}

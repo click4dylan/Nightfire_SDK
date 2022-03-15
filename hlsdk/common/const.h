@@ -766,9 +766,18 @@ typedef struct link_s
 typedef struct edict_s edict_t;
 typedef struct msurface_s msurface_t;
 
+struct cplane_t
+{
+	float	normal[3];
+	float	dist;
+	byte	type;			// for fast side tests
+	byte	signbits;		// signx + (signy<<1) + (signz<<1)
+	byte	pad[2];
+};
+
 typedef struct
 {
-	vec3_t	normal;
+	float	normal[3];
 	float	dist;
 } plane_t;
 
@@ -778,11 +787,42 @@ typedef struct
 	qboolean	startsolid;	// if true, the initial point was in a solid area
 	qboolean	inopen, inwater;
 	float	fraction;		// time completed, 1.0 = didn't hit anything
-	vec3_t	endpos;			// final position
+	float	endpos[3];			// final position
 	plane_t	plane;			// surface normal at impact
 	edict_t	*ent;			// entity the surface is on
 	int		hitgroup;		// 0 == generic, non zero is specific body part
 } trace_t;
+
+#if 0
+struct hull_t
+{
+	int clipnodes;
+	int planes;
+	unsigned short firstclipnode;
+	unsigned short lastclipnode;
+	float mins[3];
+	float maxs[3];
+};
+
+typedef struct mnode_s
+{
+	// common with leaf
+	int			contents;		// -1, to differentiate from leafs
+	int			visframe;		// node needs to be traversed if current
+
+	float		mins[3];
+	float		maxs[3];		// for bounding box culling
+
+	mnode_s* parent;
+
+	// node specific
+	cplane_t* plane;
+	mnode_s* children[2];
+
+	unsigned short		firstsurface;
+	unsigned short		numsurfaces;
+} mnode_t;
+#endif
 
 #endif
 

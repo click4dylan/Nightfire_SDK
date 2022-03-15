@@ -40,6 +40,8 @@ extern long g_engineDllHinst;
 extern long g_platformDllHinst;
 extern long g_hRenderDLL;
 extern long g_hRawInputDLL;
+extern long* g_clientDllHinst;
+extern long g_MetaAudioDllHinst;
 extern HANDLE g_hRawInputThread;
 extern HANDLE g_hRawInputEvent;
 
