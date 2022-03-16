@@ -83,7 +83,7 @@ __declspec(naked) void GUI_GetAction_Return()
 
 void Fix_Engine_Bugs()
 {
-	Fix_Sound_Overflow();
+	//Fix_Sound_Overflow();
 }
 
 // apply nullptr check from mac version

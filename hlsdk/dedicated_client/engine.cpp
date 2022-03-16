@@ -18,6 +18,7 @@
 #include "keyboard.h"
 #include "video.h"
 #include "fixes.h"
+#include <NightfireFileSystem.h>
 
 typedef int (*engine_api_func)( int version, int size, struct engine_api_s *api );
 typedef int(*gui_api_func)(int version, int size, struct gui_api_s *api);
@@ -135,6 +136,7 @@ void linkEngineDll( const char* name )
 	if ( !pfnEngineAPI || !pfnEngineAPI( ENGINE_LAUNCHER_API_VERSION, sizeof( engine_api_t ), &g_EngineAPI ) ) 
 		ErrorMessage(-1, "Could not bind engine functions from \"engine.dll\"");
 
+	g_pNightfireFileSystem->Init(g_engineDllHinst);
 	Fix_Engine_Bugs();
 
 }

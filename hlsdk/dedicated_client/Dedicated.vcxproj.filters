@@ -75,6 +75,9 @@
     <ClCompile Include="MetaHook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NightfireFileSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc">

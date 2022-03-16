@@ -322,6 +322,7 @@
     <ClCompile Include="MinHook\hde\hde64.c" />
     <ClCompile Include="MinHook\hook.c" />
     <ClCompile Include="MinHook\trampoline.c" />
+    <ClCompile Include="NightfireFileSystem.cpp" />
     <ClCompile Include="pattern_scanner.cpp" />
     <ClCompile Include="platformdll.cpp" />
     <ClCompile Include="sys_ded.cpp" />
