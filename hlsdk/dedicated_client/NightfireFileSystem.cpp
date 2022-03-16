@@ -46,7 +46,7 @@ void NightfireFileSystem::Init(unsigned long engine_dll)
 	COM_LoadStackFile = (unsigned char* (*)(const char*, void*, int, int*))FindMemoryPattern(engine_dll, "8B 44 24 08 8B 54 24 10 8B 4C 24 0C 53 8B 5C 24 08 A3 ? ? ? ?");
 	COM_LoadTempFile = (unsigned char* (*)(const char*, int*))FindMemoryPattern(engine_dll, "8B 44 24 08 53 8B 5C 24 08 50 B8 01 00 00 00 E8 ? ? ? ? 83 C4 04 5B C3");
 	Hunk_LowMark = (int(*)())FindMemoryPattern(engine_dll, "A1 ? ? ? ? C3 90 90 90 90 90 90 90 90 90 90 56");
-	Hunk_FreeToLowMark = (void(*)(int))(FindMemoryPattern(engine_dll, "90 56 8B 74 24 08 85 F6 7C 08 3B 35 ? ? ? ? 7E 0E 56 68 ? ? ? ? E8 ? ? ? ? 83 C4 08 89 35 ? ? ? ?") + 1);
+	Hunk_FreeToLowMark = (void(*)(int))(RelativeToAbsolute(FindMemoryPattern(engine_dll, "A1 ? ? ? ? 50 E8 ? ? ? ? 83 C4 04 C7 05") + 7));
 	COM_ExpandFilename = (int(*)(const char* name, unsigned int size))FindMemoryPattern(engine_dll, "81 EC 04 01 00 00 53 55 56 8B 35 ? ? ? ? 85 F6 57 8B BC 24 18 01 00 00");
 	COM_StripExtension = (void* (*)(const char* in, char* out))FindMemoryPattern(engine_dll, "53 8B 5C 24 08 56 57 8B 3D ? ? ? ? 53 FF D7 53 8D 34 18");
 	COM_DefaultExtension = (void* (*)(char* path, unsigned int pathStringLength, const char* extension))FindMemoryPattern(engine_dll, "56 8B 74 24 08 56 FF 15 ? ? ? ? 8A 4C 30 FF 80 F9 2F");
@@ -71,7 +71,7 @@ void NightfireFileSystem::Init(unsigned long engine_dll)
 	COM_UnMunge3 = (void(*)(unsigned char* data, int len, int seq))RelativeToAbsolute((FindMemoryPattern(engine_dll, "83 C9 FF 2B C8 81 E1 FF 00 00 00 51 6A 04") + 0x19));
 	COM_ListMapsToLinkedList = (LinkedList * (*)(const char* str))FindMemoryPattern(engine_dll, "6A ? ? ? ? 0D 43 64 A1 00 00 00 00 50 64 89 25 00 00 00 00 81 EC B4 00 00 00");
 	COM_ListMaps = (void(*)(const char* str))FindMemoryPattern(engine_dll, "53 56 68 ? ? ? ? E8 ? ? ? ? 68");
-	COM_CheckParm = (bool(*)(char* parm))FindMemoryPattern(engine_dll, "A1 ? ? ? ? 53 56 BE 01 00 00 00 3B C6 57 7E 2D");
+	COM_CheckParm = (int(*)(char* parm))FindMemoryPattern(engine_dll, "A1 ? ? ? ? 53 56 BE 01 00 00 00 3B C6 57 7E 2D");
 	COM_AddGameDirectory = (void(*)(bool packfile, const char* pszBaseDir, const char* pszDir))FindMemoryPattern(engine_dll, "81 EC 10 04 00 00 53 8A 9C 24 18 04 00 00 84 DB 55 8B AC 24 24 04 00 00 56");
 	COM_ChangeGameDir = (void(*)(const char* path))FindMemoryPattern(engine_dll, "A1 ? ? ? ? 57 33 FF 85 C0 74 39 53");
 	COM_BlockSequenceCRCByte = (unsigned char(*)(char* base, int length, int sequence))FindMemoryPattern(engine_dll, "83 EC 40 56 8B 74 24 50 85 F6 57 7D 0D");

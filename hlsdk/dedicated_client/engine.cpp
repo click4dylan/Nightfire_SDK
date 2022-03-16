@@ -19,6 +19,7 @@
 #include "video.h"
 #include "fixes.h"
 #include <NightfireFileSystem.h>
+#include "MetaHook.h"
 
 typedef int (*engine_api_func)( int version, int size, struct engine_api_s *api );
 typedef int(*gui_api_func)(int version, int size, struct gui_api_s *api);
@@ -137,6 +138,7 @@ void linkEngineDll( const char* name )
 		ErrorMessage(-1, "Could not bind engine functions from \"engine.dll\"");
 
 	g_pNightfireFileSystem->Init(g_engineDllHinst);
+	RunMetaHook();
 	Fix_Engine_Bugs();
 
 }
@@ -240,6 +242,7 @@ void unlinkEngineDll()
 {
 	if (g_engineDllHinst)
 	{
+		ShutdownMetaHook();
 		FreeLibrary((HMODULE)g_engineDllHinst);
 		g_engineDllHinst = NULL;
 	}

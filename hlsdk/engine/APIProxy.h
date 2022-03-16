@@ -260,6 +260,8 @@ typedef int							(*pfnEngSrc_GetWindowCenterX_t)					(void);
 typedef int							(*pfnEngSrc_GetWindowCenterY_t)					(void);
 typedef void						(*pfnEngSrc_GetViewAngles_t)					(float*);
 typedef void						(*pfnEngSrc_SetViewAngles_t)					(float*);
+typedef void						(*pfnEngSrc_GetRenderViewAngles_t)				(float*);
+typedef void						(*pfnEngSrc_GetRenderViewPosition_t)			(float*);
 typedef int							(*pfnEngSrc_GetMaxClients_t)					(void);
 typedef void						(*pfnEngSrc_Con_Printf_t)						(const char* fmt, ...);
 typedef void						(*pfnEngSrc_Con_DPrintf_t)						(const char* fmt, ...);
@@ -339,6 +341,7 @@ typedef qboolean					(*pfnEngSrc_CL_SaveRead)						(void* buf, unsigned int size
 typedef qboolean					(*pfnEngSrc_CL_SaveWrite)						(const void* buf, unsigned int size);
 typedef int							(*pfnEngSrc_IndexForSurface)					(const msurface_t*);
 typedef const msurface_t*			(*pfnEngSrc_SurfaceForIndex)					(int index);
+typedef void						(*pfnEngSrc_SetTextureCompressionDisabledOverride)(bool force_disable_compression);
 
 // Pointers to the exported engine functions themselves
 typedef struct cl_enginefuncs_s
@@ -367,6 +370,8 @@ typedef struct cl_enginefuncs_s
 	pfnEngSrc_GetWindowCenterY_t GetWindowCenterY;
 	pfnEngSrc_GetViewAngles_t GetViewAngles;
 	pfnEngSrc_SetViewAngles_t SetViewAngles;
+	pfnEngSrc_GetRenderViewAngles_t GetRenderViewAngles;
+	pfnEngSrc_GetRenderViewPosition_t GetRenderViewPosition;
 	pfnEngSrc_GetMaxClients_t GetMaxClients;
 	pfnEngSrc_Con_Printf_t Con_Printf;
 	pfnEngSrc_Con_DPrintf_t Con_DPrintf;
@@ -446,6 +451,7 @@ typedef struct cl_enginefuncs_s
 	pfnEngSrc_CL_SaveWrite CL_SaveWrite;
 	pfnEngSrc_IndexForSurface IndexForSurface;
 	pfnEngSrc_SurfaceForIndex SurfaceForIndex;
+	pfnEngSrc_SetTextureCompressionDisabledOverride SetTextureCompressionDisabledOverride;
 } cl_enginefunc_t;
 
 
@@ -472,6 +478,8 @@ typedef int							(*pfnEngDst_GetWindowCenterX_t)					(void);
 typedef int							(*pfnEngDst_GetWindowCenterY_t)					(void);
 typedef void						(*pfnEngDst_GetViewAngles_t)					(float*);
 typedef void						(*pfnEngDst_SetViewAngles_t)					(float*);
+typedef void						(*pfnEngDst_GetRenderViewAngles_t)				(float*);
+typedef void						(*pfnEngDst_GetRenderViewPosition_t)			(float*);
 typedef int							(*pfnEngDst_GetMaxClients_t)					(void);
 typedef void						(*pfnEngDst_Con_Printf_t)						(const char* fmt, ...);
 typedef void						(*pfnEngDst_Con_DPrintf_t)						(const char* fmt, ...);
@@ -551,6 +559,7 @@ typedef qboolean					(*pfnEngDst_CL_SaveRead)						(void* buf, unsigned int size
 typedef qboolean					(*pfnEngDst_CL_SaveWrite)						(const void* buf, unsigned int size);
 typedef int							(*pfnEngDst_IndexForSurface)					(const msurface_t*);
 typedef const msurface_t*			(*pfnEngDst_SurfaceForIndex)					(int index);
+typedef void						(*pfnEngDst_SetTextureCompressionDisabledOverride)(bool force_disable_compression);
 
 
 // Pointers to the engine destination functions
@@ -580,6 +589,8 @@ typedef struct
 	pfnEngDst_GetWindowCenterY_t GetWindowCenterY;
 	pfnEngDst_GetViewAngles_t GetViewAngles;
 	pfnEngDst_SetViewAngles_t SetViewAngles;
+	pfnEngDst_GetRenderViewAngles_t GetRenderViewAngles;
+	pfnEngDst_GetRenderViewPosition_t GetRenderViewPosition;
 	pfnEngDst_GetMaxClients_t GetMaxClients;
 	pfnEngDst_Con_Printf_t Con_Printf;
 	pfnEngDst_Con_DPrintf_t Con_DPrintf;
@@ -659,6 +670,7 @@ typedef struct
 	pfnEngDst_CL_SaveWrite CL_SaveWrite;
 	pfnEngDst_IndexForSurface IndexForSurface;
 	pfnEngDst_SurfaceForIndex SurfaceForIndex;
+	pfnEngDst_SetTextureCompressionDisabledOverride SetTextureCompressionDisabledOverride;
 } cl_enginefunc_dst_t;
 
 // ********************************************************

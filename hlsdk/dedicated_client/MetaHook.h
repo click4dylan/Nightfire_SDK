@@ -1,6 +1,7 @@
 #pragma once
 
 extern void RunMetaHook();
+extern void ShutdownMetaHook();
 
 #include <winsani_in.h>
 #include <windows.h>

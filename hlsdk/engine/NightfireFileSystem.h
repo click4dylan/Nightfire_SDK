@@ -112,7 +112,7 @@ struct NightfireFileSystem
     int(*Hunk_LowMark)();
     //Hunk_LowMark: A1 ? ? ? ? C3 90 90 90 90 90 90 90 90 90 90 56
     void(*Hunk_FreeToLowMark)(int mark);
-    //Hunk_FreeToLowMark: 90 56 8B 74 24 08 85 F6 7C 08 3B 35 ? ? ? ? 7E 0E 56 68 ? ? ? ? E8 ? ? ? ? 83 C4 08 89 35 ? ? ? ? + 1
+    //Hunk_FreeToLowMark: A1 ? ? ? ? 50 E8 ? ? ? ? 83 C4 04 C7 05") + 7 call //90 56 8B 74 24 08 85 F6 7C 08 3B 35 ? ? ? ? 7E 0E 56 68 ? ? ? ? E8 ? ? ? ? 83 C4 08 89 35 ? ? ? ? + 1
     int(*COM_ExpandFilename)(const char* name, unsigned int size); //AKA GetLocalPath
     //COM_ExpandFilename: 81 EC 04 01 00 00 53 55 56 8B 35 ? ? ? ? 85 F6 57 8B BC 24 18 01 00 00
     void* (*COM_StripExtension)(const char* in, char* out);
@@ -161,7 +161,7 @@ struct NightfireFileSystem
     //COM_ListMapsToLinkedList: 6A ? ? ? ? 0D 43 64 A1 00 00 00 00 50 64 89 25 00 00 00 00 81 EC B4 00 00 00
     void(*COM_ListMaps)(const char* str);
     //COM_ListMaps: 53 56 68 ? ? ? ? E8 ? ? ? ? 68
-    bool(*COM_CheckParm)(char* parm);
+    int(*COM_CheckParm)(char* parm);
     //COM_CheckParm: A1 ? ? ? ? 53 56 BE 01 00 00 00 3B C6 57 7E 2D
     void(*COM_AddGameDirectory)(bool packfile, const char* pszBaseDir, const char* pszDir);
     //COM_AddGameDirectory: 81 EC 10 04 00 00 53 8A 9C 24 18 04 00 00 84 DB 55 8B AC 24 24 04 00 00 56

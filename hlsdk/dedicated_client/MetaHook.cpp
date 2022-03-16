@@ -18,6 +18,9 @@ long g_MetaAudioDllHinst = NULL;
 //client.dll override
 int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 {
+	if (enginefuncs->version != 11 || enginefuncs->size != sizeof(cl_enginefuncs_s))
+		return g_oExportFuncs.CLIENT_Initialize(enginefuncs);
+
 	//store original enginefuncs
 	g_oEngineFuncs = *enginefuncs;
 
@@ -59,7 +62,7 @@ int CLIENT_Shutdown()
 //client.dll export
 int HUD_ClientAPI(int iVersion, int size, cl_exportfuncs_t* pClientFuncs)
 {
-	int(*oHUD_ClientAPI)(int, int, cl_exportfuncs_t*) = (int(*)(int, int, cl_exportfuncs_t*))GetProcAddress((HMODULE)*g_clientDllHinst, "HUD_ClientInit");
+	int(*oHUD_ClientAPI)(int, int, cl_exportfuncs_t*) = (int(*)(int, int, cl_exportfuncs_t*))GetProcAddress((HMODULE)*g_clientDllHinst, "HUD_ClientAPI");
 	
 	int result = oHUD_ClientAPI(iVersion, size, pClientFuncs);
 	if (result == 1 && iVersion == 5 && size == sizeof(cl_exportfuncs_t) /*200*/)
@@ -90,14 +93,23 @@ void ClientDLL_Init()
 	for (int i = 0; i < 12; ++i)
 		init_assembly[i] = data[i];
 	VirtualProtect((void*)init_assembly, 12, old, &old2);
+
+	g_oClientDLL_Init();
 }
 
 void RunMetaHook()
 {
+	MH_Initialize();
 	g_pClientDLL_Init = (void*)FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 01 00 00 84 C0 0F 85 D3", false);
 	if (!g_pClientDLL_Init)
 		return;
 
 	if (!HookFunctionWithMinHook(g_pClientDLL_Init, ClientDLL_Init, (void**)&g_oClientDLL_Init))
 		return;
+}
+
+void ShutdownMetaHook()
+{
+	MH_DisableHook(0);
+	MH_Uninitialize();
 }
