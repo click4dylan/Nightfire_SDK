@@ -94,13 +94,14 @@ typedef struct gui_imports_s
 	void(*COM_FreeFile)					(unsigned char *buffer);
 	int(*COM_ExpandFilename)			(char *filename, unsigned int unknown);
 } gui_imports;
+//size: 0x40
 
 //struct that gui.dll passes to exe
 typedef struct gui_api_s
 {
 	int version;
 	unsigned size;
-	void(*GUI_Init) (gui_imports* imports);
+	BOOL (*GUI_Init) (gui_imports* imports);
 	void (*GUI_Shutdown) (void);
 	DWORD*(*GUI_Manager) (void);
 } gui_api_t;

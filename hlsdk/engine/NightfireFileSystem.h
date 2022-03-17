@@ -1,14 +1,93 @@
 #pragma once
 #include <Windows.h>
 #include <stdio.h>
+#include <platformdll.h>
+
+#ifdef PPC
+typedef int MACBOOL;
+#else
+typedef bool MACBOOL;
+#endif
+
+typedef void* z_streamp;
+
+class File
+{
+public:
+    HANDLE handle;
+    void* memory;
+};
+
+// note: i can't figure out the class interitence. this is all likely very wrong
+class InputStream
+{
+public:
+    virtual ~InputStream();
+};
+
+class ZLibCompressedInputStream : public InputStream
+{
+public:
+    virtual ~ZLibCompressedInputStream();
+
+    MACBOOL inflated; //4
+    MACBOOL unknown_bool; //8
+    void* some_vtable; //12
+    DWORD unknown4; //16
+    DWORD unknown5; //20
+    z_streamp zlib_stream; //24
+    void* buffer; //28, 2048 bytes
+};
+
+class FileInputStream : public InputStream
+{
+public:
+    virtual ~FileInputStream();
+    virtual void read(GbxResult*, void*, int, int, int*);
+    virtual void skip(GbxResult*, int);
+    virtual void peek(GbxResult*, void*, int, int, int*);
+    virtual void seek(GbxResult*, long, int);
+    virtual int tell(GbxResult*, long* ptr);
+
+    MACBOOL inputstream_initialized; //4
+    MACBOOL has_file; //8
+    File* file; //12
+};
+
+
+class SeekableInputStream : public FileInputStream
+{
+public:
+    virtual ~SeekableInputStream();
+    virtual void read(GbxResult*, void*, int, int, int*) = 0;
+    virtual void skip(GbxResult*, int) = 0;
+    virtual void peek(GbxResult*, void*, int, int, int*) = 0;
+    virtual void seek(GbxResult*, long, int) = 0;
+    virtual int tell(GbxResult*, long* ptr) = 0;
+
+    InputStream* stream; //16
+
+};
+
+// note: this inherits multiple functions..
+class ZLibCompressedSeekableInputStream
+{
+public:
+    virtual ~ZLibCompressedSeekableInputStream();
+    virtual void read(GbxResult* result, void*, int, int, int*);
+    virtual void skip(GbxResult* result, int);
+    virtual void peek(GbxResult* result, void*, int, int, int*);
+    virtual void seek(GbxResult* result, long pos, int behavior);
+    virtual int tell(GbxResult* result, long* ptr);
+};
 
 struct HCOMFILE
 {
     int begin;
     int end;
     int handle_index;
-    void* gbx_vtable;
-    HCOMFILE() : begin(0), end(0), handle_index(-1), gbx_vtable(0) {};
+    ZLibCompressedSeekableInputStream* stream;
+    HCOMFILE() : begin(0), end(0), handle_index(-1), stream(0) {};
 };
 
 typedef struct searchpath_s
@@ -30,28 +109,45 @@ enum Loadfilelocation : int
 
 class LinkedList;
 
-#define NIGHTFIRE_FILESYSTEM_VERSION 1
-
-struct NightfireFileSystem
+enum GbxFileSeekBehavior
 {
+    SEEK_FROM_START = 0,
+    SEEK_FROM_CUR = 1,
+    SEEK_FROM_END = 2
+};
+
+enum GbxFileHandleType
+{
+    ARCHIVE = -2,
+    INVALID = -1
+};
+
+#define NIGHTFIRE_FILESYSTEM_VERSION 3
+
+class NightfireFileSystem
+{
+public:
+    int size;
     int version; // our version in case this struct gets changed
 
     void(*COM_Init)();
-    //COM_Init: A0 ? ? ? ? 84 C0 0F 85 B3 00 00 00 66 83 3D ? ? ? ? 01 75 3E
+    //COM_Init: A0 ?? ?? ?? ?? 84 C0 0F 85 B3 00 00 00 66 83 3D ?? ?? ?? ?? 01 75 3E
     void(*COM_InitFilesystem)();
-    //COM_InitFilesystem: 64 A1 00 00 00 00 6A FF 68 ? ? ? ? 50 64 89 25 00 00 00 00 81 EC 1C 01 00 00
+    //COM_InitFilesystem: 64 A1 00 00 00 00 6A FF 68 ?? ?? ?? ?? 50 64 89 25 00 00 00 00 81 EC 1C 01 00 00
     void(*COM_InitArgv)(int count, char** dest);
     //COM_InitArgv: 55 8B 6C 24 08 56 8B 74 24 10 57 33 C0 33 FF 90
     void(*COM_Shutdown)();
-    //COM_Shutdown: A0 ? ? ? ? 83 EC 08 53 33 DB 3A C3 0F 84 89 00 00 00 A1 ? ? ? ?
-    void(*COM_FileSeek)(HCOMFILE& file, int position);
-    //COM_FileSeek: 83 EC 08 56 8B 74 24 10 8B 4E 0C 85 C9 74 27 8B 15 ? ? ? ? 8B 12 8B 01
+    //COM_Shutdown: A0 ?? ?? ?? ?? 83 EC 08 53 33 DB 3A C3 0F 84 89 00 00 00 A1 ?? ?? ?? ??
+private:
+    void(*COM_FileSeek_)(HCOMFILE& file, int position);
+    //COM_FileSeek: 83 EC 08 56 8B 74 24 10 8B 4E 0C 85 C9 74 27 8B 15 ?? ?? ?? ?? 8B 12 8B 01
     void(*Sys_FileSeek)(int handle_index, int position);
-    //Sys_FileSeek: 8B 44 24 08 8B 4C 24 04 8B 14 8D ? ? ? ? 6A 00 50 52 E8 ? ? ? ? 83 C4 0C C3
-    int(*COM_FileTell)(HCOMFILE comfile);
-    //COM_FileTell: 8B 44 24 0C 50 E8 ? ? ? ? 8B 4C 24 08 83 C4 04 2B C1 C3
-    int(*Sys_FileTell)(FILE* file);
-    //Sys_FileTell: 8B 44 24 04 8B 0C 85 ? ? ? ? 89 4C 24 04 E9 ? ? ? ?
+    //Sys_FileSeek: 8B 44 24 08 8B 4C 24 04 8B 14 8D ?? ?? ?? ?? 6A 00 50 52 E8 ?? ?? ?? ?? 83 C4 0C C3
+    int(*COM_FileTell_)(HCOMFILE comfile);
+    //COM_FileTell: 8B 44 24 0C 50 E8 ?? ?? ?? ?? 8B 4C 24 08 83 C4 04 2B C1 C3
+    int(*Sys_FileTell)(int handle_index);
+    //Sys_FileTell: 8B 44 24 04 8B 0C 85 ?? ?? ?? ?? 89 4C 24 04 E9 ?? ?? ?? ??
+public:
     int(*COM_ReadFile)(HCOMFILE& comfile, void* dest, int size);
     //COM_ReadFile: 8B 44 24 04 8B 48 0C 83 EC 08 85 C9 74 2D 8B 01 8D 54 24 0C 52
     int (*Sys_FileRead)(int handle_index, void* dest, int count);
@@ -173,6 +269,77 @@ struct NightfireFileSystem
     //COM_ExplainDisconnection: A1 ? ? ? ? 83 EC 14 85 C0 56 57 0F
     void* g_Archive;
     //g_Archive: 8B 0D ? ? ? ? 50 C7 84 24 E4 00 00 00 01 + 2
+    FILE** g_DiskFileHandles;
+    //g_DiskFileHandles = Sys_FileSeek + 0xB
+    int(*gbx_fseek)(FILE* file, long offset, int origin);
+    //gbx_fseek: 6A 0C 68 ? ? ? ? E8 ? ? ? ? FF 75 08 E8 ? ? ? ? 59 83 65 FC 00 FF 75 10
+    long(*gbx_ftell)(FILE* file);
+    //gbx_ftell: 6A 0C 68 ? ? ? ? E8 ? ? ? ? FF 75 08 E8 ? ? ? ? 59 83 65 FC 00 FF 75 08
+
+    inline bool COM_EndOfFile(HCOMFILE& file)
+    {
+        long cur = COM_FileTell(file);
+        COM_FileSeek(file, 0, GbxFileSeekBehavior::SEEK_FROM_END);
+        long end = COM_FileTell(file);
+        if (cur >= end)
+            return true;
+
+        COM_FileSeek(file, cur, GbxFileSeekBehavior::SEEK_FROM_START);
+        return false;
+    }
+
+    // fixed version of gearbox's one..
+    inline void COM_FileSeek(HCOMFILE& file, int position, GbxFileSeekBehavior behavior)
+    {
+        if (file.stream)
+        {
+            GbxResult result;
+            file.stream->seek(&result, position, behavior);
+            g_pNightfirePlatformFuncs->GbxResultDestructor(result);
+        }
+        else
+        {
+#if 1
+            //gearbox's enums specify FROM, but i'm not sure if that's what they actually mean
+            //let's just assume they meant the same behavior as fseek
+            gbx_fseek(g_DiskFileHandles[file.handle_index], position, (int)behavior);
+#else
+            FILE* handle = g_DiskFileHandles[file.handle_index];
+            if (behavior == SEEK_FROM_CUR)
+            {
+                gbx_fseek(handle, position, SEEK_CUR);
+            }
+            else if (behavior == SEEK_FROM_END)
+            {
+                gbx_fseek(handle, 0, SEEK_END);
+                gbx_fseek(handle, -position, SEEK_CUR);
+            }
+            else
+            {
+                gbx_fseek(handle, position, SEEK_SET);
+            }
+#endif
+        }
+    }
+    // fixed version of gearbox's one..
+    inline long COM_FileTell(HCOMFILE& file)
+    {
+        if (file.stream)
+        {
+            GbxResult result;
+            long result2;
+            DWORD vtable = *(DWORD*)*(DWORD*)file.stream - (DWORD)GetModuleHandleA("streams.dll");
+            int return_result = file.stream->tell(&result, &result2);
+            g_pNightfirePlatformFuncs->GbxResultDestructor(result);
+            return result2;
+        }
+        else
+        {
+            FILE* handle = g_DiskFileHandles[file.handle_index];
+            //gbx subtracts file.begin for some reason
+            return gbx_ftell(handle) /* - file.begin*/;
+        }
+    }
 
     void Init(unsigned long engine_dll);
 };

@@ -51,4 +51,5 @@ extern BOOLEAN Render_Init(char* mod);
 extern void HookFuncs(bool ENABLE_NVIDIA_FIX);
 extern void linkRInput();
 extern void unlinkRInput();
+extern void linkPlatformDll(const char* library);
 #endif // SYS_DEDH

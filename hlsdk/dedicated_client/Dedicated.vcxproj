@@ -310,6 +310,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\public\platformdll.cpp" />
     <ClCompile Include="conproc.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="engine.cpp" />
@@ -324,7 +325,6 @@
     <ClCompile Include="MinHook\trampoline.c" />
     <ClCompile Include="NightfireFileSystem.cpp" />
     <ClCompile Include="pattern_scanner.cpp" />
-    <ClCompile Include="platformdll.cpp" />
     <ClCompile Include="sys_ded.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="video.cpp" />
@@ -353,7 +353,6 @@
     <ClInclude Include="MinHook\MinHook.h" />
     <ClInclude Include="MinHook\trampoline.h" />
     <ClInclude Include="pattern_scanner.h" />
-    <ClInclude Include="platformdll.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sys_ded.h" />
     <ClInclude Include="timer.h" />

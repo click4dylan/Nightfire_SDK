@@ -30,9 +30,6 @@
     <ClCompile Include="sys_ded.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="platformdll.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="VTHook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,6 +75,9 @@
     <ClCompile Include="NightfireFileSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\public\platformdll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc">
@@ -104,9 +104,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="keydefs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="platformdll.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VTHook.h">

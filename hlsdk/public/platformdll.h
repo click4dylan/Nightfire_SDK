@@ -19,14 +19,25 @@ typedef void(__thiscall *MembankUsageTypeDestructor_t) (MembankUsageType_Class* 
 typedef void* (__stdcall *mallocx_t)(size_t bytes);
 typedef void (__stdcall *freex_t)(void* mem);
 
-void linkPlatformDll(const char* name);
+#define NIGHTFIRE_PLATFORM_FUNCS_VERSION 1
 
+class NightfirePlatformFuncs
+{
+public:
+	int version; // in case we change it
+	unsigned long hPlatformDll;
 
-extern MembankInitialize_t MembankInitialize;
-extern MembankSetEnsureStatus_t MembankSetEnsureStatus;
-extern MembankShutdown_t MembankShutdown;
-extern GbxResultDestructor_t GbxResultDestructor;
-extern MembankUsageType_t MembankUsageType;
-extern MembankUsageTypeDestructor_t MembankUsageTypeDestructor;
-extern mallocx_t mallocx;
-extern freex_t freex;
+	MembankInitialize_t MembankInitialize;
+	MembankSetEnsureStatus_t MembankSetEnsureStatus;
+	MembankShutdown_t MembankShutdown;
+	GbxResultDestructor_t GbxResultDestructor;
+	MembankUsageType_t MembankUsageType;
+	MembankUsageTypeDestructor_t MembankUsageTypeDestructor;
+	mallocx_t mallocx;
+	freex_t freex;
+
+	NightfirePlatformFuncs() : version(0), hPlatformDll(0) {};
+	void Init(unsigned long platform_module);
+};
+
+extern NightfirePlatformFuncs *g_pNightfirePlatformFuncs;

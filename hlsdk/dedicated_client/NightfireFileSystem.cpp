@@ -9,15 +9,16 @@ NightfireFileSystem* g_pNightfireFileSystem = &g_NightfireFilesystem;
 void NightfireFileSystem::Init(unsigned long engine_dll)
 {
 	//repeating the cardinal sin of metamod, TODO: create castable definitions for each func type
+	size = sizeof(NightfireFileSystem);
 	version = NIGHTFIRE_FILESYSTEM_VERSION;
 	COM_Init = (void(*)())FindMemoryPattern(engine_dll, "A0 ? ? ? ? 84 C0 0F 85 B3 00 00 00 66 83 3D ? ? ? ? 01 75 3E");
 	COM_InitFilesystem = (void(*)())FindMemoryPattern(engine_dll, "64 A1 00 00 00 00 6A FF 68 ? ? ? ? 50 64 89 25 00 00 00 00 81 EC 1C 01 00 00");
 	COM_InitArgv = (void(*)(int, char**))FindMemoryPattern(engine_dll, "55 8B 6C 24 08 56 8B 74 24 10 57 33 C0 33 FF 90");
 	COM_Shutdown = (void(*)())FindMemoryPattern(engine_dll, "A0 ? ? ? ? 83 EC 08 53 33 DB 3A C3 0F 84 89 00 00 00 A1 ? ? ? ?");
-	COM_FileSeek = (void(*)(HCOMFILE &, int))FindMemoryPattern(engine_dll, "83 EC 08 56 8B 74 24 10 8B 4E 0C 85 C9 74 27 8B 15 ? ? ? ? 8B 12 8B 01");
+	COM_FileSeek_ = (void(*)(HCOMFILE &, int))FindMemoryPattern(engine_dll, "83 EC 08 56 8B 74 24 10 8B 4E 0C 85 C9 74 27 8B 15 ? ? ? ? 8B 12 8B 01");
 	Sys_FileSeek = (void(*)(int, int))FindMemoryPattern(engine_dll, "8B 44 24 08 8B 4C 24 04 8B 14 8D ? ? ? ? 6A 00 50 52 E8 ? ? ? ? 83 C4 0C C3");
-	COM_FileTell = (int(*)(HCOMFILE))FindMemoryPattern(engine_dll, "8B 44 24 0C 50 E8 ? ? ? ? 8B 4C 24 08 83 C4 04 2B C1 C3");
-	Sys_FileTell = (int(*)(FILE *))FindMemoryPattern(engine_dll, "8B 44 24 04 8B 0C 85 ? ? ? ? 89 4C 24 04 E9 ? ? ? ?");
+	COM_FileTell_ = (int(*)(HCOMFILE))FindMemoryPattern(engine_dll, "8B 44 24 0C 50 E8 ? ? ? ? 8B 4C 24 08 83 C4 04 2B C1 C3");
+	Sys_FileTell = (int(*)(int))FindMemoryPattern(engine_dll, "8B 44 24 04 8B 0C 85 ? ? ? ? 89 4C 24 04 E9 ? ? ? ?");
 	COM_ReadFile = (int(*)(HCOMFILE &, void*, int))FindMemoryPattern(engine_dll, "8B 44 24 04 8B 48 0C 83 EC 08 85 C9 74 2D 8B 01 8D 54 24 0C 52");
 	Sys_FileRead = (int (*)(int, void*, int))(FindMemoryPattern(engine_dll, "C3 90 90 90 90 8B 44 24 04 8B 0C 85 ? ? ? ? 8B 54 24 0C 8B 44 24 08 51 52 6A 01 50") + 5);
 	Sys_FileOpenRead = (int (*)(char*, int*))FindMemoryPattern(engine_dll, "B8 01 00 00 00 57 EB 08 8D A4 24 00 00 00 00 90");
@@ -77,10 +78,12 @@ void NightfireFileSystem::Init(unsigned long engine_dll)
 	COM_BlockSequenceCRCByte = (unsigned char(*)(char* base, int length, int sequence))FindMemoryPattern(engine_dll, "83 EC 40 56 8B 74 24 50 85 F6 57 7D 0D");
 	COM_ExplainDisconnection = (void(*)(bool drop))FindMemoryPattern(engine_dll, "A1 ? ? ? ? 83 EC 14 85 C0 56 57 0F");
 	g_Archive = *(void**)(FindMemoryPattern(engine_dll, "8B 0D ? ? ? ? 50 C7 84 24 E4 00 00 00 01") + 2);
-
+	g_DiskFileHandles = *(FILE***)((unsigned long)Sys_FileSeek + 0xB);
+	gbx_fseek = (int(*)(FILE*, long, int))FindMemoryPattern(engine_dll, "6A 0C 68 ? ? ? ? E8 ? ? ? ? FF 75 08 E8 ? ? ? ? 59 83 65 FC 00 FF 75 10");
+	gbx_ftell = (long(*)(FILE*))FindMemoryPattern(engine_dll, "6A 0C 68 ? ? ? ? E8 ? ? ? ? FF 75 08 E8 ? ? ? ? 59 83 65 FC 00 FF 75 08");
 #ifdef _DEBUG
 	// rudimentary bugcheck, 32 bit only
-	for (unsigned long* off = (unsigned long*)this + 1; off != (unsigned long*)this + (sizeof(*this) / sizeof(unsigned long*)); ++off)
+	for (unsigned long* off = (unsigned long*)this + 2; off != (unsigned long*)this + (sizeof(*this) / sizeof(unsigned long*)); ++off)
 	{
 		if (*off < 1024)
 		{

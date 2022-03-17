@@ -25,7 +25,7 @@
 #include "dll_state.h"
 #include "enginecallback.h"
 #include "../utils/procinfo/procinfo.h"
-#include "platformdll.h"
+#include "../public/platformdll.h"
 #include "globals.h"
 #include "console.h"
 #include "keyboard.h"
@@ -371,10 +371,10 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	linkPlatformDll("platform.dll");
 
 	GbxResult result = { 0,0 };
-	MembankInitialize(result, s_HeapSize << 20, nullptr);
-	GbxResultDestructor(result);
-	MembankSetEnsureStatus(result, result, 1);
-	GbxResultDestructor(result);
+	g_pNightfirePlatformFuncs->MembankInitialize(result, s_HeapSize << 20, nullptr);
+	g_pNightfirePlatformFuncs->GbxResultDestructor(result);
+	g_pNightfirePlatformFuncs->MembankSetEnsureStatus(result, result, 1);
+	g_pNightfirePlatformFuncs->GbxResultDestructor(result);
 	CoInitialize(NULL);
 
 	if (!g_bDedicated)
@@ -487,10 +487,10 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	//Allocate the hunk
 	MembankUsageType_Class blah;
 	memset(&blah, 0, sizeof(MembankUsageType_Class));
-	MembankUsageType(&blah, 1);
+	g_pNightfirePlatformFuncs->MembankUsageType(&blah, 1);
 	s_MemSize = s_HunkSize << 20;
-	s_pMemBase = (unsigned char*)mallocx(s_HunkSize << 20);
-	MembankUsageTypeDestructor(&blah);
+	s_pMemBase = (unsigned char*)g_pNightfirePlatformFuncs->mallocx(s_HunkSize << 20);
+	g_pNightfirePlatformFuncs->MembankUsageTypeDestructor(&blah);
 
 	CreateEngineInterface();
 	CreateGUIInterface();
@@ -628,7 +628,7 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 
 	g_EngineAPI.Host_Shutdown();
 	DestroyConsoleWindow();
-	freex(s_pMemBase);
+	g_pNightfirePlatformFuncs->freex(s_pMemBase);
 	s_pMemBase = NULL;
 	s_MemSize = 0;
 
@@ -651,8 +651,8 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	}
 	g_pMultipleInstanceMutex = nullptr;
 
-	MembankShutdown(result); //Gearbox Function
-	GbxResultDestructor(result);
+	g_pNightfirePlatformFuncs->MembankShutdown(result); //Gearbox Function
+	g_pNightfirePlatformFuncs->GbxResultDestructor(result);
 	FreeLibrary((HMODULE)g_platformDllHinst);
 
 	return 0;

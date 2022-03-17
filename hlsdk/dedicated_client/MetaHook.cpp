@@ -3,13 +3,14 @@
 #include "globals.h"
 #include "MinHook/MinHook.h"
 #include <NightfireFileSystem.h>
+#include <platformdll.h>
 
 void(*g_oClientDLL_Init)() = nullptr;
 cl_exportfuncs_t* g_pExportFuncs;
 void* g_pClientDLL_Init = nullptr;
 cl_exportfuncs_s g_oExportFuncs;
 cl_enginefuncs_s g_oEngineFuncs;
-typedef void(*StartMetaAudioFn)(unsigned long hEngineDLL, NightfireFileSystem* filesystem, cl_exportfuncs_t* pExportFunc, cl_enginefunc_t* pEngineFuncs);
+typedef void(*StartMetaAudioFn)(unsigned long hEngineDLL, NightfirePlatformFuncs* platform, NightfireFileSystem* filesystem, cl_exportfuncs_t* pExportFunc, cl_enginefunc_t* pEngineFuncs);
 typedef void(*ShutdownMetaAudioFn)();
 StartMetaAudioFn g_oStartMetaAudio = NULL;
 ShutdownMetaAudioFn g_oShutdownMetaAudio = NULL;
@@ -32,12 +33,10 @@ int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 		g_MetaAudioDllHinst = (long)LoadLibraryA("MetaAudio.dll");
 		if (g_MetaAudioDllHinst)
 		{
-			typedef void(*StartMetaAudioFn)(unsigned long hEngineDLL, NightfireFileSystem* filesystem, cl_exportfuncs_t* pExportFunc, cl_enginefunc_t* pEngineFuncs);
-			typedef void(*ShutdownMetaAudioFn)();
 			g_oStartMetaAudio = (StartMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "StartMetaAudio");
 			g_oShutdownMetaAudio = (ShutdownMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "ShutdownMetaAudio");
 			if (g_oStartMetaAudio && g_oShutdownMetaAudio)
-				g_oStartMetaAudio(g_engineDllHinst, g_pNightfireFileSystem, g_pExportFuncs, &g_oEngineFuncs);
+				g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, g_pExportFuncs, &g_oEngineFuncs);
 		}
 	}
 

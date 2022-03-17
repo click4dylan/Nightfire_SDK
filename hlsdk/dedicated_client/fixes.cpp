@@ -39,6 +39,7 @@ __declspec(naked) void GUI_GetAction_Return()
 	}
 	void Fix_Sound_Overflow()
 	{
+#if 0
 		//0x4307EFF6
 		DWORD find_name = FindMemoryPattern(g_engineDllHinst, "7E 27 8B F7 8D 45 48 8B D6 90", false);
 		if (find_name)
@@ -61,6 +62,7 @@ __declspec(naked) void GUI_GetAction_Return()
 			}
 
 		}
+#endif
 
 		//0x4307ED40
 		DWORD end_precaching = FindMemoryPattern(g_engineDllHinst, "C6 41 05 00 A1 ?? ?? ?? ?? 57 33 FF 85 C0", false);
@@ -70,6 +72,7 @@ __declspec(naked) void GUI_GetAction_Return()
 			PlaceShort((BYTE*)(end_precaching + 0xE), 0x69EB);
 		}
 
+#if 0
 		//0x43080190
 		DWORD load_sound = FindMemoryPattern(g_engineDllHinst, "81 EC 54 03 00 00 53", false);
 		if (load_sound)
@@ -78,12 +81,13 @@ __declspec(naked) void GUI_GetAction_Return()
 			//PlaceJMP((BYTE*)load_sound, (DWORD)&loadSound_CrashFix, 5);
 			loadSound_JmpBack = load_sound + 6;
 		}
+#endif
 	}
 //
 
 void Fix_Engine_Bugs()
 {
-	//Fix_Sound_Overflow();
+	Fix_Sound_Overflow();
 }
 
 // apply nullptr check from mac version

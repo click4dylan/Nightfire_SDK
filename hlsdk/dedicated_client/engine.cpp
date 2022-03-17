@@ -20,6 +20,7 @@
 #include "fixes.h"
 #include <NightfireFileSystem.h>
 #include "MetaHook.h"
+#include <platformdll.h>
 
 typedef int (*engine_api_func)( int version, int size, struct engine_api_s *api );
 typedef int(*gui_api_func)(int version, int size, struct gui_api_s *api);
@@ -102,6 +103,15 @@ void unlinkRInput()
 	}
 }
 
+void linkPlatformDll(const char* name)
+{
+	g_platformDllHinst = Sys_LoadLibrary((char*)g_pszplatform);
+
+	if (!g_platformDllHinst)
+		ErrorMessage(-1, "Was not able to load in the membank \"platform.dll\"");
+
+	g_pNightfirePlatformFuncs->Init(g_platformDllHinst);
+}
 
 void linkGUIDll(const char* name)
 {
