@@ -23,6 +23,7 @@
     <SccLocalPath />
     <ProjectGuid>{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}</ProjectGuid>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>Launcher007</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -68,19 +69,19 @@
     <OutDir>.\Release\</OutDir>
     <IntDir>.\Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>Bond2</TargetName>
+    <TargetName>Bond</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_SWDS|Win32'">
     <OutDir>.\Release\</OutDir>
     <IntDir>.\Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>hlds</TargetName>
+    <TargetName>Bond_ded</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>.\Debug\</OutDir>
     <IntDir>.\Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>hlds</TargetName>
+    <TargetName>Bond</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Remote|Win32'">
     <OutDir>.\Debug\</OutDir>
@@ -207,7 +208,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>.\Release/hlds.exe</OutputFile>
+      <OutputFile>.\Release/$(TargetName).exe</OutputFile>
       <AdditionalDependencies>uxtheme.lib;wsock32.lib;odbc32.lib;odbccp32.lib;winmm.lib;..\utils\procinfo\lib\win32_vc6\procinfo.lib;..\platform.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -257,7 +258,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>.\Debug/hlds.exe</OutputFile>
+      <OutputFile>.\Debug/$(TargetName).exe</OutputFile>
       <AdditionalDependencies>uxtheme.lib;wsock32.lib;odbc32.lib;odbccp32.lib;winmm.lib;..\utils\procinfo\lib\win32_vc6\procinfo.lib;..\platform.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
       <MinimumRequiredVersion>5.00</MinimumRequiredVersion>
@@ -305,7 +306,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <OutputFile>.\Debug/hlds.exe</OutputFile>
+      <OutputFile>.\Debug/$(TargetName).exe</OutputFile>
       <AdditionalDependencies>uxtheme.lib;wsock32.lib;odbc32.lib;odbccp32.lib;winmm.lib;..\utils\procinfo\lib\win32_vc6\procinfo.lib;..\platform.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
