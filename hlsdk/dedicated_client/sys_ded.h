@@ -27,6 +27,7 @@
 
 #include <windows.h>
 extern BOOLEAN g_bDedicated;
+extern BOOLEAN g_bRunWhileAltTabbed;
 
 typedef void (*SleepType)(int);
 extern void InitTime();

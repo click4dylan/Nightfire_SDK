@@ -88,7 +88,7 @@ void NightfireFileSystem::Init(unsigned long engine_dll)
 		if (*off < 1024)
 		{
 			printf("ERROR: filesystem pattern missing!\n");
-			DebugBreak();
+			//DebugBreak();
 		}
 	}
 

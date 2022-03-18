@@ -641,8 +641,11 @@ void DeactivateFromGameWindow()
 	ReleaseCapture();
 	g_EngineAPI.IN_DeactivateMouse();
 	ShowHideCursor(1);
-	g_EngineAPI.SetMessagePumpDisableMode(0);//((void*)fullscreen); //< setting this to 0 disables networking, we don't want that
-	g_EngineAPI.SetPauseState(1);
+	if (!g_bRunWhileAltTabbed)
+	{
+		g_EngineAPI.SetMessagePumpDisableMode(g_bFullScreen); //< setting this to 0 disables networking, we don't want that
+		g_EngineAPI.SetPauseState(1);
+	}
 	g_AltTabbedAway = 1;
 }
 

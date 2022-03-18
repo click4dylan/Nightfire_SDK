@@ -344,6 +344,9 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 			s_HunkSize = hunk;// * (1024 * 1024); //MB to Bytes
 	}
 
+	if (CheckParm("-runwhilealttabbed"))
+		g_bRunWhileAltTabbed = 1;
+
 	if (CheckParm("-dedicated"))
 		g_bDedicated = 1;
 
@@ -578,7 +581,7 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 			int dummy_state = DLL_ACTIVE;
 			g_EngineAPI.GameSetBackground(0);
 
-			if (g_AltTabbedAway)
+			if (g_AltTabbedAway && !g_bRunWhileAltTabbed)
 			{
 				Sleep(1);
 				iState = g_EngineAPI.Host_Frame((float)delta_time, DLL_ACTIVE, &dummy_state);

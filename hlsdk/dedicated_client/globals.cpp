@@ -48,6 +48,7 @@ BOOLEAN g_bDedicated = 1;
 BOOLEAN g_bDedicated = 0;
 #endif
 BOOLEAN bFinalTick = 0;
+BOOLEAN g_bRunWhileAltTabbed = 0;
 
 HANDLE* g_pMultipleInstanceMutex = nullptr;
 
