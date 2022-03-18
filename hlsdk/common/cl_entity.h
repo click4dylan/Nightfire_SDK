@@ -74,18 +74,26 @@ typedef struct cl_entity_s cl_entity_t;
 #include "progs.h"
 #endif
 
+#pragma pack(push, 4)
 struct cl_entity_s
 {
 	int						index;      // Index into cl_entities ( should match actual slot, but not necessarily )
 
 	qboolean				player;     // True if this entity is a "player"
-	
-	entity_state_t			baseline;   // The original state from which to delta during an uncompressed message
-	entity_state_t			prevstate;  // The state information from the penultimate message received from the server
-	entity_state_t			curstate;   // The state information from the last message received from server
 
-	int						current_position;  // Last received history update index
-	position_history_t		ph[ HISTORY_MAX ];   // History of position and angle updates for this player
+	char gearbox_unknown[4]; //8
+	vec3_t origin; //12
+	char gearbox_unknown_[16]; //16
+	struct model_s* model; //40
+	char gearbox_unknown2[20]; //44
+
+
+	entity_state_t			baseline;  //64 //28 dec // The original state from which to delta during an uncompressed message
+	entity_state_t			prevstate; //416 // The state information from the penultimate message received from the server
+	entity_state_t			curstate; //768  // The state information from the last message received from server
+	int						current_position; //1120 // Last received history update index
+
+	position_history_t		ph[HISTORY_MAX];   // History of position and angle updates for this player
 
 	mouth_t					mouth;			// For synchronizing mouth movements.
 
@@ -93,25 +101,27 @@ struct cl_entity_s
 
 	// Information based on interplocation, extrapolation, prediction, or just copied from last msg received.
 	//
-	float					lastmove;
+	//float					lastmove;
 
 	// Actual render position and angles
-	vec3_t					origin;
-	vec3_t					angles;
+	//vec3_t					angles; //796
 
 	// Attachment points
-	vec3_t					attachment[4];
+	vec3_t					attachment[4]; //2972
 
 	// Other entity local information
 	int						trivial_accept;
 
-	struct model_s			*model;			// cl.model_precache[ curstate.modelindes ];  all visible entities have a model
-	struct efrag_s			*efrag;			// linked list of efrags
-	struct mnode_s			*topnode;		// for bmodels, first world node that splits bmodel, or NULL if not split
+	//struct model_s* model;			// cl.model_precache[ curstate.modelindes ];  all visible entities have a model
+	struct efrag_s* efrag;			// linked list of efrags
+	struct mnode_s* topnode;		// for bmodels, first world node that splits bmodel, or NULL if not split
 
 	float					syncbase;		// for client-side animations -- used by obsolete alias animation system, remove?
 	int						visframe;		// last frame this entity was found in an active leaf
 	colorVec				cvFloorColor;
+	char pad2[280];
 };
+//size: 3336
+#pragma pack(pop)
 
 #endif // !CL_ENTITYH

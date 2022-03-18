@@ -30,14 +30,14 @@ typedef struct entity_state_s entity_state_t;
 
 struct entity_state_s
 {
-// Fields which are filled in by routines outside of delta compression
+	// Fields which are filled in by routines outside of delta compression
 	int			entityType;
 	// Index into cl_entities array for this entity.
-	int			number;      
+	int			number;
 	float		msg_time;
 
 	// Message number last time the player/entity state was updated.
-	int			messagenum;		
+	int			messagenum;
 
 	// Fields which can be transitted and reconstructed over the network stream
 	vec3_t		origin;
@@ -53,7 +53,7 @@ struct entity_state_s
 	float		scale;
 
 	byte		eflags;
-	
+
 	// Render information
 	int			rendermode;
 	int			renderamt;
@@ -64,65 +64,69 @@ struct entity_state_s
 	float		animtime;
 	float		framerate;
 	int			body;
-	byte		controller[4];
+	byte		controller[4]; //872 from player
 	byte		blending[4];
 	vec3_t		velocity;
 
 	// Send bbox down to client for use during prediction.
-	vec3_t		mins;    
+	vec3_t		mins;
 	vec3_t		maxs;
 
 	int			aiment;
 	// If owned by a player, the index of that player ( for projectiles ).
-	int			owner; 
+	int			owner;
 
 	// Friction, for prediction.
-	float		friction;       
+	float		friction;
 	// Gravity multiplier
-	float		gravity;		
+	float		gravity;
 
-// PLAYER SPECIFIC
+	// PLAYER SPECIFIC
 	int			team;
-	int			playerclass;
-	int			health;
-	qboolean	spectator;  
-	int         weaponmodel;
+	int			playerclass; // Playerclass signifies it's a decalable glass item when referring to an object
+	int			health_old; //940
+	qboolean	spectator;
+	int			weaponmodel;
 	int			gaitsequence;
 	// If standing on conveyor, e.g.
-	vec3_t		basevelocity;   
+	vec3_t		basevelocity;
 	// Use the crouched hull, or the regular player hull.
-	int			usehull;		
+	int			usehull;
 	// Latched buttons last time state updated.
-	int			oldbuttons;     
+	int			oldbuttons;
 	// -1 = in air, else pmove entity number
-	int			onground;		
+	int			onground;
 	int			iStepLeft;
 	// How fast we are falling
-	float		flFallVelocity;  
+	float		flFallVelocity;
 
 	float		fov;
 	int			weaponanim;
 
 	// Parametric movement overrides
-	vec3_t				startpos;
-	vec3_t				endpos;
-	float				impacttime;
-	float				starttime;
+	//vec3_t		startpos;
+	vec3_t		endpos;
+	float		impacttime;
+	float		starttime;
 
 	// For mods
 	int			iuser1;
 	int			iuser2;
-	int			iuser3;
-	int			iuser4;
+	//int			iuser3;
+	unsigned char			iuser4;
 	float		fuser1;
-	float		fuser2;
-	float		fuser3;
-	float		fuser4;
+	//float		fuser2;
+	//float		fuser3;
+	//float		fuser4;
 	vec3_t		vuser1;
 	vec3_t		vuser2;
-	vec3_t		vuser3;
-	vec3_t		vuser4;
+	//vec3_t		vuser3;
+	//vec3_t		vuser4;
+	int gbx_unknown;
+	float health;
+	char unknown2[56];
 };
+//size: 352 bytes
 
 #include "pm_info.h"
 

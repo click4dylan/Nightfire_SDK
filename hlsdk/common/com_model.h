@@ -59,10 +59,15 @@
 
 typedef enum
 {
-	mod_brush,
-	mod_sprite,
-	mod_alias,
-	mod_studio
+	mod_unknown,
+	mod_brush, //1
+	mod_unknown2,
+	mod_studio //3
+
+	//mod_brush,
+	//mod_sprite,
+	//mod_alias,
+	//mod_studio
 } modtype_t;
 
 // must match definition in modelgen.h
@@ -86,10 +91,7 @@ typedef struct
 	int firstface = 0, numfaces = 0;
 } dmodel_t;
 
-// plane_t structure
-// 06/23/2002 MAH
-// This structure is the same in QW source files
-//  'model.h' and 'gl_model.h'
+// nightfire structure in memory
 typedef struct mplane_s
 {
 	vec3_t normal;  // surface normal
@@ -98,6 +100,28 @@ typedef struct mplane_s
 	byte signbits = 0;  // signx + signy<<1 + signz<<1
 	byte pad[2] = { 0 };
 } mplane_t;
+
+// nightfire structure in .bsp file
+typedef struct dplane_s
+{
+	vec3_t normal;
+	float dist;
+	unsigned int closest_axis;
+}dplane_t;
+
+// nightfire structure in memory
+typedef struct mbrushside_s
+{
+	mplane_t* plane;
+	msurface_t* surface;
+} mbrushside_t;
+
+// nightfire structure in .bsp file
+typedef struct dbrushside_s
+{
+	int plane;
+	int face;
+} dbrushside_t;
 
 typedef struct
 {
@@ -114,33 +138,20 @@ typedef struct
 } medge_t;
 
 
-//
-//  hardware mode - QW 'gl_model.h'
-typedef struct texture_s
+// nightfire structure in memory
+typedef struct mtexture_s
 {
-	char name[16] = { 0 };
-	unsigned width = 0, height = 0;
-	int gl_texturenum = 0;
-	struct msurface_s* texturechain = nullptr;    // for gl_texsort drawing
-	int anim_total = 0;                     // total tenths in sequence ( 0 = no)
-	int anim_min = 0, anim_max = 0;             // time for this frame min <=time< max
-	struct texture_s* anim_next = nullptr;        // in the animation sequence
-	struct texture_s* alternate_anims = nullptr;  // bmodels in frmae 1 use these
-	unsigned offsets[MIPLEVELS] = { 0 };        // four mip maps stored
-} texture_t;
+	char name[64];
+	int index_in_memory;
+	int unknown2;
+} mtexture_t;
 
-
-// 06/23/2002 MAH
-// This structure is the same in QW source files
-//  'model.h' and 'gl_model.h'
+// nightfire structure in memory
 typedef struct
 {
 	float vecs[2][4] = { 0 };  // [s/t] unit vectors in world space.
 					   // [i][3] is the s/t offset relative to the origin.
 					   // s or t = dot(3Dpoint,vecs[i])+vecs[i][3]
-	float mipadjust = 0.f;   // ?? mipmap limits for very small surfaces
-	texture_t* texture = nullptr;
-	int flags = 0;  // sky or slime, no lightmap or 256 subdivision
 } mtexinfo_t;
 
 // 06/23/2002 MAH
@@ -164,7 +175,7 @@ typedef struct glpoly_s
 typedef struct mnode_s
 {
 	// common with leaf
-	int contents = 0;  // 0, to differentiate from leafs
+	int planenum = 0;  //-1?
 	int visframe = 0;  // node needs to be traversed if current
 
 	float minmaxs[6] = { 0 };  // for bounding box culling
@@ -174,10 +185,8 @@ typedef struct mnode_s
 	// node specific
 	mplane_t* plane = nullptr;
 	struct mnode_s* children[2] = { 0 };
-
-	unsigned short firstsurface = 0;
-	unsigned short numsurfaces = 0;
 } mnode_t;
+
 
 
 typedef struct msurface_s msurface_t;
@@ -197,17 +206,33 @@ struct decal_s
 	short entityIndex = 0;  // Entity this is attached to
 };
 
-//
-//  hardware renderer - QW 'gl_model.h'
+// nightfire structure in .bsp
+typedef struct dbrush_s
+{
+	int contents;
+	int firstside;
+	int numsides;
+} dbrush_t;
+
+
+// nightfire structure in memory
+struct mbrush_t
+{
+	int contents;
+	int numsides;
+	mbrushside_t* sides;
+	int unknown;
+};
+//size: 0x10
+
+// nightfire structure in memory
 typedef struct mleaf_s
 {
-	// common with node
-	int contents = 0;  // wil be a negative contents number
-	int visframe = 0;  // node needs to be traversed if current
-
-	float minmaxs[6] = { 0 };  // for bounding box culling
-
+	int leafnum = 0;
+	int visframe = 0; // unused?     node needs to be traversed if current
+	float minmaxs[6] = { 0 };
 	struct mnode_s* parent = nullptr;
+	int contents = 0;  // wil be a negative contents number
 
 	// leaf specific
 	byte* compressed_vis = nullptr;
@@ -215,52 +240,110 @@ typedef struct mleaf_s
 
 	msurface_t** firstmarksurface = nullptr;
 	int nummarksurfaces = 0;
-	int key = 0;  // BSP sequence number for leaf's contents
-	byte ambient_sound_level[NUM_AMBIENTS] = { 0 };
+	mbrush_t** firstmarkbrush = nullptr;
+	int nummarkbrushes = 0;
+	byte ambient_sound_level[NUM_AMBIENTS] = { 0 }; //unused?
 } mleaf_t;
+//size: 0x44
 
-//
-//  hardware renderer - QW 'gl_model.h'
-//  06/23/2002 2230 MAH
-//  WARNING - the above indicates this structure was modified
-//      for Half-Life this structure needs VERIFICATION
-//  06/23/2002 2300 MAH - the below version for hardware agrees
-//      with a hexadecimal data dump of these structures taken
-//      from a running game.
+// nightfire structure in .bsp file
+typedef struct dleaf_s
+{
+	int contents;
+	int visofs;
+	float mins[3];
+	float maxs[3];
+	unsigned int firstmarksurface;
+	unsigned int nummarksurfaces;
+	unsigned int firstmarkbrush;
+	unsigned int nummarkbrushes;
+} dleaf_t;
+//size: 0x30
+
+// nightfire structure in .bsp file
+typedef struct dnode_s
+{
+	int				planenum;
+	int				children[2];
+	float			mins[3];
+	float			maxs[3];
+} dnode_t;
+//size: 0x24
+
+// nightfire
+struct mmaterial_t
+{
+	char name[64];
+};
+
+
+// nightfire
+struct lightingdata_t
+{
+	int index;
+};
+
+// nightfires structure in mmemory
+struct texmatrix_t
+{
+	float vecs[4];
+};
+
+// nightfire structure in memory
+typedef struct mface_s
+{
+	unsigned char gap0[4];
+	int texture;
+	int firstVertex;
+	int numVertices;
+	int firstIndex;
+	int numIndices;
+	int bmins[2];
+	int bmaxs[2];
+	int extent;
+	int unknown_;
+	mtexinfo_t* scale_info;
+	texmatrix_t* _texturematrices;
+	float unknown_float;
+	unsigned char gap38[36];
+	unsigned __int8 lightStyles[4];
+	unsigned char gap61[20];
+	int lightmap;
+	int unknown;
+} mface_t;
+//size: 0x30
+
+
+// nightfire structure in .bsp file
+typedef struct dface_s
+{
+	int plane;
+	int firstVertex;
+	int numVertices;
+	int firstIndex;
+	int numIndices;
+	unsigned char flags[4];
+	int texture;
+	int material;
+	int texInfo;
+	int lightmapTexInfo;
+	int lightStyles;
+	int lightmapOffset;
+} dface_t;
+//size: 0x30
+
+// nightfire structure in memory
 typedef struct msurface_s
 {
-	int visframe = 0;  // should be drawn when node is crossed
-
-	mplane_t* plane = nullptr;
-	int flags = 0;
-
-	int firstedge = 0;  // look up in model->surfedges[], negative numbers
-	int numedges = 0;   // are backwards edges
-
-	short texturemins[2] = { 0 };
-	short extents[2] = { 0 };
-
-	int light_s = 0, light_t = 0;  // gl lightmap coordinates
-
-	glpoly_t* polys = nullptr;  // multiple if warped
-	struct msurface_s* texturechain = nullptr;
-
-	mtexinfo_t* texinfo = nullptr;
-
-	// lighting info
-	int dlightframe = 0;
-	int dlightbits = 0;
-
-	int lightmaptexturenum = 0;
-	byte styles[MAXLIGHTMAPS] = { 0 };
-	int cached_light[MAXLIGHTMAPS] = { 0 };  // values currently used in lightmap
-	qboolean cached_dlight = 0;          // true if dynamic light in cache
-
-	//  byte        *samples;                   // [numstyles*surfsize]
-	color24* samples = nullptr;  // note: this is the actual lightmap data for this surface
-	decal_t* pdecals = nullptr;
-
+	int flags;					// see SURF_ #defines
+	mplane_t* plane;			// pointer to shared plane
+	mtexinfo_t* texinfo;
+	const char* materialname;	//nightfire material file
+	mbrush_t* parent_brush;
+	mface_s* parent_face;
+	int unknown3;
 } msurface_t;
+//size: 0x1C
 
 //
 //  06/23/2002 MAH
@@ -294,51 +377,121 @@ typedef struct cache_user_s
 } cache_user_t;
 #endif
 
+class StudioModelData
+{
+public:
+	char pad[0x9C];
+};
+
+// nightfire format in memory
 typedef struct model_s
 {
-	char name[MAX_MODEL_NAME] = { 0 };  // +0x000
-	qboolean needload = 0;          // +0x040   bmodels and sprites don't cache normally
+	char name[64] = { 0 };
+	unsigned int cachesize = 0;
+	unsigned int N000002C7 = 0;
+	int isloaded = 0;
+	int type = 0;
+	int numframes = 0;
+	int otherflags = 0;
+	int flags = 0;
+	vec3_t mins = { 0 };
+	vec3_t maxs = { 0 };
+	vec3_t centroid = { 0 };
+	float radius = 0.0f;
+	int firstmodelsurface = 0;
+	unsigned int nummodelsurfaces = 0;
+	unsigned int numsubmodels = 0;
+	dmodel_t* submodels = nullptr;
+	unsigned int numplanes = 0;
+	mplane_t* planes = nullptr;
+	unsigned int numleafs = 0;
+	mleaf_s* leafs = nullptr;
+	unsigned int numverts = 0;
+	vec3_t* verts = nullptr;
+	unsigned int N000002D5 = 0;
+	unsigned int N000002D6 = 0;
+	unsigned int numindices = 0;
+	unsigned int* indices = nullptr;
+	unsigned int numnodes = 0;
+	mnode_t* nodes = nullptr;
+	unsigned int numsurfaces = 0;
+	msurface_t* surfaces = nullptr;
+	unsigned int nummarksurfaces = 0;
+	unsigned int* marksurfaces = nullptr;
+	unsigned int nummarkbrushes = 0;
+	unsigned int* markbrushes = nullptr;
+	unsigned int numtextures = 0;
+	mtexture_t* textures = nullptr;
+	unsigned int nummaterials = 0;
+	mmaterial_t* materials = nullptr;
+	unsigned int numtexturematrices = 0;
+	mtexinfo_t* texturematrices = nullptr;
+	unsigned int numbrushsides = 0;
+	mbrushside_t* brushsides = nullptr;
+	unsigned int numbrushes = 0;
+	mbrush_t* brushes = nullptr;
+	mnode_t* nodes_copy = nullptr;
+	mleaf_s* leafs_copy = nullptr;
+	mplane_t* planes_copy = nullptr;
+	mbrush_t* brushes_copy = nullptr;
+	unsigned int numnodes_copy = 0;
+	unsigned int numleafs_copy = 0;
+	mplane_t* numplanes_copy = 0;
+	unsigned int numbrushes_copy = 0;
+	void* visdata = nullptr;
+	void* lighting = nullptr;
+	void* entities = nullptr;
+	void* studiomodel = nullptr;
+	void* cache = nullptr;
 
-	modtype_t type;       // +0x044
-	int numframes = 0;        // +0x048
-	synctype_t synctype;  // +0x04C
+#if 0
+	char name[MAX_MODEL_NAME] = { 0 };  //
+	size_t cachesize; //0x40 : value of 76
+	int unknown2; //0x44
+	qboolean needload = 0; //0x48 bmodels and sprites don't cache normally
+	modtype_t type;       // 0x4C
+	int numframes = 0;    //0x50
+	synctype_t synctype;  //
 
-	int flags = 0;  // +0x050
+	int otherflags = 0;  //0x54
+	int flags = 0; //0x58 , 0x800
 
 	//
 	// volume occupied by the model
 	//
-	vec3_t mins, maxs;  // +0x054, +060
-	float radius = 0.f;       // +0x06C
+	vec3_t mins; //0x5C
+	vec3_t maxs;
+	float radius = 0.f; //
 
 	//
 	// brush model
 	//
-	int firstmodelsurface = 0, nummodelsurfaces = 0;  // +0x070, +0x074
+	int firstmodelsurface = 0; 
+	int nummodelsurfaces = 0;  //
 
-	int numsubmodels = 0;     // +0x078
-	dmodel_t* submodels = nullptr;  // +0x07C
+	int numsubmodels = 0;     //0x8C
+	dmodel_t* submodels = nullptr;  //0x90
 
-	int numplanes = 0;     // +0x080
-	mplane_t* planes = nullptr;  // +0x084
+	int numplanes = 0;     //
+	mplane_t* planes = nullptr;  //
 
-	int numleafs = 0;           // +0x088      number of visible leafs, not counting 0
-	struct mleaf_s* leafs = nullptr;  // +0x08C
+	int numleafs = 0;           //      number of visible leafs, not counting 0
+	struct mleaf_s* leafs = nullptr;  //
 
-	int numvertexes = 0;      // +0x090
-	mvertex_t* vertexes = nullptr;  // +0x094
+	int numvertexes = 0;      //
+	mvertex_t* vertexes = nullptr;  //
 
-	int numedges = 0;    // +0x098
-	medge_t* edges = nullptr;  // +0x09C
+	int numedges = 0;    //
+	medge_t* edges = nullptr;  //
 
-	int numnodes = 0;    // +0x0A0
-	mnode_t* nodes = nullptr;  // +0x0A4
+	int numnodes = 0;    //
+	mnode_t* nodes = nullptr;  //
 
-	int numtexinfo = 0;       // +0x0A8
-	mtexinfo_t* texinfo = nullptr;  // +0x0AC
+	int numtexinfo = 0;       // 
+	mtexinfo_t* texinfo = nullptr;  //
 
-	int numsurfaces = 0;       // +0x0B0
-	msurface_t* surfaces = nullptr;  // +0x0B4
+	int numsurfaces = 0;       // 
+	msurface_t* surfaces = nullptr;  // 
 
 	int numsurfedges = 0;
 	int* surfedges = nullptr;
@@ -360,12 +513,14 @@ typedef struct model_s
 
 	char* entities = nullptr;
 
+	StudioModelData* studiomodeldata = nullptr;//0x130
 	//
 	// additional model data
 	//
-	cache_user_t cache;  // only access through Mod_Extradata
-
+	cache_user_t cache;  //0x134 only access through Mod_Extradata
+#endif
 } model_t;
+//size: 0x138
 
 typedef vec_t vec4_t[4];
 
