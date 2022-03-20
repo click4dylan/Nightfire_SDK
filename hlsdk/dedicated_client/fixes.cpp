@@ -1,6 +1,14 @@
 #include <Windows.h>
 #include "globals.h"
 #include "pattern_scanner.h"
+#include "MinHook/MinHook.h"
+
+typedef float vec_t;
+typedef float vec2_t[2];
+typedef float vec3_t[3];
+#include <eiface.h>
+#include <com_model.h>
+#include <pmtrace.h>
 
 DWORD GUI_GetAction_JmpBack;
 __declspec(naked) void GUI_GetAction_Return()
@@ -85,9 +93,93 @@ __declspec(naked) void GUI_GetAction_Return()
 	}
 //
 
+void(*EV_SetTraceHull)(int hull);
+DWORD g_PlayerMove, offset;
+int EV_GetTraceHull()
+{
+	return *(int*)(*(DWORD*)g_PlayerMove + offset);
+}
+void(*EV_PlayerTrace) (float* start, float* end, int brushFlags, int traceFlags, int ignore_pe, struct pmtrace_s* tr);
+bool(*g_oUTIL_CheckForWater)(float, float, float, float, float, float, vec3_t&);
+
+bool UTIL_CheckForWater(float startx, float starty, float startz, float endx, float endy, float endz, vec3_t& dest)
+{
+
+}
+
+bool UTIL_CheckForWater_Hook(float startx, float starty, float startz, float endx, float endy, float endz, vec3_t& dest)
+{
+	pmtrace_s tr;
+	int old_hull = EV_GetTraceHull(); //gearbox didn't have this
+	EV_SetTraceHull(2);
+	EV_PlayerTrace(&startx, &endx, 0x100000, 0x31, -1, &tr);
+	EV_SetTraceHull(old_hull);// this is the fix for broken hull bounds when in water!!
+	if (tr.fraction >= 1.0f || !tr.surface)
+		return false;
+	if (!tr.surface->parent_brush || !(tr.surface->parent_brush->contents & 0x100000) || tr.plane.normal[2] <= 0.99f)
+		return false;
+
+	//nightfire default behavior is to just set dest to tr.endpos here and return true
+	dest[0] = tr.endpos[0];
+	dest[1] = tr.endpos[1];
+	dest[2] = tr.endpos[2];
+	return true;
+	// 
+	//TODO: replicate old amx hook behavior
+
+#if 0
+	// fix endpos so that rain collides with water as intended, etc
+	vec3_t ground;
+	ground[0] = tr.endpos[0];
+	ground[1] = tr.endpos[1];
+	ground[2] = tr.endpos[2];
+	startz += 3.0f;
+	EV_PlayerTrace(&startx, &endx, 0x100000, 0x31, -1, &tr);
+	if (tr.endpos[2] > ground[2])
+	{
+		dest[0] = tr.endpos[0];
+		dest[1] = tr.endpos[1];
+		dest[2] = tr.endpos[2] + 6.0f;
+		return true;
+	}
+
+	dest[0] = ground[0];
+	dest[1] = ground[1];
+	dest[2] = ground[2];
+	return true;
+#endif
+}
+
+void Fix_Water_Hull()
+{
+	//Fixes bug introduced somewhere between alpha demo and public build in UTIL_CheckForWater
+	//Hull gets set to point size and then not restored, causing major movement prediction errors, lag and audio glitches whenever this function gets called
+	HMODULE clientdll = GetModuleHandleA("client.dll");
+	DWORD adr = FindMemoryPattern(*g_clientDllHinst, "A1 ? ? ? ? 83 EC 48 6A 02", false);
+	EV_PlayerTrace = (void(*)(float*, float*, int, int, int, struct pmtrace_s*))FindMemoryPattern(g_engineDllHinst, "8B 44 24 14 8B 4C 24 10 8B 54 24 0C 83 EC 48", false);
+	EV_SetTraceHull = (void(*)(int))FindMemoryPattern(g_engineDllHinst, "8B 44 24 04 8B 0D ? ? ? ? 89 81 ? 00 00 00 C3", false);
+	g_PlayerMove = *(DWORD*)((DWORD)EV_SetTraceHull + 6);
+	offset = *(DWORD*)((DWORD)EV_SetTraceHull + 0xC);
+	if (!HookFunctionWithMinHook((void*)adr, UTIL_CheckForWater_Hook, (void**)&g_oUTIL_CheckForWater))
+		return;
+}
+
 void Fix_Engine_Bugs()
 {
 	Fix_Sound_Overflow();
+}
+
+void Fix_Gamespy()
+{
+	DWORD adr = FindMemoryPattern(g_engineDllHinst, "6D 61 73 74 65 72 2E 67 61 6D 65 73 70 79 2E 63 6F 6D 00", false);
+	while (adr)
+	{
+		DWORD old, old2;
+		VirtualProtect((void*)adr, 19, PAGE_READWRITE, &old);
+		strncpy((char*)adr, "master.openspy.net", 19);
+		VirtualProtect((void*)adr, 19, old, &old2);
+		adr = FindMemoryPattern(g_engineDllHinst, "6D 61 73 74 65 72 2E 67 61 6D 65 73 70 79 2E 63 6F 6D 00", false);
+	}
 }
 
 // apply nullptr check from mac version

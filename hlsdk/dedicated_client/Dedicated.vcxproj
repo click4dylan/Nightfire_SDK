@@ -28,7 +28,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v100</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Remote|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -261,7 +261,7 @@
       <OutputFile>.\Debug/$(TargetName).exe</OutputFile>
       <AdditionalDependencies>uxtheme.lib;wsock32.lib;odbc32.lib;odbccp32.lib;winmm.lib;..\utils\procinfo\lib\win32_vc6\procinfo.lib;..\platform.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
-      <MinimumRequiredVersion>5.00</MinimumRequiredVersion>
+      <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
       <StackReserveSize>1048576</StackReserveSize>
       <StackCommitSize>4096</StackCommitSize>
       <HeapCommitSize>4096</HeapCommitSize>

@@ -4,6 +4,7 @@
 #include "MinHook/MinHook.h"
 #include <NightfireFileSystem.h>
 #include <platformdll.h>
+#include "fixes.h"
 
 void(*g_oClientDLL_Init)() = nullptr;
 cl_exportfuncs_t* g_pExportFuncs;
@@ -63,6 +64,8 @@ int HUD_ClientAPI(int iVersion, int size, cl_exportfuncs_t* pClientFuncs)
 {
 	int(*oHUD_ClientAPI)(int, int, cl_exportfuncs_t*) = (int(*)(int, int, cl_exportfuncs_t*))GetProcAddress((HMODULE)*g_clientDllHinst, "HUD_ClientAPI");
 	
+	Fix_Water_Hull();
+
 	int result = oHUD_ClientAPI(iVersion, size, pClientFuncs);
 	if (result == 1 && iVersion == 5 && size == sizeof(cl_exportfuncs_t) /*200*/)
 	{
@@ -98,7 +101,6 @@ void ClientDLL_Init()
 
 void RunMetaHook()
 {
-	MH_Initialize();
 	g_pClientDLL_Init = (void*)FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 01 00 00 84 C0 0F 85 D3", false);
 	if (!g_pClientDLL_Init)
 		return;

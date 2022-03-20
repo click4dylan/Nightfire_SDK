@@ -31,6 +31,7 @@
 #include "keyboard.h"
 #include "video.h"
 #include "timer.h"
+#include "MinHook/MinHook.h"
 
 extern void MakeLauncherVisible();
 
@@ -295,6 +296,7 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	g_hDLLInstance = hInstance;
 	// Store off command line for argument searching
 	strncpy_s(s_szCmdLine, lpszCmdLine, 2048);
+	MH_Initialize();
 
 	if (!g_bDedicated)
 	{

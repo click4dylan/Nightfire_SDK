@@ -82,7 +82,7 @@ typedef enum
 
 #endif
 
-typedef struct
+typedef struct dmodel_s
 {
 	float mins[3] = { 0 }, maxs[3] = { 0 };
 	float origin[3] = { 0 };
@@ -436,7 +436,7 @@ typedef struct model_s
 	mbrush_t* brushes_copy = nullptr;
 	unsigned int numnodes_copy = 0;
 	unsigned int numleafs_copy = 0;
-	mplane_t* numplanes_copy = 0;
+	unsigned int numplanes_copy = 0;
 	unsigned int numbrushes_copy = 0;
 	void* visdata = nullptr;
 	void* lighting = nullptr;

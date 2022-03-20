@@ -150,7 +150,7 @@ void linkEngineDll( const char* name )
 	g_pNightfireFileSystem->Init(g_engineDllHinst);
 	RunMetaHook();
 	Fix_Engine_Bugs();
-
+	Fix_Gamespy();
 }
 
 /*
