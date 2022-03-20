@@ -211,7 +211,7 @@ meta_enginefuncs_t::meta_enginefuncs_t(
             edict_t*         (*_pfnFindEntityByString)              (edict_t*, const char*, const char*),
             int              (*_pfnGetEntityIllum)                  (edict_t*, bool),
 			int				 (*_pfnGetPointIllum)					(const float*),
-			edict_t*         (*_pfnFindEntityInSphere)              (edict_t*, const Vector &, float),
+			edict_t*         (*_pfnFindEntityInSphere)              (edict_t*, const float*, float),
             edict_t*         (*_pfnFindClientInPVS)                 (edict_t*),
             edict_t*         (*_pfnEntitiesInPVS)                   (edict_t*),
             void             (*_pfnMakeVectors)                     (const float*),

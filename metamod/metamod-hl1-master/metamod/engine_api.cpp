@@ -208,7 +208,7 @@ int mm_GetPointIllum(const float* pPos) {
 	RETURN_API()
 }
 
-edict_t* mm_FindEntityInSphere(edict_t* pEdictStartSearchAfter, const Vector& org, float rad) {
+edict_t* mm_FindEntityInSphere(edict_t* pEdictStartSearchAfter, const float* org, float rad) {
 
 	META_ENGINE_HANDLE(edict_t*, NULL, FN_FINDENTITYINSPHERE, pfnFindEntityInSphere, (pEdictStartSearchAfter, org, rad));
 

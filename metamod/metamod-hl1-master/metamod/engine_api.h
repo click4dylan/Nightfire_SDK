@@ -305,7 +305,7 @@ typedef void (*FN_CHANGEPITCH) (edict_t *ent);
 typedef edict_t * (*FN_FINDENTITYBYSTRING) (edict_t *pEdictStartSearchAfter, const char *pszField, const char *pszValue);
 typedef int (*FN_GETENTITYILLUM) (edict_t *pEnt, bool unknown);
 typedef int (*FN_GETPOINTILLUM) (const float* pPos);
-typedef edict_t * (*FN_FINDENTITYINSPHERE) (edict_t *pEdictStartSearchAfter, const Vector &org, float rad);
+typedef edict_t * (*FN_FINDENTITYINSPHERE) (edict_t *pEdictStartSearchAfter, const float *org, float rad);
 typedef edict_t * (*FN_FINDCLIENTINPVS) (edict_t *pEdict);
 typedef edict_t * (*FN_ENTITIESINPVS) (edict_t *pplayer);
 typedef void (*FN_MAKEVECTORS) (const float *rgflVector);
