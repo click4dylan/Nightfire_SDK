@@ -147,7 +147,7 @@ void linkEngineDll( const char* name )
 	if ( !pfnEngineAPI || !pfnEngineAPI( ENGINE_LAUNCHER_API_VERSION, sizeof( engine_api_t ), &g_EngineAPI ) ) 
 		ErrorMessage(-1, "Could not bind engine functions from \"engine.dll\"");
 
-	g_pNightfireFileSystem->Init(g_engineDllHinst);
+	g_pNightfireFileSystem->Init(g_engineDllHinst, g_platformDllHinst);
 	RunMetaHook();
 	Fix_Engine_Bugs();
 	Fix_Gamespy();

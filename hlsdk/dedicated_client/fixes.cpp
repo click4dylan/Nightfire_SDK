@@ -2,6 +2,8 @@
 #include "globals.h"
 #include "pattern_scanner.h"
 #include "MinHook/MinHook.h"
+#include <event_api.h>
+#include "MetaHook.h"
 
 typedef float vec_t;
 typedef float vec2_t[2];
@@ -9,6 +11,24 @@ typedef float vec3_t[3];
 #include <eiface.h>
 #include <com_model.h>
 #include <pmtrace.h>
+
+void(*EV_SetTraceHull)(int hull);
+DWORD g_PlayerMove, offset;
+int EV_GetTraceHull()
+{
+	return *(int*)(*(DWORD*)g_PlayerMove + offset);
+}
+void(*EV_PlayerTrace) (float* start, float* end, int brushFlags, int traceFlags, int ignore_pe, struct pmtrace_s* tr);
+
+void GetImportantOffsets()
+{
+	EV_PlayerTrace = (void(*)(float*, float*, int, int, int, struct pmtrace_s*))FindMemoryPattern(g_engineDllHinst, "8B 44 24 14 8B 4C 24 10 8B 54 24 0C 83 EC 48", false);
+	EV_SetTraceHull = (void(*)(int))FindMemoryPattern(g_engineDllHinst, "8B 44 24 04 8B 0D ? ? ? ? 89 81 ? 00 00 00 C3", false);
+	if (!EV_SetTraceHull)
+		return;
+	g_PlayerMove = *(DWORD*)((DWORD)EV_SetTraceHull + 6);
+	offset = *(DWORD*)((DWORD)EV_SetTraceHull + 0xC);
+}
 
 DWORD GUI_GetAction_JmpBack;
 __declspec(naked) void GUI_GetAction_Return()
@@ -93,21 +113,9 @@ __declspec(naked) void GUI_GetAction_Return()
 	}
 //
 
-void(*EV_SetTraceHull)(int hull);
-DWORD g_PlayerMove, offset;
-int EV_GetTraceHull()
-{
-	return *(int*)(*(DWORD*)g_PlayerMove + offset);
-}
-void(*EV_PlayerTrace) (float* start, float* end, int brushFlags, int traceFlags, int ignore_pe, struct pmtrace_s* tr);
-bool(*g_oUTIL_CheckForWater)(float, float, float, float, float, float, vec3_t&);
+bool(*g_oUTIL_CheckForWater)(float, float, float, float, float, float, float*);
 
-bool UTIL_CheckForWater(float startx, float starty, float startz, float endx, float endy, float endz, vec3_t& dest)
-{
-
-}
-
-bool UTIL_CheckForWater_Hook(float startx, float starty, float startz, float endx, float endy, float endz, vec3_t& dest)
+bool UTIL_CheckForWater_Hook(float startx, float starty, float startz, float endx, float endy, float endz, float* dest)
 {
 	pmtrace_s tr;
 	int old_hull = EV_GetTraceHull(); //gearbox didn't have this
@@ -119,49 +127,98 @@ bool UTIL_CheckForWater_Hook(float startx, float starty, float startz, float end
 	if (!tr.surface->parent_brush || !(tr.surface->parent_brush->contents & 0x100000) || tr.plane.normal[2] <= 0.99f)
 		return false;
 
-	//nightfire default behavior is to just set dest to tr.endpos here and return true
 	dest[0] = tr.endpos[0];
 	dest[1] = tr.endpos[1];
 	dest[2] = tr.endpos[2];
 	return true;
-	// 
-	//TODO: replicate old amx hook behavior
-
-#if 0
-	// fix endpos so that rain collides with water as intended, etc
-	vec3_t ground;
-	ground[0] = tr.endpos[0];
-	ground[1] = tr.endpos[1];
-	ground[2] = tr.endpos[2];
-	startz += 3.0f;
-	EV_PlayerTrace(&startx, &endx, 0x100000, 0x31, -1, &tr);
-	if (tr.endpos[2] > ground[2])
-	{
-		dest[0] = tr.endpos[0];
-		dest[1] = tr.endpos[1];
-		dest[2] = tr.endpos[2] + 6.0f;
-		return true;
-	}
-
-	dest[0] = ground[0];
-	dest[1] = ground[1];
-	dest[2] = ground[2];
-	return true;
-#endif
 }
 
 void Fix_Water_Hull()
 {
 	//Fixes bug introduced somewhere between alpha demo and public build in UTIL_CheckForWater
 	//Hull gets set to point size and then not restored, causing major movement prediction errors, lag and audio glitches whenever this function gets called
-	HMODULE clientdll = GetModuleHandleA("client.dll");
 	DWORD adr = FindMemoryPattern(*g_clientDllHinst, "A1 ? ? ? ? 83 EC 48 6A 02", false);
-	EV_PlayerTrace = (void(*)(float*, float*, int, int, int, struct pmtrace_s*))FindMemoryPattern(g_engineDllHinst, "8B 44 24 14 8B 4C 24 10 8B 54 24 0C 83 EC 48", false);
-	EV_SetTraceHull = (void(*)(int))FindMemoryPattern(g_engineDllHinst, "8B 44 24 04 8B 0D ? ? ? ? 89 81 ? 00 00 00 C3", false);
-	g_PlayerMove = *(DWORD*)((DWORD)EV_SetTraceHull + 6);
-	offset = *(DWORD*)((DWORD)EV_SetTraceHull + 0xC);
+	if (!adr)
+		return;
+	
 	if (!HookFunctionWithMinHook((void*)adr, UTIL_CheckForWater_Hook, (void**)&g_oUTIL_CheckForWater))
 		return;
+}
+
+
+void __stdcall RainDropTrace(DWORD ESI, float* vecStart, float* vecEnd, int brushflags, int traceflags, int pSkip, pmtrace_s* tr)
+{
+	int old_hull = EV_GetTraceHull(); //gearbox didn't have this
+	g_oEngineFuncs.pEventAPI->EV_SetTraceHull(2);
+
+	g_oEngineFuncs.pEventAPI->EV_PlayerTrace(vecStart, vecEnd, brushflags, traceflags, pSkip, tr);
+
+	const float groundzpos = tr->endpos[2];
+	*(float*)(ESI + 0x9C) = groundzpos + 3.0f;
+
+	EV_PlayerTrace(vecStart, vecEnd, 0x100000, 0x31, -1, tr);
+
+#if 1
+	if (tr->endpos[2] > groundzpos)
+		*(float*)(ESI + 0x9C) = tr->endpos[2];
+#else
+	vec3_t waterpos;
+	if (UTIL_CheckForWater_Hook(vecStart[0], vecStart[1], vecStart[2], vecEnd[0], vecEnd[2], vecEnd[2], waterpos))
+	{
+		//*(float*)(ESI + 0x94) = waterpos[0];
+		//*(float*)(ESI + 0x98) = waterpos[1];
+		*(float*)(ESI + 0x9C) = waterpos[2];
+	}
+#endif
+
+	g_oEngineFuncs.pEventAPI->EV_SetTraceHull(old_hull);
+}
+
+__declspec(naked) void WaterDropRayTrace()
+{
+	__asm
+	{
+		FSTP DWORD PTR SS : [ESP + 0x2C]
+		push ebx
+		push ecx
+		push -1
+		push 2
+		push 0
+		push edx
+		push eax
+		push esi
+		call RainDropTrace
+		pop ebx
+		mov al, bl
+		pop edi
+		pop esi
+		pop ebp
+		pop ebx
+		add esp, 0x88
+		retn
+	}
+}
+
+float splash_z_offset = 0.0f;
+void Fix_RainDrop_WaterCollision()
+{
+	DWORD adr = FindMemoryPattern(*g_clientDllHinst, "D9 44 24 7C D8 05 ? ? ? ? 83 C4 18 8A C3 D9", false);
+	if (!adr)
+		return;
+	PlaceJMP((BYTE*)(adr - 0x15), (DWORD)&WaterDropRayTrace, 5);
+	DWORD touch = FindMemoryPattern(*g_clientDllHinst, "0F 85 ? ? ? ? D9 44 24 2C 8B 74 24 28", false);
+	if (!touch)
+		return;
+	//increase frequency of splashes
+	DWORD old, old2;
+	VirtualProtect((LPVOID)touch, 128, PAGE_EXECUTE_READWRITE, &old);
+	*(DWORD*)touch = 0x90909090;
+	*(unsigned short*)(touch + 4) = 0x9090;
+
+	//make splashes work on water by removing addition of z offset by 32 units..
+	*(float**)(touch + 0x10) = &splash_z_offset;
+
+	VirtualProtect((LPVOID)touch, 128, old, &old2);
 }
 
 void Fix_Engine_Bugs()

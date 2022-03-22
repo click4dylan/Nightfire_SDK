@@ -6,7 +6,7 @@ NightfireFileSystem g_NightfireFilesystem;
 NightfireFileSystem* g_pNightfireFileSystem = &g_NightfireFilesystem;
 
 
-void NightfireFileSystem::Init(unsigned long engine_dll)
+void NightfireFileSystem::Init(unsigned long engine_dll, unsigned long platform_dll)
 {
 	//repeating the cardinal sin of metamod, TODO: create castable definitions for each func type
 	size = sizeof(NightfireFileSystem);
@@ -56,7 +56,7 @@ void NightfireFileSystem::Init(unsigned long engine_dll)
 	COM_CreatePath = (void(*)(const char* path))FindMemoryPattern(engine_dll, "8B 44 24 04 81 EC 04 01 00 00 56 68 04 01 00 00 50 8D 4C 24 0C 51");
 	Sys_mkdir = (int(*)(const char* path))FindMemoryPattern(engine_dll, "55 8B EC 53 8B 5D 08 56 57 53");
 	COM_FileBase = (void(*)(const char* path, char* dest, unsigned int size))FindMemoryPattern(engine_dll, "56 57 8B 7C 24 0C 57 FF 15 ? ? ? ? 48 8B C8 85 C9 74 15");
-	COM_FileSize = (int(*)(const char* path))FindMemoryPattern(engine_dll, "8B 4C 24 04 83 EC 10 56 6A 00 8D 44 24 08 50 51 6A 00 6A 00");
+	COM_FileSize_ = (int(*)(const char* path))FindMemoryPattern(engine_dll, "8B 4C 24 04 83 EC 10 56 6A 00 8D 44 24 08 50 51 6A 00 6A 00");
 	COM_GetGameDir = (int(*)(char* dest, unsigned int size))FindMemoryPattern(engine_dll, "8B 44 24 04 85 C0 74 11 8B 4C 24 08 51");
 	COM_GetWriteableDirectory = (const char* (*)())FindMemoryPattern(engine_dll, "B8 ? ? ? ? C3 90 90 90 90 90 90 90 90 90 90 A1");
 	Sys_FindFirst = (const char* (*)(const char* path, char* filebase, unsigned int size))FindMemoryPattern(engine_dll, " A1 ? ? ? ? 56 33 F6 83 F8 FF");
@@ -81,6 +81,10 @@ void NightfireFileSystem::Init(unsigned long engine_dll)
 	g_DiskFileHandles = *(FILE***)((unsigned long)Sys_FileSeek + 0xB);
 	gbx_fseek = (int(*)(FILE*, long, int))FindMemoryPattern(engine_dll, "6A 0C 68 ? ? ? ? E8 ? ? ? ? FF 75 08 E8 ? ? ? ? 59 83 65 FC 00 FF 75 10");
 	gbx_ftell = (long(*)(FILE*))FindMemoryPattern(engine_dll, "6A 0C 68 ? ? ? ? E8 ? ? ? ? FF 75 08 E8 ? ? ? ? 59 83 65 FC 00 FF 75 08");
+	com_filesize = (int*)*(DWORD*)FindMemoryPattern(engine_dll, "A1 ? ? ? ? 50 53 8D 8C 24 4C 01 00 00 55 51", false);
+	SEEK_FROM_CUR = (int*)GetProcAddress((HMODULE)platform_dll, "?SEEK_FROM_CUR@File@@2HB");
+	SEEK_FROM_END = (int*)GetProcAddress((HMODULE)platform_dll, "?SEEK_FROM_END@File@@2HB");
+	SEEK_FROM_START = (int*)GetProcAddress((HMODULE)platform_dll, "?SEEK_FROM_START@File@@2HB");
 #ifdef _DEBUG
 	// rudimentary bugcheck, 32 bit only
 	for (unsigned long* off = (unsigned long*)this + 2; off != (unsigned long*)this + (sizeof(*this) / sizeof(unsigned long*)); ++off)

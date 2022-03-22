@@ -37,7 +37,7 @@ int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 			g_oStartMetaAudio = (StartMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "StartMetaAudio");
 			g_oShutdownMetaAudio = (ShutdownMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "ShutdownMetaAudio");
 			if (g_oStartMetaAudio && g_oShutdownMetaAudio)
-				g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, g_pExportFuncs, &g_oEngineFuncs);
+				g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, &g_oExportFuncs, &g_oEngineFuncs);
 		}
 	}
 
@@ -64,7 +64,9 @@ int HUD_ClientAPI(int iVersion, int size, cl_exportfuncs_t* pClientFuncs)
 {
 	int(*oHUD_ClientAPI)(int, int, cl_exportfuncs_t*) = (int(*)(int, int, cl_exportfuncs_t*))GetProcAddress((HMODULE)*g_clientDllHinst, "HUD_ClientAPI");
 	
+	GetImportantOffsets();
 	Fix_Water_Hull();
+	Fix_RainDrop_WaterCollision();
 
 	int result = oHUD_ClientAPI(iVersion, size, pClientFuncs);
 	if (result == 1 && iVersion == 5 && size == sizeof(cl_exportfuncs_t) /*200*/)

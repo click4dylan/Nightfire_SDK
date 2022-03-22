@@ -109,20 +109,13 @@ enum Loadfilelocation : int
 
 class LinkedList;
 
-enum GbxFileSeekBehavior
-{
-    SEEK_FROM_START = 0,
-    SEEK_FROM_CUR = 1,
-    SEEK_FROM_END = 2
-};
-
 enum GbxFileHandleType
 {
     ARCHIVE = -2,
     INVALID = -1
 };
 
-#define NIGHTFIRE_FILESYSTEM_VERSION 3
+#define NIGHTFIRE_FILESYSTEM_VERSION 6
 
 class NightfireFileSystem
 {
@@ -225,7 +218,7 @@ public:
     //Sys_mkdir: 55 8B EC 53 8B 5D 08 56 57 53
     void(*COM_FileBase)(const char* path, char* dest, unsigned int size);
     //COM_FileBase: 56 57 8B 7C 24 0C 57 FF 15 ? ? ? ? 48 8B C8 85 C9 74 15
-    int(*COM_FileSize)(const char* path);
+    int(*COM_FileSize_)(const char* path);
     //COM_FileSize: 8B 4C 24 04 83 EC 10 56 6A 00 8D 44 24 08 50 51 6A 00 6A 00
     int(*COM_GetGameDir)(char* dest, unsigned int size);
     //COM_GetGameDir: 8B 44 24 04 85 C0 74 11 8B 4C 24 08 51
@@ -275,50 +268,49 @@ public:
     //gbx_fseek: 6A 0C 68 ? ? ? ? E8 ? ? ? ? FF 75 08 E8 ? ? ? ? 59 83 65 FC 00 FF 75 10
     long(*gbx_ftell)(FILE* file);
     //gbx_ftell: 6A 0C 68 ? ? ? ? E8 ? ? ? ? FF 75 08 E8 ? ? ? ? 59 83 65 FC 00 FF 75 08
+    int* com_filesize;
+    int* SEEK_FROM_START;
+    int* SEEK_FROM_CUR;
+    int* SEEK_FROM_END;
 
     inline bool COM_EndOfFile(HCOMFILE& file)
     {
         long cur = COM_FileTell(file);
-        COM_FileSeek(file, 0, GbxFileSeekBehavior::SEEK_FROM_END);
+        COM_FileSeek(file, 0, *SEEK_FROM_END);
         long end = COM_FileTell(file);
         if (cur >= end)
             return true;
 
-        COM_FileSeek(file, cur, GbxFileSeekBehavior::SEEK_FROM_START);
+        COM_FileSeek(file, cur, *SEEK_FROM_START);
         return false;
     }
 
     // fixed version of gearbox's one..
-    inline void COM_FileSeek(HCOMFILE& file, int position, GbxFileSeekBehavior behavior)
+    inline void COM_FileSeek(HCOMFILE& file, int position, int behavior)
     {
         if (file.stream)
         {
+            int gbxbehavior;
+            switch (behavior)
+            {
+            case SEEK_CUR:
+                gbxbehavior = *SEEK_FROM_CUR;
+                break;
+            default:
+            case SEEK_SET:
+                gbxbehavior = *SEEK_FROM_START;
+                break;
+            case SEEK_END:
+                gbxbehavior = *SEEK_FROM_END;
+                break;
+            }
             GbxResult result;
-            file.stream->seek(&result, position, behavior);
+            file.stream->seek(&result, position, gbxbehavior);
             g_pNightfirePlatformFuncs->GbxResultDestructor(result);
         }
         else
         {
-#if 1
-            //gearbox's enums specify FROM, but i'm not sure if that's what they actually mean
-            //let's just assume they meant the same behavior as fseek
             gbx_fseek(g_DiskFileHandles[file.handle_index], position, (int)behavior);
-#else
-            FILE* handle = g_DiskFileHandles[file.handle_index];
-            if (behavior == SEEK_FROM_CUR)
-            {
-                gbx_fseek(handle, position, SEEK_CUR);
-            }
-            else if (behavior == SEEK_FROM_END)
-            {
-                gbx_fseek(handle, 0, SEEK_END);
-                gbx_fseek(handle, -position, SEEK_CUR);
-            }
-            else
-            {
-                gbx_fseek(handle, position, SEEK_SET);
-            }
-#endif
         }
     }
     // fixed version of gearbox's one..
@@ -341,7 +333,18 @@ public:
         }
     }
 
-    void Init(unsigned long engine_dll);
+    inline long COM_FileSize(HCOMFILE& file)
+    {
+        long cur = COM_FileTell(file);
+        COM_FileSeek(file, 0, *SEEK_FROM_END);
+        long end = COM_FileTell(file);
+        if (cur < end)
+            COM_FileSeek(file, cur, *SEEK_FROM_START);
+
+        return end;
+    }
+
+    void Init(unsigned long engine_dll, unsigned long platform_dll);
 };
 
 extern NightfireFileSystem* g_pNightfireFileSystem;

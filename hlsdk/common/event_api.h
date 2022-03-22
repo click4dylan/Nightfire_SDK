@@ -47,7 +47,7 @@ typedef struct event_api_s
 	const char *( *EV_TraceTexture ) ( int ground, float *vstart, float *vend );
 	void	( *EV_StopAllSounds ) ( int entnum, int entchannel );
 	void    ( *EV_KillEvents ) ( int entnum, const char *eventname );
-	void    ( *EV_TraceStudioModel ) (struct pmtrace_s* pTrace, cl_entity_t const* ent, float const* src, float const* end, float const* mins, float const* maxs, bool playerhull);
+	void    ( *EV_TraceStudioModel ) (struct pmtrace_s* pTrace, struct cl_entity_s const* ent, float const* src, float const* end, float const* mins, float const* maxs, bool playerhull);
 } event_api_t;
 
 extern event_api_t eventapi;
