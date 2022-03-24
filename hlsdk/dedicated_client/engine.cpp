@@ -21,6 +21,7 @@
 #include <NightfireFileSystem.h>
 #include "MetaHook.h"
 #include <platformdll.h>
+#include "pattern_scanner.h"
 
 typedef int (*engine_api_func)( int version, int size, struct engine_api_s *api );
 typedef int(*gui_api_func)(int version, int size, struct gui_api_s *api);
@@ -148,6 +149,13 @@ void linkEngineDll( const char* name )
 		ErrorMessage(-1, "Could not bind engine functions from \"engine.dll\"");
 
 	g_pNightfireFileSystem->Init(g_engineDllHinst, g_platformDllHinst);
+
+	DWORD loadthisdll = FindMemoryPattern(g_engineDllHinst, "57 53 FF 15 ? ? ? ? 8B F8 85 FF 75 17", false);
+	if (loadthisdll)
+	{
+		g_pGlobalVariables = (void*)*(DWORD*)(loadthisdll + 0x4D);
+		g_pEngineFuncs = (struct enginefuncs_s*)*(DWORD*)(loadthisdll + 0x52);
+	}
 	RunMetaHook();
 	Fix_Engine_Bugs();
 	Fix_Gamespy();

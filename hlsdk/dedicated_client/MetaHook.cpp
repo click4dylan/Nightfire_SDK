@@ -5,12 +5,16 @@
 #include <NightfireFileSystem.h>
 #include <platformdll.h>
 #include "fixes.h"
+#include "renderfuncs.h"
 
 void(*g_oClientDLL_Init)() = nullptr;
 cl_exportfuncs_t* g_pExportFuncs;
 void* g_pClientDLL_Init = nullptr;
 cl_exportfuncs_s g_oExportFuncs;
-cl_enginefuncs_s g_oEngineFuncs;
+cl_enginefuncs_s g_oCL_EngineFuncs;
+struct enginefuncs_s* g_pEngineFuncs = nullptr;
+struct cl_enginefuncs_s* g_pCL_EngineFuncs = nullptr;
+void* g_pGlobalVariables = nullptr;
 typedef void(*StartMetaAudioFn)(unsigned long hEngineDLL, NightfirePlatformFuncs* platform, NightfireFileSystem* filesystem, cl_exportfuncs_t* pExportFunc, cl_enginefunc_t* pEngineFuncs);
 typedef void(*ShutdownMetaAudioFn)();
 StartMetaAudioFn g_oStartMetaAudio = NULL;
@@ -24,7 +28,7 @@ int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 		return g_oExportFuncs.CLIENT_Initialize(enginefuncs);
 
 	//store original enginefuncs
-	g_oEngineFuncs = *enginefuncs;
+	g_oCL_EngineFuncs = *enginefuncs;
 
 	// call original func
 	int result = g_oExportFuncs.CLIENT_Initialize(enginefuncs);
@@ -37,7 +41,7 @@ int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 			g_oStartMetaAudio = (StartMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "StartMetaAudio");
 			g_oShutdownMetaAudio = (ShutdownMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "ShutdownMetaAudio");
 			if (g_oStartMetaAudio && g_oShutdownMetaAudio)
-				g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, &g_oExportFuncs, &g_oEngineFuncs);
+				g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, &g_oExportFuncs, &g_oCL_EngineFuncs);
 		}
 	}
 
@@ -48,13 +52,6 @@ int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 int CLIENT_Shutdown()
 {
 	int result = g_oExportFuncs.CLIENT_Shutdown();
-
-	if (g_MetaAudioDllHinst && g_oStartMetaAudio && g_oShutdownMetaAudio)
-	{
-		g_oShutdownMetaAudio();
-		FreeLibrary((HMODULE)g_MetaAudioDllHinst);
-		g_MetaAudioDllHinst = NULL;
-	}
 
 	return result;
 }
@@ -103,6 +100,13 @@ void ClientDLL_Init()
 
 void RunMetaHook()
 {
+	// hook renderer temporarily for debugging
+#ifdef _DEBUG
+	//Hook_SCR_ConnectMsg();
+	//Hook_CL_PrecacheResources();
+#endif
+
+
 	g_pClientDLL_Init = (void*)FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 01 00 00 84 C0 0F 85 D3", false);
 	if (!g_pClientDLL_Init)
 		return;
@@ -113,6 +117,13 @@ void RunMetaHook()
 
 void ShutdownMetaHook()
 {
+	if (g_MetaAudioDllHinst)
+	{
+		g_oShutdownMetaAudio();
+		FreeLibrary((HMODULE)g_MetaAudioDllHinst);
+		g_MetaAudioDllHinst = NULL;
+	}
+
 	MH_DisableHook(0);
 	MH_Uninitialize();
 }

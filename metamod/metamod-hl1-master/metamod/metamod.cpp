@@ -365,6 +365,7 @@ mBOOL meta_init_gamedll(void) {
 	return(mTRUE);
 }
 
+#include <iostream>
 // Load game DLL.
 // meta_errno values:
 //  - ME_DLOPEN		couldn't dlopen game dll file

@@ -19,6 +19,12 @@
     <Filter Include="Source Files\MinHook\hde">
       <UniqueIdentifier>{715ed01d-4c2c-482f-ba71-673a1b5af35e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\sdk">
+      <UniqueIdentifier>{297e404f-4a23-4389-8127-940142cb39a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bzip2">
+      <UniqueIdentifier>{ce5cf801-cc9c-4b1a-a86a-fd555e5b4593}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="conproc.cpp">
@@ -76,6 +82,33 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\public\platformdll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bzip2\src\blocksort.c">
+      <Filter>Source Files\bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="bzip2\src\bzlib.c">
+      <Filter>Source Files\bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="bzip2\src\compress.c">
+      <Filter>Source Files\bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="bzip2\src\crctable.c">
+      <Filter>Source Files\bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="bzip2\src\decompress.c">
+      <Filter>Source Files\bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="bzip2\src\huffman.c">
+      <Filter>Source Files\bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="bzip2\src\precompiled.c">
+      <Filter>Source Files\bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="bzip2\src\randtable.c">
+      <Filter>Source Files\bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="renderfuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -155,6 +188,15 @@
       <Filter>Source Files\MinHook\hde</Filter>
     </ClInclude>
     <ClInclude Include="MetaHook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bzip2\include\bzip2\bzlib.h">
+      <Filter>Source Files\bzip2</Filter>
+    </ClInclude>
+    <ClInclude Include="bzip2\src\bzlib_private.h">
+      <Filter>Source Files\bzip2</Filter>
+    </ClInclude>
+    <ClInclude Include="renderfuncs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -80,4 +80,7 @@ typedef struct cl_exportfuncs_s
 cl_exportfuncs_t;
 
 extern cl_exportfuncs_s g_oExportFuncs;
-extern cl_enginefuncs_s g_oEngineFuncs;
+extern cl_enginefuncs_s g_oCL_EngineFuncs;
+extern struct enginefuncs_s* g_pEngineFuncs;
+extern cl_enginefuncs_s* g_pCL_EngineFuncs;
+extern void* g_pGlobalVariables;

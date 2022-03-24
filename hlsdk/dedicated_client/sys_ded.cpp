@@ -32,6 +32,7 @@
 #include "video.h"
 #include "timer.h"
 #include "MinHook/MinHook.h"
+#include "fixes.h"
 
 extern void MakeLauncherVisible();
 
@@ -544,6 +545,7 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 			time = new_time;
 			iState = g_EngineAPI.Host_Frame((float)delta_time, DLL_ACTIVE, &iState2);
 			g_EngineAPI.GetEngineState();
+			Fix_GameDLL_Bugs();
 
 			if (iState2 == DLL_TRANS || iState == DLL_CLOSE)
 				break;
@@ -582,6 +584,7 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 			time = new_time;
 			int dummy_state = DLL_ACTIVE;
 			g_EngineAPI.GameSetBackground(0);
+			Fix_GameDLL_Bugs();
 
 			if (g_AltTabbedAway && !g_bRunWhileAltTabbed)
 			{

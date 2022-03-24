@@ -98,7 +98,7 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\public;..\dx8sdk;..\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\dlls;..\public;..\dx8sdk;..\pm_shared;bzip2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;DEDICATED;LAUNCHERONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Release\Dedicated.pch</PrecompiledHeaderOutputFile>
@@ -167,7 +167,7 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\public;..\dx8sdk;..\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\dlls;..\public;..\dx8sdk;..\pm_shared;bzip2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;DEDICATED;LAUNCHERONLY;SWDS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Release\Dedicated.pch</PrecompiledHeaderOutputFile>
@@ -231,7 +231,7 @@
       <WarningLevel>Level3</WarningLevel>
       <MinimalRebuild>true</MinimalRebuild>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\public;..\dx8sdk;..\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\dlls;..\public;..\dx8sdk;..\pm_shared;bzip2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;DEDICATED;LAUNCHERONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Debug\Dedicated.pch</PrecompiledHeaderOutputFile>
@@ -280,7 +280,7 @@
       <WarningLevel>Level3</WarningLevel>
       <MinimalRebuild>true</MinimalRebuild>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\public;..\dx8sdk;..\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine;..\common;..\dedicated;..\cl_dll;..\dlls;..\public;..\dx8sdk;..\pm_shared;bzip2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;DEDICATED;LAUNCHERONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Debug\Dedicated.pch</PrecompiledHeaderOutputFile>
@@ -312,6 +312,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\public\platformdll.cpp" />
+    <ClCompile Include="bzip2\src\blocksort.c" />
+    <ClCompile Include="bzip2\src\bzlib.c" />
+    <ClCompile Include="bzip2\src\compress.c" />
+    <ClCompile Include="bzip2\src\crctable.c" />
+    <ClCompile Include="bzip2\src\decompress.c" />
+    <ClCompile Include="bzip2\src\huffman.c" />
+    <ClCompile Include="bzip2\src\precompiled.c" />
+    <ClCompile Include="bzip2\src\randtable.c" />
     <ClCompile Include="conproc.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="engine.cpp" />
@@ -326,6 +334,7 @@
     <ClCompile Include="MinHook\trampoline.c" />
     <ClCompile Include="NightfireFileSystem.cpp" />
     <ClCompile Include="pattern_scanner.cpp" />
+    <ClCompile Include="renderfuncs.cpp" />
     <ClCompile Include="sys_ded.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="video.cpp" />
@@ -335,6 +344,8 @@
     <ResourceCompile Include="dedicated.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bzip2\include\bzip2\bzlib.h" />
+    <ClInclude Include="bzip2\src\bzlib_private.h" />
     <ClInclude Include="conproc.h" />
     <ClInclude Include="..\common\crc.h" />
     <ClInclude Include="console.h" />
@@ -354,6 +365,7 @@
     <ClInclude Include="MinHook\MinHook.h" />
     <ClInclude Include="MinHook\trampoline.h" />
     <ClInclude Include="pattern_scanner.h" />
+    <ClInclude Include="renderfuncs.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sys_ded.h" />
     <ClInclude Include="timer.h" />
