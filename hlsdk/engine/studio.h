@@ -205,6 +205,7 @@ typedef struct
 	
 	int					nextseq;		// auto advancing sequences
 } mstudioseqdesc_t;
+//nightfire size: 0xBC, unfinished struct
 
 // events
 #include "studio_event.h"

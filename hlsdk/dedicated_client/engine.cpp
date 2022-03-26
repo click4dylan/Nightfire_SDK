@@ -156,6 +156,11 @@ void linkEngineDll( const char* name )
 		g_pGlobalVariables = (void*)*(DWORD*)(loadthisdll + 0x4D);
 		g_pEngineFuncs = (struct enginefuncs_s*)*(DWORD*)(loadthisdll + 0x52);
 	}
+	DWORD studiomodelapi = FindMemoryPattern(g_engineDllHinst, "68 ? ? ? ? 68 ? ? ? ? 6A 01 FF D0 83 C4 0C", false);
+	if (studiomodelapi)
+	{
+		g_pStudioModelAPI = (struct engine_studio_api_s*)*(DWORD*)(loadthisdll + 1);
+	}
 	RunMetaHook();
 	Fix_Engine_Bugs();
 	Fix_Gamespy();
@@ -432,6 +437,8 @@ void ActivateGameWindowFromOther()
 		g_EngineAPI.SetMessagePumpDisableMode(0);
 		g_EngineAPI.SetPauseState(0);
 		g_AltTabbedAway = 0;
+		if (!g_bRunWhileAltTabbed && g_oResumeMetaAudioPlayback)
+			g_oResumeMetaAudioPlayback();
 	}
 }
 
@@ -653,6 +660,8 @@ void DeactivateFromGameWindow()
 	{
 		g_EngineAPI.SetMessagePumpDisableMode(g_bFullScreen); //< setting this to 0 disables networking, we don't want that
 		g_EngineAPI.SetPauseState(1);
+		if (g_oPauseMetaAudioPlayback)
+			g_oPauseMetaAudioPlayback();
 	}
 	g_AltTabbedAway = 1;
 }
@@ -1020,6 +1029,8 @@ LONG WINAPI HLEngineWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
 			if ((wParam == VK_TAB || wParam == VK_ESCAPE) && ((unsigned int)lParam >> VK_NONCONVERT) & 1 && ((unsigned int)lParam >> VK_MODECHANGE) & 1)
 			{
 				g_AltTabbedAway = 1;
+				if (!g_bRunWhileAltTabbed && g_oPauseMetaAudioPlayback)
+					g_oPauseMetaAudioPlayback();
 				g_EngineAPI.IN_DeactivateMouse();
 			}
 			goto SENDKEYUP;
@@ -1033,6 +1044,8 @@ LONG WINAPI HLEngineWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam
 			//fix clip cursor with bordered window
 			if (g_AltTabbedAway && !g_bFullScreen && border)
 			{
+				if (!g_bRunWhileAltTabbed && g_oResumeMetaAudioPlayback)
+					g_oResumeMetaAudioPlayback();
 				ForceCapture = true;
 				AppActivate(TRUE);
 				return 0;

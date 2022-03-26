@@ -10,7 +10,7 @@ typedef struct enginefuncs_s
 	int			(*pfnPrecacheModel)			(const char* s);
 	int			(*pfnPrecacheSound)			(const char* s);
 	int			(*pfnPrecacheGeneric)		(const char* s); //moved
-	void		(*pfnSetModel)				(edict_t *e, const char *m);
+	void		(*pfnSetModel)				(struct edict_t *e, const char *m);
 	int			(*pfnModelIndex)			(const char *m);
 	int			(*pfnModelFrames)			(int modelIndex);
 	void		(*pfnSetSize)				(struct edict_t *e, const float *rgflMin, const float *rgflMax);

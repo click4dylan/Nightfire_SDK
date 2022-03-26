@@ -157,7 +157,7 @@ struct netchan7
 //was 20000 in nf
 #define MAX_RATE 1000000
 
-//#define COMPRESS_PACKETS
+#define COMPRESS_PACKETS
 //works
 #define HOOK_NETCHAN_CLEAR
 //works

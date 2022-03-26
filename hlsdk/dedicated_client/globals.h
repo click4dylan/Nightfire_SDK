@@ -21,6 +21,7 @@ extern HWND g_EngWnd;
 extern BOOLEAN g_bFullScreen;
 extern BOOLEAN g_bDirectToConsole;
 extern BOOLEAN border;
+extern BOOLEAN g_bNoMetaAudio;
 
 extern BYTE g_AltTabbedAway;
 
@@ -41,6 +42,7 @@ extern long g_platformDllHinst;
 extern long g_hRenderDLL;
 extern long g_hRawInputDLL;
 extern long* g_clientDllHinst;
+extern long g_gameDllHinst;
 extern long g_MetaAudioDllHinst;
 extern HANDLE g_hRawInputThread;
 extern HANDLE g_hRawInputEvent;

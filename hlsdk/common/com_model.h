@@ -22,6 +22,8 @@
 #define HARDWARE_MODE
 #endif
 
+#include <cache_user.h>
+
 
 // com_model.h
 #ifndef COM_MODEL_H
@@ -90,6 +92,7 @@ typedef struct dmodel_s
 	int visleafs = 0;  // not including the solid leaf 0
 	int firstface = 0, numfaces = 0;
 } dmodel_t;
+//size: 0x40
 
 // nightfire structure in memory
 typedef struct mplane_s
@@ -100,6 +103,7 @@ typedef struct mplane_s
 	byte signbits = 0;  // signx + signy<<1 + signz<<1
 	byte pad[2] = { 0 };
 } mplane_t;
+//size: 0x14
 
 // nightfire structure in .bsp file
 typedef struct dplane_s
@@ -108,6 +112,7 @@ typedef struct dplane_s
 	float dist;
 	unsigned int closest_axis;
 }dplane_t;
+//size: 0x14
 
 // nightfire structure in memory
 typedef struct mbrushside_s
@@ -115,6 +120,7 @@ typedef struct mbrushside_s
 	mplane_t* plane;
 	msurface_t* surface;
 } mbrushside_t;
+//size: 0x8
 
 // nightfire structure in .bsp file
 typedef struct dbrushside_s
@@ -122,11 +128,13 @@ typedef struct dbrushside_s
 	int plane;
 	int face;
 } dbrushside_t;
+//size: 0x8
 
 typedef struct
 {
 	vec3_t position;
 } mvertex_t;
+//size: 0x12
 
 // 06/23/2002 MAH
 // This structure is the same in QW source files
@@ -145,6 +153,7 @@ typedef struct mtexture_s
 	int index_in_memory;
 	int unknown2;
 } mtexture_t;
+//size: 0x48
 
 // nightfire structure in memory
 typedef struct
@@ -153,6 +162,7 @@ typedef struct
 					   // [i][3] is the s/t offset relative to the origin.
 					   // s or t = dot(3Dpoint,vecs[i])+vecs[i][3]
 } mtexinfo_t;
+//size: 0x20
 
 // 06/23/2002 MAH
 // This structure is only need for hardware rendering
@@ -186,7 +196,7 @@ typedef struct mnode_s
 	mplane_t* plane = nullptr;
 	struct mnode_s* children[2] = { 0 };
 } mnode_t;
-
+//size: 0x30
 
 
 typedef struct msurface_s msurface_t;
@@ -213,6 +223,7 @@ typedef struct dbrush_s
 	int firstside;
 	int numsides;
 } dbrush_t;
+//size: 0xC
 
 
 // nightfire structure in memory
@@ -275,19 +286,21 @@ struct mmaterial_t
 {
 	char name[64];
 };
-
+//size: 0x40
 
 // nightfire
 struct lightingdata_t
 {
 	int index;
 };
+//size: 0x4
 
 // nightfires structure in mmemory
 struct texmatrix_t
 {
 	float vecs[4];
 };
+//size: 0x10
 
 // nightfire structure in memory
 typedef struct mface_s
@@ -368,14 +381,7 @@ typedef struct hull_s
 	vec3_t clip_mins;
 	vec3_t clip_maxs;
 } hull_t;
-
-#if !defined(CACHE_USER) && !defined(QUAKEDEF_H)
-#define CACHE_USER
-typedef struct cache_user_s
-{
-	void* data = nullptr;
-} cache_user_t;
-#endif
+//size: 0x28, unknown
 
 class StudioModelData
 {
@@ -541,6 +547,13 @@ typedef struct auxvert_s
 // ------------------  Player Model Animation Info ----------------
 //
 #include "custom.h"
+
+typedef struct DM_PlayerState_s
+{
+	char modelname[260];
+	char modelpath[260];
+	struct model_s* model;
+} DM_PlayerState_t;
 
 #define MAX_INFO_STRING    256
 #define MAX_SCOREBOARDNAME 32

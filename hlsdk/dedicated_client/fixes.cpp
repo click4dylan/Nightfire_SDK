@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <vector>
 //#include <extdll.h>	
 //#include <CVector.h>
 //#include "CString.h"
@@ -14,6 +15,9 @@
 #include <event_api.h>
 #include "MetaHook.h"
 #include <cvardef.h>
+#include <clientsideentity.h>
+#include <NightfireFileSystem.h>
+//#include <r_studioint.h>
 
 typedef float vec_t;
 typedef float vec2_t[2];
@@ -29,6 +33,7 @@ typedef float vec3_t[3];
 #include <enginefuncs.h>
 #include <globalvars.h>
 
+struct cl_entity_s** g_rCurrentEntity = nullptr;
 int* svs_maxclients = 0;
 void(*EV_SetTraceHull)(int hull) = 0;
 DWORD g_PlayerMove = 0;
@@ -39,8 +44,14 @@ int EV_GetTraceHull()
 }
 void(*EV_PlayerTrace) (float* start, float* end, int brushFlags, int traceFlags, int ignore_pe, struct pmtrace_s* tr) = nullptr;
 void(*g_oLog_Printf)(const char*, ...) = nullptr;
+player_info_s* (*ENG_GetPlayerInfo)(int index) = nullptr;
+BOOL(*Host_IsSinglePlayerGame)() = nullptr;
+void(*R_ChangeMPSkin)() = nullptr;
+int(*g_oR_StudioSetupPlayerModel)(int);
+extern model_s* R_StudioSetupPlayerModel(int playerindex);
+char* DM_PlayerState = 0;
 
-void GetImportantOffsets()
+void GetImportantEngineOffsets()
 {
 	if (!g_engineDllHinst)
 		return;
@@ -57,15 +68,41 @@ void GetImportantOffsets()
 		if (g_pCL_EngineFuncs)
 			g_pCL_EngineFuncs = *(cl_enginefuncs_s**)((DWORD)g_pCL_EngineFuncs + 1);
 	}
-	g_PlayerMove = *(DWORD*)((DWORD)EV_SetTraceHull + 6);
-	offset = *(DWORD*)((DWORD)EV_SetTraceHull + 0xC);
+	if (!g_PlayerMove)
+		g_PlayerMove = *(DWORD*)((DWORD)EV_SetTraceHull + 6);
+	if (!offset)
+		offset = *(DWORD*)((DWORD)EV_SetTraceHull + 0xC);
 	if (!svs_maxclients)
 	{
 		svs_maxclients = (int*)FindMemoryPattern(g_engineDllHinst, "83 3D ? ? ? ? 01 7E 2E 8B 4C 24 0C 8D 44 24 10 50", false);
 		if (svs_maxclients)
 			svs_maxclients = *(int**)((DWORD)svs_maxclients + 2);
 	}
-	g_oLog_Printf = (void(*)(const char*, ...))FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 08 00 00 84 C0", false);
+	if (!g_oLog_Printf)
+		g_oLog_Printf = (void(*)(const char*, ...))FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 08 00 00 84 C0", false);
+	if (!ENG_GetPlayerInfo)
+		ENG_GetPlayerInfo = (player_info_s * (*)(int))FindMemoryPattern(g_engineDllHinst, "8B 44 24 04 69 C0 B4 01 00 00 05 ? ? ? ? C3 55", false);
+	if (!Host_IsSinglePlayerGame)
+		Host_IsSinglePlayerGame = (BOOL(*)())FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 84 C0 8B 0D ? ? ? ? 74 06", false);
+	if (!R_ChangeMPSkin)
+		R_ChangeMPSkin = (void(*)())FindMemoryPattern(g_engineDllHinst, "A1 ? ? ? ? 8B 08 8B 04 ? ? ? ? ? 85 C0", false);
+	if (!g_rCurrentEntity)
+	{
+		g_rCurrentEntity = (struct cl_entity_s**)FindMemoryPattern(g_engineDllHinst, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false);
+		DM_PlayerState = (char*)*(DWORD*)((DWORD)g_rCurrentEntity + 0x15);
+		if (g_rCurrentEntity)
+			g_rCurrentEntity = *(struct cl_entity_s***)((DWORD)g_rCurrentEntity + 1);
+	}
+
+}
+
+void GetImportantClientOffsets()
+{
+	if (!g_clientDllHinst)
+		return;
+	DWORD studiorenderapi = FindMemoryPattern((DWORD)*g_clientDllHinst, "B9 ?? ?? ?? ?? E8 ?? ?? ?? ?? B8 01 00 00 00 5D C3", false);
+	if (studiorenderapi)
+		g_pStudioAPI = *(class CStudioModelRenderer**)FindMemoryPattern((DWORD)*g_clientDllHinst, "B9 ?? ?? ?? ?? E8 ?? ?? ?? ?? B8 01 00 00 00 5D C3", false);
 }
 
 DWORD GUI_GetAction_JmpBack;
@@ -313,18 +350,377 @@ void Fix_AI_TurnSpeed()
 	}
 }
 
+// Forces various entities on the server to not delete themselves and instead send to the client
+// Fixes things such as sprite render fx, model/breakable collision, etc
+void Force_ServerSide_Entities_GameDLL()
+{
+	DWORD adr = FindMemoryPattern(g_gameDllHinst, "39 98 ? ? 00 00 75 11 39 98 ? ? 00 00 75 09 56", false);
+	if (adr)
+	{
+		//force CGenericItem to not remove itself on the server
+		PushProtection(adr);
+		*(unsigned char*)(adr + 6) = 0xEB;
+		PopProtection();
+	}
+	adr = FindMemoryPattern(g_gameDllHinst, "8B 88 ? ? 00 00 85 C9 75 13 8B 88 ? ? 00 00 85 C9", false);
+	if (adr)
+	{
+		//force CBreakableItem to not remove itself on the server
+		PushProtection(adr);
+		*(unsigned char*)(adr + 8) = 0xEB;
+		PopProtection();
+	}
+	adr = FindMemoryPattern(g_gameDllHinst, "0F 94 C1 33 D2 85 DB 0F 94 C2 85 CA 74 09", false);
+	if (adr)
+	{
+		//force CHangingLantern to not remove itself on the server
+		PushProtection(adr);
+		*(unsigned char*)(adr + 12) = 0xEB;
+		PopProtection();
+	}
+	adr = FindMemoryPattern(g_gameDllHinst, "8B 82 ? ? 00 00 85 C0 75 09 56", false);
+	if (adr)
+	{
+		//force CEnvGlow to not remove itself on the server
+		PushProtection(adr);
+		*(unsigned char*)(adr + 8) = 0xEB;
+		PopProtection();
+	}
+	adr = FindMemoryPattern(g_gameDllHinst, "F6 80 ? ? 00 00 04 75 11 39 B8 ? ? 00 00 75 09", false);
+	if (adr)
+	{
+		//force CEnvSprite to not remove itself on the server
+		PushProtection(adr);
+		*(unsigned char*)(adr + 7) = 0xEB;
+		PopProtection();
+	}
+	//FIXME: worldspawn and env_fog are still client side! They don't have a specific call to UTIL_Remove..
+}
+
+// returns the allocated entity
+void* ClientEntityHandler_Dummy(std::string const& name, std::vector<std::pair<std::string, std::string>>const& keyvalues)
+{
+	return nullptr;
+}
+
+void Force_ServerSide_Entities_ClientDLL()
+{
+	//TODO: FIXME: check if server we are connected to is running latest patch!!!
+	//Otherwise we will be missing clientside entities on old servers!
+	DWORD adr = FindMemoryPattern((DWORD)*g_clientDllHinst, "8B 0C F5 ? ? ? ? 51 50 FF D3", false);
+	if (adr)
+	{
+		// replace all the client side entity create functions with a dummy so the client doesn't create them!!
+		int numclientsidedentities = *(unsigned char*)(adr + 0x12);
+		CLIENTSIDEENTITY* client_side_ent_table = *(CLIENTSIDEENTITY**)(adr + 3);
+		PushProtection(client_side_ent_table);
+
+		// nightfire 1.1 has 7 client sided entities, in addition to these there is "env_fog" and "worldspawn"
+		const char* blocked_clientsided_entities[] = { "env_sprite", "env_glow", "item_generic", "item_breakable", "physics_lantern" };
+
+		for (int i = 0; i < numclientsidedentities; ++i)
+		{
+			CLIENTSIDEENTITY* client_side_ent = &client_side_ent_table[i];
+			for (int j = 0; j < ARRAYSIZE(blocked_clientsided_entities); ++j)
+			{
+				if (!strcmp(client_side_ent->name, blocked_clientsided_entities[j]))
+				{
+					client_side_ent->ClientEntityHandler = ClientEntityHandler_Dummy;
+					break;
+				}
+			}
+		}
+
+		PopProtection();
+	}
+}
+
 void Fix_GameDLL_Bugs()
 {
 	static bool already_fixed = false;
 	if (already_fixed)
 		return;
 
-	DWORD gamedll = (DWORD)GetModuleHandleA("game.dll");
-	if (!gamedll)
+	g_gameDllHinst = (DWORD)GetModuleHandleA("game.dll");
+	if (!g_gameDllHinst)
 		return;
+
+	// prevent GiveNamedItem for testing purposes
+#if 0
+	DWORD adr = FindMemoryPattern((DWORD)g_gameDllHinst, "8B 44 24 04 56 57 8B F9", false);
+	if (adr)
+	{
+		PushProtection(adr, 4);
+		*(DWORD*)(adr) = 0x900004C2;
+		PopProtection();
+	}
+#endif
+
 	already_fixed = true;
 
+	Force_ServerSide_Entities_GameDLL();
 	Fix_AI_TurnSpeed();
+}
+
+#include <studio.h>
+#include <StudioModelRenderer.h>
+
+mstudioanim_t* (__fastcall* g_oStudioGetAnim)(CStudioModelRenderer*, void*, model_t*, mstudioseqdesc_t*);
+mstudioanim_t* __fastcall CStudioModelRenderer_StudioGetAnim(CStudioModelRenderer* me, void* edx, model_t* m_pSubModel, mstudioseqdesc_t* pseqdesc)
+{
+	auto model = &me->m_pCurrentEntity->model;
+	mstudioseqgroup_t* pseqgroup;
+	cache_user_t* paSequences;
+	auto localplayer = g_pCL_EngineFuncs->GetLocalPlayer();
+	studiohdr_t* studiomodel = (studiohdr_t*)localplayer->model->cache;
+
+	if (localplayer)
+		g_pCL_EngineFuncs->Con_Printf("player model adr  %#010x\n", localplayer->model);
+	g_pCL_EngineFuncs->Con_Printf("render model adr %#010x\n", (DWORD)model);
+	g_pCL_EngineFuncs->Con_Printf("RenderModel name %s, ptr %#010x, adr %#010x\n", me->m_pRenderModel->name, me->m_pRenderModel, (DWORD)&me->m_pRenderModel);
+	g_pCL_EngineFuncs->Con_Printf("StudioHeader name %s, ptr %#010x, adr %#010x\n", me->m_pStudioHeader->name, me->m_pStudioHeader, (DWORD)&me->m_pStudioHeader);
+	pseqgroup = (mstudioseqgroup_t*)((byte*)me->m_pStudioHeader + me->m_pStudioHeader->seqgroupindex) + pseqdesc->seqgroup;
+
+	//if (!strstr(me->m_pRenderModel->name, me->m_pStudioHeader->name))
+	//	return (mstudioanim_t*)((byte*)me->m_pStudioHeader + pseqdesc->animindex);
+
+	if (pseqdesc->seqgroup == 0)
+	{
+		return (mstudioanim_t*)((byte*)me->m_pStudioHeader + pseqdesc->animindex);
+	}
+
+	paSequences = (cache_user_t*)m_pSubModel->submodels;
+
+	if (paSequences == NULL)
+	{
+		paSequences = (cache_user_t*)g_pNightfirePlatformFuncs->mallocx(16 * sizeof(cache_user_t)); // UNDONE: leak!
+		memset(paSequences, 0, 16 * sizeof(cache_user_t));
+		m_pSubModel->submodels = (dmodel_t*)paSequences;
+	}
+	if (!g_pNightfireFileSystem->Cache_Check((struct cache_user_s*)&(paSequences[pseqdesc->seqgroup])))
+	{
+		if (g_pCL_EngineFuncs)
+			g_pCL_EngineFuncs->Con_DPrintf("loading %s\n", pseqgroup->name);
+		g_pNightfireFileSystem->COM_LoadCacheFile(pseqgroup->name, (struct cache_user_s*)&paSequences[pseqdesc->seqgroup]);
+	}
+	return (mstudioanim_t*)((byte*)paSequences[pseqdesc->seqgroup].data + pseqdesc->animindex);
+}
+
+DWORD invalid_sequence_jmpback;
+DWORD valid_sequence_jmpback;
+bool StudioSequenceGetAnimPosOutOfBoundsCheck(CStudioModelRenderer* renderer, model_t* model)
+{
+	return renderer->m_pCurrentEntity->curstate.sequence < renderer->m_pStudioHeader->numseq;
+}
+
+__declspec(naked) void StudioGetAnimPos_Hook()
+{
+	__asm
+	{
+		JE invalid_seq
+
+		push eax
+		push esi
+		push ebx
+
+		push eax //model_t*
+		push esi //CStudioModelRenderer*
+		call StudioSequenceGetAnimPosOutOfBoundsCheck
+		add esp, 8
+		test al, al
+
+		pop ebx
+		pop esi
+		pop eax
+		
+	
+		je invalid_seq
+		jmp valid_sequence_jmpback
+
+		invalid_seq:
+		jmp invalid_sequence_jmpback
+	}
+}
+
+
+bool __cdecl StudioGaitSequenceBonesOutOfBoundsCheck(CStudioModelRenderer* renderer, player_info_s* info)
+{
+	if (info->gaitsequence == 0)
+		return true;
+
+	studiohdr_t* hdr = renderer->m_pStudioHeader;
+	if (info->gaitsequence >= hdr->numseq)
+	{
+		info->gaitsequence = 0;
+		return false;
+	}
+	
+	return true;
+}
+
+DWORD invalid_gaitsequence_jmpback;
+DWORD valid_gaitsequence_jmpback;
+__declspec(naked) void StudioSetupBones_Hook()
+{
+	__asm
+	{
+		push eax //1
+		push edx
+		push edi
+		push ebx //2
+		push esi //3
+		push ecx //4
+		push eax // m_PlayerInfo
+		push esi // thisptr
+		call StudioGaitSequenceBonesOutOfBoundsCheck
+		add esp, 8
+		pop ecx //4
+		pop esi //3
+		pop ebx //2
+		pop edi
+		pop edx
+		test al, al
+		je invalid
+		pop eax //1
+		mov eax, [eax + 0x17C]
+		jmp valid_gaitsequence_jmpback
+
+		invalid:
+		pop eax //1
+		jmp invalid_gaitsequence_jmpback
+	}
+}
+
+
+//studioapi_SetupPlayerModel
+model_s* R_StudioSetupPlayerModel(int playerindex)
+{
+	player_info_s* info = ENG_GetPlayerInfo(playerindex);
+	static ConsoleVariable* developer = g_pEngineFuncs->pfnGetConsoleVariableGame("developer");
+	DM_PlayerState_s* state = (DM_PlayerState_s*)DM_PlayerState;
+	cl_entity_s* current_entity = (*g_rCurrentEntity);
+
+	if (*g_rCurrentEntity)
+	{
+		if ((developer->getValueInt() || !Host_IsSinglePlayerGame()) && info->name[0])
+		{
+			if (strcmp(state->modelname, info->model) || !state->model || state->model->isloaded != 1)
+			{
+				strncpy(state->modelname, info->model, 260);
+				state->modelname[MAX_PATH - 1] = 0;
+
+#if 1
+				strncpy(state->modelpath, "models/player/", 260);
+				strncat(state->modelpath, info->model, 260);
+				state->modelpath[MAX_PATH - 1] = 0;
+				strncat(state->modelpath, "/", 260);
+				state->modelpath[MAX_PATH - 1] = 0;
+				strncat(state->modelpath, info->model, 260);
+				state->modelpath[MAX_PATH - 1] = 0;
+				strncat(state->modelpath, ".mdl", 260);
+				state->modelpath[MAX_PATH - 1] = 0;
+
+				if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
+					state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
+				else
+				{
+					strncpy(state->modelpath, "models/", 260);
+					strncat(state->modelpath, info->model, 260);
+					strncat(state->modelpath, ".mdl", 260);
+					state->modelpath[MAX_PATH - 1] = 0;
+					if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
+						state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
+					else
+					{
+						strncpy(state->modelpath, "models/water/", 260);
+						strncat(state->modelpath, info->model, 260);
+						state->modelpath[MAX_PATH - 1] = 0;
+						strncat(state->modelpath, ".mdl", 260);
+						state->modelpath[MAX_PATH - 1] = 0;
+						if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
+							state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
+						else
+						{
+							strncpy(state->modelpath, "models/sky/", 260);
+							strncat(state->modelpath, info->model, 260);
+							state->modelpath[MAX_PATH - 1] = 0;
+							strncat(state->modelpath, ".mdl", 260);
+							state->modelpath[MAX_PATH - 1] = 0;
+							if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
+								state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
+							else
+								state->model = nullptr;
+						}
+					}
+				}
+#else
+				//gearbox code
+				strncpy(state->modelpath, "models/player/", 260);
+				state->modelpath[MAX_PATH - 1] = 0;
+				strncat(state->modelpath, info->model, 260);
+				state->modelpath[MAX_PATH - 1] = 0;
+				strncat(state->modelpath, "/", 260);
+				state->modelpath[MAX_PATH - 1] = 0;
+				strncat(state->modelpath, info->model, 260);
+				state->modelpath[MAX_PATH - 1] = 0;
+				strncat(state->modelpath, ".mdl", 260);
+				state->modelpath[MAX_PATH - 1] = 0;
+
+				state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
+#endif
+
+				if (!state->model)
+					state->model = current_entity->model;
+
+				R_ChangeMPSkin();
+			}
+		}
+		else
+		{
+			state->modelname[0] = 0;
+			if (state->model != current_entity->model)
+			{
+				state->model = current_entity->model;
+				R_ChangeMPSkin();
+			}
+		}
+	}
+	return state->model;
+}
+
+void Fix_Model_Crash()
+{
+	DWORD adr = FindMemoryPattern((DWORD)*g_clientDllHinst, "56 8B 74 24 0C 8B 86 ? 00 00 00 85 C0 57 75 19", false);
+	if (!adr)
+		return;
+	//if (!HookFunctionWithMinHook((void*)adr, CStudioModelRenderer_StudioGetAnim, (void**)&g_oStudioGetAnim))
+	//	return;
+	adr = FindMemoryPattern(g_engineDllHinst, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false);
+	if (!HookFunctionWithMinHook((void*)adr, &R_StudioSetupPlayerModel, (void**)&g_oR_StudioSetupPlayerModel))
+		return;
+	adr = FindMemoryPattern(*g_clientDllHinst, "8B 80 ? ? ? ? 85 C0 0F ? ? ? ? ? 8B ? ? ? ? ? 69 ? ? ? ? ? 03", false);
+	if (adr)
+	{
+		invalid_gaitsequence_jmpback = adr + 0xDC;
+		valid_gaitsequence_jmpback = adr + 6;
+		PlaceJMP((BYTE*)adr, (DWORD)&StudioSetupBones_Hook, 5);
+	}
+	adr = FindMemoryPattern(*g_clientDllHinst, "50 FF 15 ? ? ? ? 89 46 ? 88 5E", false);
+	if (adr)
+	{
+		valid_sequence_jmpback = adr;
+		invalid_sequence_jmpback = adr + 0x1E3;
+		PlaceJMP((BYTE*)(adr - 6), (DWORD)&StudioGetAnimPos_Hook, 5);
+	}
+}
+
+void Fix_ClientDLL_Bugs()
+{
+	GetImportantEngineOffsets();
+	Fix_Model_Crash();
+	Fix_Water_Hull();
+	Fix_RainDrop_WaterCollision();
+	Force_ServerSide_Entities_ClientDLL();
 }
 
 #define MAKEID(d,c,b,a)					( ((int)(a) << 24) | ((int)(b) << 16) | ((int)(c) << 8) | ((int)(d)) )
@@ -1131,7 +1527,7 @@ void Fix_AlertMessage_Crash()
 	if (!adr)
 		return;
 
-	GetImportantOffsets();
+	GetImportantEngineOffsets();
 
 	if (!HookFunctionWithMinHook((void*)adr, (void*)&AlertMessage, (void**)&g_oAlertMessage))
 		return;
@@ -1160,7 +1556,7 @@ void Con_DPrintf(const char* fmt, ...)
 
 void Fix_Con_DPrintf_StackSmash_Crash()
 {
-	GetImportantOffsets();
+	GetImportantEngineOffsets();
 	if (!g_pCL_EngineFuncs->Con_DPrintf)
 		return;
 
@@ -1170,8 +1566,43 @@ void Fix_Con_DPrintf_StackSmash_Crash()
 		return;
 }
 
+void LoadThisDll_Post(const char* gamedll)
+{
+	g_gameDllHinst = (long)GetModuleHandleA("game.dll");
+	if (!g_gameDllHinst)
+		return;
+	
+	Fix_GameDLL_Bugs();
+}
+
+DWORD g_oLoadThisDll;
+__declspec(naked) void LoadThisDll_Hook()
+{
+	__asm
+	{
+		push ebx
+		call g_oLoadThisDll
+		pop ebx
+		push ebx
+		call LoadThisDll_Post
+		add esp, 4
+		retn
+	}
+}
+
+void Hook_GameDLLLoadLibrary()
+{
+	DWORD adr = FindMemoryPattern(g_engineDllHinst, "57 53 FF 15 ? ? ? ? 8B F8 85 FF 75 17", false);
+	if (!adr)
+		return;
+
+	if (!HookFunctionWithMinHook((void*)adr, (void*)&LoadThisDll_Hook, (void**)&g_oLoadThisDll))
+		return;
+}
+
 void Fix_Engine_Bugs()
 {
+	Hook_GameDLLLoadLibrary();
 	Fix_Sound_Overflow();
 	Fix_Netchan();
 	Fix_AlertMessage_Crash();

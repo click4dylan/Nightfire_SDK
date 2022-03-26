@@ -3,6 +3,10 @@
 #define PSAPI_VERSION 1
 #include <Psapi.h>
 
+DWORD old_protection;
+void* protection_address;
+DWORD protection_length;
+
 void GetModuleStartEndPoints(HANDLE ModuleHandle, uintptr_t& start, uintptr_t& end) {
 	MODULEINFO dllinfo;
 	GetModuleInformation(GetCurrentProcess(), (HMODULE)ModuleHandle, &dllinfo, sizeof(MODULEINFO));

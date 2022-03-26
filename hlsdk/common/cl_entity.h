@@ -83,7 +83,8 @@ struct cl_entity_s
 
 	char gearbox_unknown[4]; //8
 	vec3_t origin; //12
-	char gearbox_unknown_[16]; //16
+	vec3_t angles; //24
+	float unknown2;
 	struct model_s* model; //40
 	char gearbox_unknown2[20]; //44
 

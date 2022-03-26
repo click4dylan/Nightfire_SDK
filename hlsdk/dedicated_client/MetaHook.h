@@ -83,4 +83,12 @@ extern cl_exportfuncs_s g_oExportFuncs;
 extern cl_enginefuncs_s g_oCL_EngineFuncs;
 extern struct enginefuncs_s* g_pEngineFuncs;
 extern cl_enginefuncs_s* g_pCL_EngineFuncs;
+extern struct engine_studio_api_s* g_pStudioModelAPI;
+extern class CStudioModelRenderer* g_pStudioAPI;
 extern void* g_pGlobalVariables;
+
+typedef void(*PauseMetaAudioPlaybackFn)();
+typedef void(*ResumeMetaAudioPlaybackFn)();
+extern PauseMetaAudioPlaybackFn g_oPauseMetaAudioPlayback;
+extern ResumeMetaAudioPlaybackFn g_oResumeMetaAudioPlayback;
+extern void PostFrame();

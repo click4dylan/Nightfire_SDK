@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <platformdll.h>
+#include <cache_user.h>
 
 #ifdef PPC
 typedef int MACBOOL;
@@ -115,7 +116,7 @@ enum GbxFileHandleType
     INVALID = -1
 };
 
-#define NIGHTFIRE_FILESYSTEM_VERSION 6
+#define NIGHTFIRE_FILESYSTEM_VERSION 7
 
 class NightfireFileSystem
 {
@@ -185,6 +186,10 @@ public:
     //COM_Parse: A0 ? ? ? ? 53 33 DB 3A C3 8B
     void(*COM_FreeFile)(void* file);
     //COM_FreeFile: 8B 44 24 04 85 C0 74 07 50 FF 15 ? ? ? ? C3 8B 44 24 0C 81 EC 00 04 00 00
+private:
+    unsigned char* (*COM_LoadFile_)(const char* path, Loadfilelocation loc, int* pLength);
+    //COM_LoadFile: 81 EC 14 01 00 00 55 8B AC ? ? ? ? ? 85 ED 56 57
+public:
     void* (*COM_LoadFileLimit)(char* name, int desired_start, int desired_end, int* end_used, HCOMFILE* comfile);
     //COM_LoadFileLimit: 83 EC 30 53 55 56 57 8B 7C 24 54 8B 47 08
     unsigned char* (*COM_LoadHeapFile)(const char* path, int* length);
@@ -272,6 +277,32 @@ public:
     int* SEEK_FROM_START;
     int* SEEK_FROM_CUR;
     int* SEEK_FROM_END;
+    cache_user_t** loadcache;
+    void*(*Cache_Alloc)(cache_user_t* c, int size, const char* name);
+    void(*Cache_Free)(cache_user_t* c);
+    void*(*Cache_Check)(cache_user_t* c);
+
+    inline unsigned char* COM_LoadFile(const char* path, Loadfilelocation loc, int* pLength)
+    {
+        unsigned char* result;
+        DWORD func = (DWORD)COM_LoadFile_;
+        __asm
+        {
+            push pLength
+            mov eax, loc
+            mov ebx, path
+            call func
+            mov result, eax
+            add esp, 4
+        }
+        return result;
+    }
+
+    inline unsigned char* COM_LoadCacheFile(const char* path, cache_user_t* cu)
+    {
+        *loadcache = cu;
+        return COM_LoadFile(path, Loadfilelocation::CACHE, nullptr);
+    }
 
     inline bool COM_EndOfFile(HCOMFILE& file)
     {

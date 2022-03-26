@@ -16,6 +16,7 @@ HWND g_EngWnd = nullptr;
 BOOLEAN g_bFullScreen = 1;
 BOOLEAN border = 0;
 BOOLEAN g_bDirectToConsole = 0;
+BOOLEAN g_bNoMetaAudio = 0;
 
 RECT g_WindowRect = { 0, 0 };
 unsigned g_WindowX = 0;
@@ -34,6 +35,7 @@ long g_platformDllHinst = NULL;
 long g_hRenderDLL = NULL;
 long g_hRawInputDLL = NULL;
 long* g_clientDllHinst = NULL;
+long g_gameDllHinst = NULL;
 HANDLE g_hRawInputThread = INVALID_HANDLE_VALUE;
 HANDLE g_hRawInputEvent = INVALID_HANDLE_VALUE;
 

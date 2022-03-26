@@ -25,6 +25,12 @@
     <Filter Include="Source Files\bzip2">
       <UniqueIdentifier>{ce5cf801-cc9c-4b1a-a86a-fd555e5b4593}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\fixes">
+      <UniqueIdentifier>{63052061-01e7-40ba-9bab-86223faa170f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\fixes">
+      <UniqueIdentifier>{a43fa359-1698-48eb-a3bd-e4a28e41836b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="conproc.cpp">
@@ -52,9 +58,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="timer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="fixes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pattern_scanner.cpp">
@@ -111,6 +114,9 @@
     <ClCompile Include="renderfuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fixes.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc">
@@ -157,9 +163,6 @@
     <ClInclude Include="timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="fixes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="pattern_scanner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -198,6 +201,9 @@
     </ClInclude>
     <ClInclude Include="renderfuncs.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fixes.h">
+      <Filter>Header Files\fixes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -33,6 +33,7 @@
 #include "timer.h"
 #include "MinHook/MinHook.h"
 #include "fixes.h"
+#include "MetaHook.h"
 
 extern void MakeLauncherVisible();
 
@@ -353,6 +354,9 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	if (CheckParm("-dedicated"))
 		g_bDedicated = 1;
 
+	if (CheckParm("-nometaaudio"))
+		g_bNoMetaAudio = 1;
+
 	if (CheckParm("-fullscreen"))
 		g_bFullScreen = 1;
 
@@ -386,13 +390,18 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	if (!g_bDedicated)
 	{
 		// prevent multiple instances
-		g_pMultipleInstanceMutex = new HANDLE;
-		*g_pMultipleInstanceMutex = CreateMutexA(0, true, "{7B9C6EAB-E1DD-4FE5-AE85-57A7CCDD608A}");
-
-		if (GetLastError() == ERROR_ALREADY_EXISTS || !*g_pMultipleInstanceMutex)
+#ifdef _DEBUG
+		if (!CheckParm("-allowmultipleinstances"))
 		{
-			CloseHandle(*g_pMultipleInstanceMutex);
-			exit(EXIT_FAILURE);
+#endif
+			g_pMultipleInstanceMutex = new HANDLE;
+			*g_pMultipleInstanceMutex = CreateMutexA(0, true, "{7B9C6EAB-E1DD-4FE5-AE85-57A7CCDD608A}");
+
+			if (GetLastError() == ERROR_ALREADY_EXISTS || !*g_pMultipleInstanceMutex)
+			{
+				CloseHandle(*g_pMultipleInstanceMutex);
+				exit(EXIT_FAILURE);
+			}
 		}
 	}
 
@@ -595,6 +604,8 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 				DWORD adr = (DWORD)render + der2 + 4;
 				DWORD der3 = *(DWORD*)adr;
 				((void(__thiscall*)(DWORD))* (DWORD*)(der3 + 0x10))(adr);
+
+				PostFrame();
 			}
 			else
 			{
@@ -605,6 +616,8 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 				((void(__thiscall*)(DWORD*, DWORD, DWORD))* (DWORD*)(*result + 0x40))(result, (DWORD)cursorpos.x, (DWORD)cursorpos.y);
 				iState = g_EngineAPI.Host_Frame((float)delta_time, DLL_ACTIVE, &iState2);
 				g_EngineAPI.GetEngineState();
+
+				PostFrame();
 			}
 
 			if (iState2 == DLL_TRANS || iState == DLL_CLOSE)

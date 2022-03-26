@@ -41,6 +41,7 @@ void NightfireFileSystem::Init(unsigned long engine_dll, unsigned long platform_
 	COM_ParseFile = (char* (*)(const char*, char*, unsigned int))FindMemoryPattern(engine_dll, "8B 44 24 04 56 50 E8 ? ? ? ? 8B 4C 24 14 8B 54 24 10 83 C4 04");
 	COM_Parse = (char*(*)(const char*))FindMemoryPattern(engine_dll, "A0 ? ? ? ? 53 33 DB 3A C3 8B");
 	COM_FreeFile = (void(*)(void*))FindMemoryPattern(engine_dll, "8B 44 24 04 85 C0 74 07 50 FF 15 ? ? ? ? C3 8B 44 24 0C 81 EC 00 04 00 00");
+	COM_LoadFile_ = (unsigned char* (*)(const char*, Loadfilelocation, int*))FindMemoryPattern(engine_dll, "81 EC 14 01 00 00 55 8B AC ? ? ? ? ? 85 ED 56 57", false);
 	COM_LoadFileLimit = (void* (*)(char*, int, int, int*, HCOMFILE*))FindMemoryPattern(engine_dll, "83 EC 30 53 55 56 57 8B 7C 24 54 8B 47 08");
 	COM_LoadHeapFile = (unsigned char* (*)(const char*, int*))FindMemoryPattern(engine_dll, "8B 44 24 08 53 8B 5C 24 08 50 B8 02 00 00 00 E8 ? ? ? ? 83 C4 04 5B C3");
 	COM_LoadHunkFile = (unsigned char* (*)(const char*))FindMemoryPattern(engine_dll, "53 8B 5C 24 08 6A 00 33 C0 E8 ? ? ? ? 83 C4 04 5B C3");
@@ -85,6 +86,10 @@ void NightfireFileSystem::Init(unsigned long engine_dll, unsigned long platform_
 	SEEK_FROM_CUR = (int*)GetProcAddress((HMODULE)platform_dll, "?SEEK_FROM_CUR@File@@2HB");
 	SEEK_FROM_END = (int*)GetProcAddress((HMODULE)platform_dll, "?SEEK_FROM_END@File@@2HB");
 	SEEK_FROM_START = (int*)GetProcAddress((HMODULE)platform_dll, "?SEEK_FROM_START@File@@2HB");
+	loadcache = *(cache_user_t***)((DWORD)COM_LoadFile_ + 0xC2);
+	Cache_Alloc = (void*(*)(cache_user_t*,int,const char*))FindMemoryPattern(engine_dll, "53 8B 5C 24 08 83 3B 00 55 8B 6C 24 14 56 57", false);
+	Cache_Free = (void(*)(cache_user_t*))FindMemoryPattern(engine_dll, "53 56 57 8B 7C 24 10 8B 07 33 DB 3B C3", false);
+	Cache_Check = (void*(*)(cache_user_t*))FindMemoryPattern(engine_dll, "57 8B 7C 24 08 8B 07 85 C0 75 02 5F C3", false);
 #ifdef _DEBUG
 	// rudimentary bugcheck, 32 bit only
 	for (unsigned long* off = (unsigned long*)this + 2; off != (unsigned long*)this + (sizeof(*this) / sizeof(unsigned long*)); ++off)

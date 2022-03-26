@@ -55,3 +55,17 @@ inline uintptr_t RelativeToAbsolute(uintptr_t address)
 {
 	return (address + 4 + *reinterpret_cast<unsigned int*>(address));
 }
+
+extern DWORD old_protection;
+extern void* protection_address;
+extern DWORD protection_length;
+template<class T> inline void PushProtection(T address, uintptr_t length = 4096)
+{
+	protection_address = (void*)address;
+	protection_length = length;
+	VirtualProtect((void*)address, length, PAGE_EXECUTE_READWRITE, &old_protection);
+}
+inline void PopProtection()
+{
+	VirtualProtect(protection_address, protection_length, old_protection, nullptr);
+}

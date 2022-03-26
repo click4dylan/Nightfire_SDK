@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32228.343
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "parseentvars", "parseentvars\parseentvars.vcxproj", "{F27C0FAD-C5C8-4E2C-93AD-DC59D6DC0EDC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F27C0FAD-C5C8-4E2C-93AD-DC59D6DC0EDC}.Debug|x64.ActiveCfg = Debug|x64
+		{F27C0FAD-C5C8-4E2C-93AD-DC59D6DC0EDC}.Debug|x64.Build.0 = Debug|x64
+		{F27C0FAD-C5C8-4E2C-93AD-DC59D6DC0EDC}.Debug|x86.ActiveCfg = Debug|Win32
+		{F27C0FAD-C5C8-4E2C-93AD-DC59D6DC0EDC}.Debug|x86.Build.0 = Debug|Win32
+		{F27C0FAD-C5C8-4E2C-93AD-DC59D6DC0EDC}.Release|x64.ActiveCfg = Release|x64
+		{F27C0FAD-C5C8-4E2C-93AD-DC59D6DC0EDC}.Release|x64.Build.0 = Release|x64
+		{F27C0FAD-C5C8-4E2C-93AD-DC59D6DC0EDC}.Release|x86.ActiveCfg = Release|Win32
+		{F27C0FAD-C5C8-4E2C-93AD-DC59D6DC0EDC}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {36639A3E-623C-41EC-814E-976418770A84}
+	EndGlobalSection
+EndGlobal

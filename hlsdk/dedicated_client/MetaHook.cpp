@@ -14,11 +14,17 @@ cl_exportfuncs_s g_oExportFuncs;
 cl_enginefuncs_s g_oCL_EngineFuncs;
 struct enginefuncs_s* g_pEngineFuncs = nullptr;
 struct cl_enginefuncs_s* g_pCL_EngineFuncs = nullptr;
+struct engine_studio_api_s* g_pStudioModelAPI = nullptr;
+class CStudioModelRenderer* g_pStudioAPI = nullptr;
 void* g_pGlobalVariables = nullptr;
 typedef void(*StartMetaAudioFn)(unsigned long hEngineDLL, NightfirePlatformFuncs* platform, NightfireFileSystem* filesystem, cl_exportfuncs_t* pExportFunc, cl_enginefunc_t* pEngineFuncs);
 typedef void(*ShutdownMetaAudioFn)();
+typedef void(*PauseMetaAudioPlaybackFn)();
+typedef void(*ResumeMetaAudioPlaybackFn)();
 StartMetaAudioFn g_oStartMetaAudio = NULL;
 ShutdownMetaAudioFn g_oShutdownMetaAudio = NULL;
+PauseMetaAudioPlaybackFn g_oPauseMetaAudioPlayback = NULL;
+ResumeMetaAudioPlaybackFn g_oResumeMetaAudioPlayback = NULL;
 long g_MetaAudioDllHinst = NULL;
 
 //client.dll override
@@ -35,13 +41,19 @@ int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 
 	if (result)
 	{
-		g_MetaAudioDllHinst = (long)LoadLibraryA("MetaAudio.dll");
-		if (g_MetaAudioDllHinst)
+		// load meta audio
+		if (!g_bNoMetaAudio)
 		{
-			g_oStartMetaAudio = (StartMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "StartMetaAudio");
-			g_oShutdownMetaAudio = (ShutdownMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "ShutdownMetaAudio");
-			if (g_oStartMetaAudio && g_oShutdownMetaAudio)
-				g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, &g_oExportFuncs, &g_oCL_EngineFuncs);
+			g_MetaAudioDllHinst = (long)LoadLibraryA("MetaAudio.dll");
+			if (g_MetaAudioDllHinst)
+			{
+				g_oStartMetaAudio = (StartMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "StartMetaAudio");
+				g_oShutdownMetaAudio = (ShutdownMetaAudioFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "ShutdownMetaAudio");
+				g_oPauseMetaAudioPlayback = (PauseMetaAudioPlaybackFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "PauseMetaAudio");
+				g_oResumeMetaAudioPlayback = (ResumeMetaAudioPlaybackFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "ResumeMetaAudio");
+				if (g_oStartMetaAudio && g_oShutdownMetaAudio && g_oPauseMetaAudioPlayback && g_oResumeMetaAudioPlayback)
+					g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, &g_oExportFuncs, &g_oCL_EngineFuncs);
+			}
 		}
 	}
 
@@ -61,9 +73,9 @@ int HUD_ClientAPI(int iVersion, int size, cl_exportfuncs_t* pClientFuncs)
 {
 	int(*oHUD_ClientAPI)(int, int, cl_exportfuncs_t*) = (int(*)(int, int, cl_exportfuncs_t*))GetProcAddress((HMODULE)*g_clientDllHinst, "HUD_ClientAPI");
 	
-	GetImportantOffsets();
-	Fix_Water_Hull();
-	Fix_RainDrop_WaterCollision();
+	GetImportantEngineOffsets();
+	GetImportantClientOffsets();
+	Fix_ClientDLL_Bugs();
 
 	int result = oHUD_ClientAPI(iVersion, size, pClientFuncs);
 	if (result == 1 && iVersion == 5 && size == sizeof(cl_exportfuncs_t) /*200*/)
@@ -126,4 +138,24 @@ void ShutdownMetaHook()
 
 	MH_DisableHook(0);
 	MH_Uninitialize();
+}
+
+
+#include <enginefuncs.h>
+#include <edict.h>
+
+void PostFrame()
+{
+	if (g_pCL_EngineFuncs->GetLevelName())
+	{
+		for (int i = 1; i <= 32; ++i)
+		{
+			edict_s* player = (edict_s*)g_pEngineFuncs->pfnPEntityOfEntIndex(i);
+			if (player && player->v.health > 0)
+			{
+				//g_pEngineFuncs->pfnPrecacheModel("models/3rd_person.mdl");
+				//g_pEngineFuncs->pfnSetModel((edict_t*)player, "models/3rd_person.mdl");
+			}
+		}
+	}
 }
