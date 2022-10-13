@@ -402,7 +402,9 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 				CloseHandle(*g_pMultipleInstanceMutex);
 				exit(EXIT_FAILURE);
 			}
+#ifdef _DEBUG
 		}
+#endif
 	}
 
 	clipboardformat = RegisterWindowMessageA("MSWHEEL_ROLLMSG");

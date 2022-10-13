@@ -134,7 +134,7 @@ typedef struct
 {
 	vec3_t position;
 } mvertex_t;
-//size: 0x12
+//size: 0xC
 
 // 06/23/2002 MAH
 // This structure is the same in QW source files

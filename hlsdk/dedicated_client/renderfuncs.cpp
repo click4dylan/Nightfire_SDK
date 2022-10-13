@@ -63,11 +63,11 @@ void RunRenderCode()
 				beam.modelIndex = beam_sprite;
 				beam.type = BEAM_POINTS;
 				beam.die = 0;
-				beam.r = 1;
-				beam.g = 0;
-				beam.b = 0;
+				beam.r = line.red / 255;
+				beam.g = line.green / 255;
+				beam.b = line.blue / 255;
 				beam.segments = 2;
-				beam.brightness = 255;
+				beam.brightness = line.alpha / 255;
 				beam.flags = FBEAM_ISACTIVE;
 				beam.speed = 1;
 				beam.frameRate = 1;

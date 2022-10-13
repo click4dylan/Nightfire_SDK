@@ -3,7 +3,6 @@
 //#include <extdll.h>	
 //#include <CVector.h>
 //#include "CString.h"
-//#include <usercmd.h>
 //#include "entity.h"
 //#include <gpglobals.h>
 //#include <const.h>
@@ -14,6 +13,7 @@
 #include "MinHook/MinHook.h"
 #include <event_api.h>
 #include "MetaHook.h"
+#include <usercmd.h>
 #include <cvardef.h>
 #include <clientsideentity.h>
 #include <NightfireFileSystem.h>
@@ -1638,4 +1638,9 @@ void Fix_GUI_GetAction_Crash()
 
 	PlaceJMP((BYTE*)adr, (DWORD)&GUI_GetAction_Return, 5);
 	GUI_GetAction_JmpBack = adr + 8;
+}
+
+void Fix_HighFPSBugs()
+{
+	usercmd_t test;
 }

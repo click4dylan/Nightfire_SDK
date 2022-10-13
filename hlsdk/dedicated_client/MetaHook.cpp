@@ -114,8 +114,8 @@ void RunMetaHook()
 {
 	// hook renderer temporarily for debugging
 #ifdef _DEBUG
-	//Hook_SCR_ConnectMsg();
-	//Hook_CL_PrecacheResources();
+	Hook_SCR_ConnectMsg();
+	Hook_CL_PrecacheResources();
 #endif
 
 
