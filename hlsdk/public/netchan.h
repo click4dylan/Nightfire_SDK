@@ -28,13 +28,72 @@ enum
 	MAX_STREAMS
 };
 
-#pragma pack(push, 1)
-struct netchan_temp
+enum
 {
-	unsigned char gap0[92];
+	FLOW_OUTGOING = 0,
+	FLOW_INCOMING,
+	MAX_FLOWS
+};
+
+#include <netadr.h>
+
+// Message data
+typedef struct flowstats_s
+{
+	// Size of message sent/received
+	int size;
+	// Time that message was sent/received
+	double time;
+} flowstats_t;
+
+const int MAX_LATENT = 32;
+
+typedef struct flow_s
+{
+	// Data for last MAX_LATENT messages
+	flowstats_t stats[MAX_LATENT];
+	// Current message position
+	int current;
+	// Time when we should recompute k/sec data
+	double nextcompute;
+	// Average data
+	float kbytespersec;
+	float avgkbytespersec;
+} flow_t;
+
+typedef enum netsrc_s
+{
+	NS_CLIENT,
+	NS_SERVER,
+	NS_MULTICAST	// xxxMO
+} netsrc_t;
+
+typedef struct netchan_s
+{
+	netsrc_t sock;
+	netadr_t remote_address; //4
+	int player_slot; //24
+	float last_received; //28
+	float connect_time; //32
+	//BYTE gap24[4]; //36
+	double rate; //40
+	double cleartime; //48
+	int incoming_sequence; //56, untested
+	int incoming_acknowledged; //60, untested
+	int incoming_reliable_acknowledged; //64
+	int incoming_reliable_sequence; //68, untested
+	int outgoing_sequence; //70, untested
+	int reliable_sequence; //76
+	int last_reliable_sequence; //80
+	void* connection_status; //84
+	int(__cdecl* pfnNetchan_Blocksize)(void*); //88
 	sizebuf_t message; //92
-	char gap1[7988]; //112
-	fragbufwaiting_s* waitlist[2]; //8100
+	byte message_buf[MAX_MSGLEN]; //112
+	//char gap1[2]; //112
+	int reliable_length; //4104
+	byte reliable_buf[MAX_MSGLEN]; //4108
+	//char gap2[2]; //4108
+	fragbufwaiting_s* waitlist[MAX_STREAMS]; //8100
 	int reliable_fragment[MAX_STREAMS];//1FAC  8108
 	unsigned int reliable_fragid[MAX_STREAMS]; //0x1FB4 8116
 	fragbuf_t* fragbufs[MAX_STREAMS];
@@ -43,109 +102,12 @@ struct netchan_temp
 	short frag_length[MAX_STREAMS];//1FD0 8144
 	fragbuf_t* incomingbufs[MAX_STREAMS]; //8148
 	qboolean incomingready[MAX_STREAMS];//1FDC 8156
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-struct netchan2
-{
-	unsigned char gap0[84];
-	DWORD connection_status; //84
-	int(__cdecl* pfnNetchan_Blocksize)(DWORD); //88
-	char pad[8008]; //92
-	fragbufwaiting_s* waitlist[2]; //8100
-};
-#pragma pack(pop)
-
-struct netchan5
-{
-	char char0;
-	__declspec(align(4)) char char4;
-	BYTE gap5[19];
-	DWORD player_slot;
-	float last_received;
-	float connect_time;
-	BYTE gap24[4];
-	double rate;
-	BYTE gap30[24];
-	DWORD dword48;
-	BYTE gap4C[8];
-	DWORD connection_status;
-	DWORD pfnNetchan_Blocksize;
-	DWORD message_buffername;
-	WORD word60;
-	DWORD message_data;
-	DWORD message_maxsize;
-};
-
-struct netchan4
-{
-	unsigned char gap0[8124];
-	DWORD* fragbufs[2];
-};
-
-struct netchan6
-{
-	netchan4 netchan40;
-	BYTE gap1FC4[12];
-	WORD word1FD0;
-	BYTE gap1FD2[274];
-	void* tempbuffer;
-
-	double& cleartime()
-	{
-		return *(double*)&netchan40.gap0[48];
-	}
-	int& reliable_length()
-	{
-		return *(int*)&netchan40.gap0[4104];
-	}
-};
-
-struct netchan3
-{
-	unsigned char gap0[108];
-	int message_cursize;
-};
-
-
-struct netchan7
-{
-	netchan3 netchan30;
-	char char70;
-	BYTE gap71[3991];
-	DWORD dword1008;
-	char char100C;
-	BYTE gap100D[3999];
-	DWORD dword1FAC;
-	BYTE gap1FB0[4];
-	DWORD dword1FB4;
-	BYTE gap1FB8[4];
-	int int1FBC;
-	BYTE gap1FC0[12];
-	WORD word1FCC;
-	WORD word1FCE;
-	__int16 int161FD0;
-	BYTE gap1FD2[790];
-	DWORD dword22E8;
-
-	int& incoming_acknowleged()
-	{
-		return *(int*)&netchan30.gap0[60];
-	}
-	int& last_reliable_sequence()
-	{
-		return *(int*)&netchan30.gap0[80];
-	}
-	int& reliable_sequence()
-	{
-		return *(int*)&netchan30.gap0[76];
-	}
-	int incoming_reliable_acknowledged()
-	{
-		return *(int*)&netchan30.gap0[64];
-	}
-};
+	char incomingfilename[MAX_PATH]; //8158
+	void* tempbuffer; //8420
+	//int tempbuffersize; // not in nightfire
+	flow_t flow[MAX_FLOWS];
+} netchan_t;
+//size: 0x2518, 9496 bytes
 
 //was 100 in nf
 #define MAX_FPS 1000

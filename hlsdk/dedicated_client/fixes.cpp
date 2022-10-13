@@ -727,9 +727,9 @@ void Fix_ClientDLL_Bugs()
 void(*g_oNetchan_ClearFragments)(netchan_s*);
 void(*g_oNetchan_CreateFragments)(BOOL, netchan_s*, sizebuf_s*);
 void(*g_oNetchan_CreateFragments_)(BOOL, netchan_s*, sizebuf_s*);
-void (*g_oNetchan_Setup)(int, netchan5*, char, int, int, int, int, int, int, int);
+void (*g_oNetchan_Setup)(netsrc_t socketnumber, netchan_t* chan, netadr_t adr, int player_slot, void* connection_status, int(*pfnNetchan_Blocksize)(void*));
 void(*g_oNetchan_FragSend)(netchan_s* chan);
-void(*g_oNetchan_Clear)(netchan6* a1);
+void(*g_oNetchan_Clear)(netchan_t* a1);
 qboolean (*g_oNetchan_Validate)(netchan_s* chan, qboolean* frag_message, unsigned int* fragid, int* frag_offset, int* frag_length);
 DWORD g_Netchan_Transit_FragSend_Retadr;
 DWORD g_NetchanCreateFragments_Transmit_Retadr;
@@ -787,7 +787,6 @@ void Netchan_CreateFragments_(BOOL server, netchan_s* chan, sizebuf_s* msg)
 #ifndef HOOK_NETCHAN_CREATEFRAGMENTS_
 	return g_oNetchan_CreateFragments_(server, chan, msg);
 #else
-	netchan2* nchan = (netchan2*)chan;
 	fragbuf_t* buf;
 	int chunksize;
 	int send;
@@ -816,7 +815,7 @@ void Netchan_CreateFragments_(BOOL server, netchan_s* chan, sizebuf_s* msg)
 	}
 #endif
 
-	chunksize = nchan->pfnNetchan_Blocksize(nchan->connection_status);
+	chunksize = chan->pfnNetchan_Blocksize(chan->connection_status);
 
 	wait = (fragbufwaiting_t*)g_pNightfirePlatformFuncs->mallocx(sizeof(fragbufwaiting_t));
 	memset(wait, 0, sizeof(fragbufwaiting_t));
@@ -845,13 +844,13 @@ void Netchan_CreateFragments_(BOOL server, netchan_s* chan, sizebuf_s* msg)
 	}
 
 	// Now add waiting list item to the end of buffer queue
-	if (!nchan->waitlist[FRAG_NORMAL_STREAM])
+	if (!chan->waitlist[FRAG_NORMAL_STREAM])
 	{
-		nchan->waitlist[FRAG_NORMAL_STREAM] = wait;
+		chan->waitlist[FRAG_NORMAL_STREAM] = wait;
 	}
 	else
 	{
-		p = nchan->waitlist[FRAG_NORMAL_STREAM];
+		p = chan->waitlist[FRAG_NORMAL_STREAM];
 		while (p->next)
 		{
 			p = p->next;
@@ -874,12 +873,11 @@ void Hooked_Netchan_CreateFragments(BOOL server, netchan_s* chan, sizebuf_s* msg
 		return;
 	}
 
-	netchan_temp* nchan = (netchan_temp*)chan;
 	// Always queue any pending reliable data ahead of the fragmentation buffer
-	if (nchan->message.cursize > 0)
+	if (chan->message.cursize > 0)
 	{
-		Netchan_CreateFragments_(server, chan, &nchan->message);
-		nchan->message.cursize = 0;
+		Netchan_CreateFragments_(server, chan, &chan->message);
+		chan->message.cursize = 0;
 	}
 
 	Netchan_CreateFragments_(server, chan, msg);
@@ -892,23 +890,19 @@ BOOL Netchan_CopyNormalFragments(netchan_s* chan)
 #ifndef HOOK_NETCHAN_COPYNORMALFRAGMENTS
 	return g_oNetchan_CopyNormalFragments(chan);
 #else
-	netchan_temp* nchan = (netchan_temp*)chan;
 	fragbuf_t* p, *n;
 
-	DWORD adr = (DWORD)&nchan->incomingready - (DWORD)nchan;
-	DWORD adr2 = (DWORD)&nchan->incomingbufs - (DWORD)nchan;
-
-	if (!nchan->incomingready[FRAG_NORMAL_STREAM])
+	if (!chan->incomingready[FRAG_NORMAL_STREAM])
 		return FALSE;
 
-	if (!nchan->incomingbufs[FRAG_NORMAL_STREAM])
+	if (!chan->incomingbufs[FRAG_NORMAL_STREAM])
 	{
 		//Con_Printf("%s:  Called with no fragments readied\n", __func__);
-		nchan->incomingready[FRAG_NORMAL_STREAM] = FALSE;
+		chan->incomingready[FRAG_NORMAL_STREAM] = FALSE;
 		return FALSE;
 	}
 
-	p = nchan->incomingbufs[FRAG_NORMAL_STREAM];
+	p = chan->incomingbufs[FRAG_NORMAL_STREAM];
 
 	SZ_Clear(g_net_message);
 	MSG_BeginReading();
@@ -938,8 +932,8 @@ BOOL Netchan_CopyNormalFragments(netchan_s* chan)
 #endif
 		SZ_Clear(g_net_message);
 
-		nchan->incomingbufs[FRAG_NORMAL_STREAM] = nullptr;
-		nchan->incomingready[FRAG_NORMAL_STREAM] = FALSE;
+		chan->incomingbufs[FRAG_NORMAL_STREAM] = nullptr;
+		chan->incomingready[FRAG_NORMAL_STREAM] = FALSE;
 
 		return FALSE;
 	}
@@ -955,8 +949,8 @@ BOOL Netchan_CopyNormalFragments(netchan_s* chan)
 	}
 #endif
 
-	nchan->incomingbufs[FRAG_NORMAL_STREAM] = nullptr;
-	nchan->incomingready[FRAG_NORMAL_STREAM] = FALSE;
+	chan->incomingbufs[FRAG_NORMAL_STREAM] = nullptr;
+	chan->incomingready[FRAG_NORMAL_STREAM] = FALSE;
 #endif
 
 	return TRUE;
@@ -984,19 +978,17 @@ void Netchan_ClearFragbufs(fragbuf_t** ppbuf)
 
 void Netchan_FlushIncoming(netchan_s* chan, int stream)
 {
-	netchan_temp* nchan = (netchan_temp*)chan;
-	netchan5* nchan5 = (netchan5*)chan;
 	fragbuf_t* p, * n;
 
 	int current_server_client = *host_client - *svs_clients;
 
-	if ((nchan5->player_slot - 1) == *host_client - *svs_clients)
+	if ((chan->player_slot - 1) == *host_client - *svs_clients)
 	{
 		SZ_Clear(g_net_message);
 		*msg_readcount = 0;
 	}
 
-	p = nchan->incomingbufs[stream];
+	p = chan->incomingbufs[stream];
 	while (p)
 	{
 		n = p->next;
@@ -1004,8 +996,8 @@ void Netchan_FlushIncoming(netchan_s* chan, int stream)
 		p = n;
 	}
 
-	nchan->incomingbufs[stream] = nullptr;
-	nchan->incomingready[stream] = FALSE;
+	chan->incomingbufs[stream] = nullptr;
+	chan->incomingready[stream] = FALSE;
 }
 
 void Netchan_ClearFragments(netchan_s* chan)
@@ -1014,12 +1006,10 @@ void Netchan_ClearFragments(netchan_s* chan)
 	g_oNetchan_ClearFragments(chan);
 	return;
 #else
-	netchan_temp* nchan = (netchan_temp*)chan;
-	netchan2* nchan2 = (netchan2*)chan;
 	fragbufwaiting_t* wait, * next;
 	for (int i = 0; i < MAX_STREAMS; i++)
 	{
-		wait = nchan2->waitlist[i];
+		wait = chan->waitlist[i];
 		while (wait)
 		{
 			next = wait->next;
@@ -1027,15 +1017,15 @@ void Netchan_ClearFragments(netchan_s* chan)
 			g_pNightfirePlatformFuncs->freex(wait);
 			wait = next;
 		}
-		nchan2->waitlist[i] = nullptr;
+		chan->waitlist[i] = nullptr;
 
-		Netchan_ClearFragbufs(&nchan->fragbufs[i]);
+		Netchan_ClearFragbufs(&chan->fragbufs[i]);
 		Netchan_FlushIncoming(chan, i);
 	}
 #endif
 }
 
-void Netchan_Clear(netchan6* a1)
+void Netchan_Clear(netchan_s* chan)
 {
 #ifndef HOOK_NETCHAN_CLEAR
 	g_oNetchan_Clear(a1);
@@ -1044,82 +1034,67 @@ void Netchan_Clear(netchan6* a1)
 	WORD* p_word1FD0; // edx
 	DWORD* v3; // eax
 
-	netchan7* nchan = (netchan7*)a1;
+	Netchan_ClearFragments(chan);
+	chan->cleartime = 0.0;
 
-	Netchan_ClearFragments((netchan_s*)a1);
-	a1->cleartime() = 0.0;
-
-	if (a1->reliable_length())
+	if (chan->reliable_length)
 	{
 		//Con_DPrintf("%s: reliable length not 0, reliable_sequence: %d, incoming_reliable_acknowledged: %d\n", __func__, chan->reliable_length, chan->incoming_reliable_acknowledged);
-		nchan->reliable_sequence() ^= 1;
-		a1->reliable_length() = 0;
+		chan->reliable_sequence ^= 1;
+		chan->reliable_length = 0;
 	}
-	
-	v1 = 0;
-	p_word1FD0 = &a1->word1FD0;
-	v3 = (DWORD*)&a1->netchan40.gap0[8108];
 	
 	for (int i = 0; i < MAX_STREAMS; ++i)
 	{
-		v3[2] = 0;
-		*v3 = 0;
-		v3[6] = 0;
-		*(p_word1FD0 - 2) = 0;
-		*p_word1FD0 = 0;
-		a1->gap1FD2[v1++ + 10] = 0;
-		++v3;
-		++p_word1FD0;
+		chan->reliable_fragid[i] = 0;
+		chan->reliable_fragment[i] = 0;
+		chan->fragbufcount[i] = 0;
+		chan->frag_startpos[i] = 0;
+		chan->frag_length[i] = 0;
+		chan->incomingready[i] = FALSE;
 	}
 
-	if (a1->tempbuffer)
+	if (chan->tempbuffer)
 	{
-		g_pNightfirePlatformFuncs->freex(a1->tempbuffer);
-		a1->tempbuffer = 0;
+		g_pNightfirePlatformFuncs->freex(chan->tempbuffer);
+		chan->tempbuffer = 0;
 	}
+	//chan->tempbuffersize = 0; // not in nightfire
 #endif
 }
 
-void Netchan_Setup(int a1, netchan5* a2, char a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10)
+void Netchan_Setup(netsrc_t socketnumber, netchan_t* chan, netadr_t adr, int player_slot, void* connection_status, int(*pfnNetchan_Blocksize)(void*))
 {
 #ifndef HOOK_NETCHAN_SETUP
-	g_oNetchan_Setup(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+	g_oNetchan_Setup(socketnumber, chan, adr, player_slot, connection_status, pfnNetchan_Blocksize);
 #else
-	int v10; // eax
-	int v11; // ecx
-	int result; // eax
-
-	netchan_temp* nchan = (netchan_temp*)a2;
-	Netchan_Clear((netchan6*)a2);
-	memset(a2, 0, 9496);
-	v10 = a8;
-	*&a2->char0 = a1;
-	a2->player_slot = v10 + 1;
-	memcpy(&a2->char4, &a3, 0x14u);
-	a2->last_received = *realtime;
-	a2->connect_time = *realtime;
-	v11 = a10;
-	nchan->message.cursize = 0;
-	a2->word60 = 1;
-	a2->dword48 = 1;
-	result = a9;
-	if (a2->player_slot != -1)
+	Netchan_Clear(chan);
+	memset(chan, 0, 9496);
+	chan->sock = socketnumber;
+	chan->player_slot = player_slot + 1;
+	chan->remote_address = adr;
+	chan->last_received = *realtime;
+	chan->connect_time = *realtime;
+	chan->message.cursize = 0;
+	chan->message.flags = 1; //SIZEBUF_ALLOW_OVERFLOW
+ 
+	if (chan->player_slot != -1)
 	{
-		nchan->message.data = g_ExtendedMessageBuffer[a2->player_slot];
-		nchan->message.maxsize = NET_MAX_PAYLOAD;
+		chan->message.data = g_ExtendedMessageBuffer[chan->player_slot];
+		chan->message.maxsize = NET_MAX_PAYLOAD;
 	}
 	else
 	{
-		a2->message_data = (DWORD)(a2 + 1);
-		a2->message_maxsize = 3990;
+		chan->message.data = chan->message_buf;
+		chan->message.maxsize = sizeof(chan->message_buf);
 	}
-	a2->message_buffername = (DWORD)"netchan->message";
+	chan->message.buffername = "netchan->message";
 	// nightfire fix, use cl_rate value:
 	static ConsoleVariable* cl_rate = g_pEngineFuncs->pfnGetConsoleVariableGame("cl_rate");
 	double rate = cl_rate ? max(min(cl_rate->getValueFloat(), 1000), MAX_RATE) : DEFAULT_RATE;
-	a2->rate = rate;
-	a2->connection_status = result;
-	a2->pfnNetchan_Blocksize = v11;
+	chan->rate = rate;
+	chan->connection_status = connection_status;
+	chan->pfnNetchan_Blocksize = pfnNetchan_Blocksize;
 #endif
 }
 
@@ -1130,11 +1105,10 @@ void Netchan_FragSend(netchan_s* chan)
 #else
 	if ((DWORD)_ReturnAddress() == g_Netchan_Transit_FragSend_Retadr)
 	{
-		netchan_temp* nchan = (netchan_temp*)chan;
-		if (nchan->message.cursize > MAX_MSGLEN)
+		if (chan->message.cursize > MAX_MSGLEN)
 		{
-			Netchan_CreateFragments_(chan == cls_netchan ? 1 : 0, chan, &nchan->message);
-			SZ_Clear(&nchan->message);
+			Netchan_CreateFragments_(chan == cls_netchan ? 1 : 0, chan, &chan->message);
+			SZ_Clear(&chan->message);
 		}
 	}
 	g_oNetchan_FragSend(chan);
