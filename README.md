@@ -7,4 +7,8 @@ Only the game's executable (located in dedicated_client), metamod and amxmodx ar
 
 amxmodx is currently not compilable as it is being transitioned from using an older fork of metamod for nightfire
 
-REQUIREMENTS: create environment variable in Windows called HLSDK and point it to the hlsdk directory create environment variable in Windows called METAMOD and point it to the metamod\metamod-hl1-master directory
+REQUIREMENTS: create environment variable in Windows called HLSDK and point it to the hlsdk directory, create environment variable in Windows called METAMOD and point it to the metamod\metamod-hl1-master directory
+
+Minimum requirements to compile: Visual Studio 2010 (C++) with SP1 and KB2736182 update, Visual Studio 2015 (C++) with Update 3 and XP support selected in installation options, Windows SDK 8.1.
+
+Unfortunately Visual Studio 2019 and up is no longer supported because of lack of support for Windows XP in >14.26
