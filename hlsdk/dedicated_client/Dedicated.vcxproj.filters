@@ -31,6 +31,9 @@
     <Filter Include="Header Files\fixes">
       <UniqueIdentifier>{a43fa359-1698-48eb-a3bd-e4a28e41836b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\engine">
+      <UniqueIdentifier>{397cf766-5a5e-43ef-8ba3-abef24d9225d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="conproc.cpp">
@@ -116,6 +119,9 @@
     </ClCompile>
     <ClCompile Include="fixes.cpp">
       <Filter>Source Files\fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="sv_user.cpp">
+      <Filter>Source Files\engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

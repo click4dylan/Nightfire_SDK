@@ -53,10 +53,11 @@
 #include "usercmd.h"
 #endif
 
+// nightfire
 // physent_t
 typedef struct physent_s
 {
-	char			name[32];             // Name of model, or "player" or "world".
+	char			name[64];             // Name of model, or "player" or "world".
 	int				player;
 	vec3_t			origin;               // Model's origin in world coordinates.
 	struct model_s	*model;		          // only for bsp models
@@ -80,6 +81,8 @@ typedef struct physent_s
 	int				blooddecal;
 	int				team;
 	int				classnumber;
+	
+	int unknown;
 
 	// For mods
 	int				iuser1;
@@ -96,12 +99,13 @@ typedef struct physent_s
 	vec3_t			vuser4;
 } physent_t;
 
+// nightfire
 typedef struct playermove_s
 {
 	int				player_index;  // So we don't try to run the PM_CheckStuck nudging too quickly.
-	qboolean		server;        // For debugging, are we running physics code on server side?
+	bool_nightfire		server;        // For debugging, are we running physics code on server side?
 
-	qboolean		multiplayer;   // 1 == multiplayer server
+	bool_nightfire		multiplayer;   // 1 == multiplayer server
 	float			time;          // realtime on host, for reckoning duck timing
 	float			frametime;	   // Duration of this frame
 
@@ -117,7 +121,15 @@ typedef struct playermove_s
 	// For ducking/dead
 	vec3_t			view_ofs;      // Our eye position.
 	float			flDuckTime;    // Time we started duck
-	qboolean		bInDuck;       // In process of ducking or ducked already?
+	
+	float flLeanLeftTime;
+	float flLeanRightTime;
+	
+	bool_nightfire		bInDuck;       // In process of ducking or ducked already?
+	
+	bool_nightfire bInLeanLeft;
+	bool_nightfire bInLeanRight;
+	vec3_t preleanangles;
 	
 	// For walking/falling
 	int				flTimeStepSound;  // Next time we can play a step sound
@@ -138,7 +150,7 @@ typedef struct playermove_s
 	float			friction;
 	int				oldbuttons;    // Buttons last usercmd
 	float			waterjumptime; // Amount of time left in jumping out of water cycle.
-	qboolean		dead;          // Are we a dead player?
+	bool_nightfire		dead;          // Are we a dead player?
 	int				deadflag;
 	int				spectator;     // Should we use spectator physics model?
 	int				movetype;      // Our movement type, NOCLIP, WALK, FLY
@@ -153,6 +165,8 @@ typedef struct playermove_s
 
 	float			maxspeed;
 	float			clientmaxspeed; // Player specific maxspeed
+	
+	int jetpackfuel;
 
 	// For mods
 	int				iuser1;
@@ -220,7 +234,7 @@ typedef struct playermove_s
 
 	// Functions
 	// Run functions for this frame?
-	qboolean		runfuncs;      
+	bool_nightfire		runfuncs;      
 	void			(*PM_PlaySound) ( int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch );
 	const char		*(*PM_TraceTexture) ( int ground, float *vstart, float *vend );
 	void			(*PM_PlaybackEventFull) ( int flags, int clientindex, unsigned short eventindex, float delay, float *origin, float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 );

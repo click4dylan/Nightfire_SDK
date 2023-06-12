@@ -25,6 +25,7 @@
 #include "const.h"
 
 #define MAX_QPATH 64    // Must match value in quakedefs.h
+#define MAX_RESOURCE_LIST	1792
 
 /////////////////
 // Customization
@@ -63,19 +64,16 @@ typedef struct resourceinfo_s
 
 #include "crc.h"
 
+
 typedef struct resource_s
 {
 	char              szFileName[MAX_QPATH]; // File name to download/precache.
-	resourcetype_t    type;                // t_sound, t_skin, t_model, t_decal.
-	int               nIndex;              // For t_decals
-	int               nDownloadSize;       // Size in Bytes if this must be downloaded.
-	unsigned char     ucFlags;
-
-// For handling client to client resource propagation
 	unsigned char     rgucMD5_hash[16];    // To determine if we already have it.
-	unsigned char     playernum;           // Which player index this resource is associated with, if it's a custom resource.
-
-	unsigned char	  rguc_reserved[ 32 ]; // For future expansion
+	int               nDownloadSize;       // Size in Bytes if this must be downloaded.
+	int               nIndex;              // For t_decals
+	unsigned char     ucFlags;
+	resourcetype_t    type;                // t_sound, t_skin, t_model, t_decal.
+	unsigned char	  rguc_reserved[32]; // For future expansion
 	struct resource_s *pNext;              // Next in chain.
 	struct resource_s *pPrev;
 } resource_t;

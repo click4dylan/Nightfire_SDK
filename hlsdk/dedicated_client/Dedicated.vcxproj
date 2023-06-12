@@ -22,8 +22,8 @@
     <SccProjectName />
     <SccLocalPath />
     <ProjectGuid>{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}</ProjectGuid>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
     <ProjectName>Launcher007</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -335,6 +335,7 @@
     <ClCompile Include="NightfireFileSystem.cpp" />
     <ClCompile Include="pattern_scanner.cpp" />
     <ClCompile Include="renderfuncs.cpp" />
+    <ClCompile Include="sv_user.cpp" />
     <ClCompile Include="sys_ded.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="video.cpp" />

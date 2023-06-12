@@ -32,7 +32,10 @@ typedef float vec3_t[3];
 #include <platformdll.h>
 #include <enginefuncs.h>
 #include <globalvars.h>
+#include <server.h>
 
+
+server_t* g_psv = nullptr;
 struct cl_entity_s** g_rCurrentEntity = nullptr;
 int* svs_maxclients = 0;
 void(*EV_SetTraceHull)(int hull) = 0;
@@ -93,16 +96,21 @@ void GetImportantEngineOffsets()
 		if (g_rCurrentEntity)
 			g_rCurrentEntity = *(struct cl_entity_s***)((DWORD)g_rCurrentEntity + 1);
 	}
-
+	if (!g_psv)
+	{
+		DWORD adr = FindMemoryPattern(g_engineDllHinst, "68 ? ? ? ? FF 15 ? ? ? ? 8B 3D ? ? ? ? 6A 40", false);
+		if (adr)
+			g_psv = *(server_t**)(adr + 1);
+	}
 }
 
 void GetImportantClientOffsets()
 {
 	if (!g_clientDllHinst)
 		return;
-	DWORD studiorenderapi = FindMemoryPattern((DWORD)*g_clientDllHinst, "B9 ?? ?? ?? ?? E8 ?? ?? ?? ?? B8 01 00 00 00 5D C3", false);
+	DWORD studiorenderapi = FindMemoryPattern((DWORD)*g_clientDllHinst, "B9 ? ? ? ? E8 ? ? ? ? B8 01 00 00 00 5D C3", false);
 	if (studiorenderapi)
-		g_pStudioAPI = *(class CStudioModelRenderer**)FindMemoryPattern((DWORD)*g_clientDllHinst, "B9 ?? ?? ?? ?? E8 ?? ?? ?? ?? B8 01 00 00 00 5D C3", false);
+		g_pStudioAPI = *(class CStudioModelRenderer**)FindMemoryPattern((DWORD)*g_clientDllHinst, "B9 ? ? ? ? E8 ? ? ? ? B8 01 00 00 00 5D C3", false);
 }
 
 DWORD GUI_GetAction_JmpBack;
