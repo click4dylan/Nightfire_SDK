@@ -312,6 +312,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\public\platformdll.cpp" />
+    <ClCompile Include="AITurnSpeed.cpp" />
     <ClCompile Include="bzip2\src\blocksort.c" />
     <ClCompile Include="bzip2\src\bzlib.c" />
     <ClCompile Include="bzip2\src\compress.c" />
@@ -333,13 +334,17 @@
     <ClCompile Include="MinHook\hook.c" />
     <ClCompile Include="MinHook\trampoline.c" />
     <ClCompile Include="NightfireFileSystem.cpp" />
+    <ClCompile Include="nightfire_hooks.cpp" />
+    <ClCompile Include="nightfire_pointers.cpp" />
     <ClCompile Include="pattern_scanner.cpp" />
+    <ClCompile Include="PlayerModelCrash.cpp" />
     <ClCompile Include="renderfuncs.cpp" />
     <ClCompile Include="sv_user.cpp" />
     <ClCompile Include="sys_ded.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="video.cpp" />
     <ClCompile Include="VTHook.cpp" />
+    <ClCompile Include="WaterPrediction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc" />
@@ -365,6 +370,7 @@
     <ClInclude Include="MinHook\hde\table64.h" />
     <ClInclude Include="MinHook\MinHook.h" />
     <ClInclude Include="MinHook\trampoline.h" />
+    <ClInclude Include="nightfire_hooks.h" />
     <ClInclude Include="pattern_scanner.h" />
     <ClInclude Include="renderfuncs.h" />
     <ClInclude Include="resource.h" />

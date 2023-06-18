@@ -8,13 +8,7 @@ extern void ShutdownMetaHook();
 #include <winsani_out.h>
 #include <stdio.h>
 
-typedef float vec_t;
-typedef float vec2_t[2];
-typedef float vec3_t[3];
-struct CommonVector
-{
-	float x, y, z;
-};
+#include <vector_types.h>
 
 #include <wrect.h>
 #include <interface.h>
@@ -80,9 +74,7 @@ typedef struct cl_exportfuncs_s
 cl_exportfuncs_t;
 
 extern cl_exportfuncs_s g_oExportFuncs;
-extern cl_enginefuncs_s g_oCL_EngineFuncs;
 extern struct enginefuncs_s* g_pEngineFuncs;
-extern cl_enginefuncs_s* g_pCL_EngineFuncs;
 extern struct engine_studio_api_s* g_pStudioModelAPI;
 extern class CStudioModelRenderer* g_pStudioAPI;
 extern void* g_pGlobalVariables;

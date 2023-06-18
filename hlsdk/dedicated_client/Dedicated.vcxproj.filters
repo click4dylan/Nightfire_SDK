@@ -123,6 +123,21 @@
     <ClCompile Include="sv_user.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
+    <ClCompile Include="nightfire_hooks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nightfire_pointers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerModelCrash.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="AITurnSpeed.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="WaterPrediction.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc">
@@ -210,6 +225,9 @@
     </ClInclude>
     <ClInclude Include="fixes.h">
       <Filter>Header Files\fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="nightfire_hooks.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -21,6 +21,8 @@
 #endif /* not __MINGW32__ */
 #endif
 
+#include <vector_types.h>
+
 #include "archtypes.h"     // DAL
 #define	MAX_PHYSENTS 600 		  // Must have room for all entities in the world.
 #define MAX_MOVEENTS 64
@@ -52,6 +54,8 @@
 #if !defined ( USERCMD_H )
 #include "usercmd.h"
 #endif
+
+#include <bool_nightfire.h>
 
 // nightfire
 // physent_t

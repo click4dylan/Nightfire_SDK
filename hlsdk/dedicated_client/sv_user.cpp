@@ -34,8 +34,8 @@ typedef float vec3_t[3];
 #include <globalvars.h>
 
 #include <server.h>
+#include "nightfire_pointers.h"
 
-extern server_t* g_psv;
 extern double* host_frametime;
 
 void SV_EstablishTimeBase(client_t *cl, usercmd_t *cmds, int dropped, int numbackup, int numcmds)
@@ -77,5 +77,5 @@ void SV_EstablishTimeBase(client_t *cl, usercmd_t *cmds, int dropped, int numbac
 		time_at_end += cmds[i].msec / 1000.0;
 	}
 
-	cl->svtimebase = *host_frametime + g_psv->time - (time_at_end + runcmd_time);
+	cl->svtimebase = *host_frametime + (*g_Pointers.g_psv)->time - (time_at_end + runcmd_time);
 }

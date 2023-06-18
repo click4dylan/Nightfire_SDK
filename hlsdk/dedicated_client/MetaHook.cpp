@@ -6,14 +6,15 @@
 #include <platformdll.h>
 #include "fixes.h"
 #include "renderfuncs.h"
+#include <nightfire_pointers.h>
+#include <enginefuncs.h>
+#include <edict.h>
 
 void(*g_oClientDLL_Init)() = nullptr;
 cl_exportfuncs_t* g_pExportFuncs;
 void* g_pClientDLL_Init = nullptr;
 cl_exportfuncs_s g_oExportFuncs;
-cl_enginefuncs_s g_oCL_EngineFuncs;
 struct enginefuncs_s* g_pEngineFuncs = nullptr;
-struct cl_enginefuncs_s* g_pCL_EngineFuncs = nullptr;
 struct engine_studio_api_s* g_pStudioModelAPI = nullptr;
 class CStudioModelRenderer* g_pStudioAPI = nullptr;
 void* g_pGlobalVariables = nullptr;
@@ -34,7 +35,7 @@ int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 		return g_oExportFuncs.CLIENT_Initialize(enginefuncs);
 
 	//store original enginefuncs
-	g_oCL_EngineFuncs = *enginefuncs;
+	//g_oCL_EngineFuncs = *enginefuncs;
 
 	// call original func
 	int result = g_oExportFuncs.CLIENT_Initialize(enginefuncs);
@@ -52,7 +53,7 @@ int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 				g_oPauseMetaAudioPlayback = (PauseMetaAudioPlaybackFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "PauseMetaAudio");
 				g_oResumeMetaAudioPlayback = (ResumeMetaAudioPlaybackFn)GetProcAddress((HMODULE)g_MetaAudioDllHinst, "ResumeMetaAudio");
 				if (g_oStartMetaAudio && g_oShutdownMetaAudio && g_oPauseMetaAudioPlayback && g_oResumeMetaAudioPlayback)
-					g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, &g_oExportFuncs, &g_oCL_EngineFuncs);
+					g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, &g_oExportFuncs, g_Pointers.g_pCL_EngineFuncs);
 			}
 		}
 	}
@@ -73,8 +74,8 @@ int HUD_ClientAPI(int iVersion, int size, cl_exportfuncs_t* pClientFuncs)
 {
 	int(*oHUD_ClientAPI)(int, int, cl_exportfuncs_t*) = (int(*)(int, int, cl_exportfuncs_t*))GetProcAddress((HMODULE)*g_clientDllHinst, "HUD_ClientAPI");
 	
-	GetImportantEngineOffsets();
-	GetImportantClientOffsets();
+	g_Pointers.GetImportantEngineOffsets(g_engineDllHinst);
+	g_Pointers.GetImportantClientOffsets(*g_clientDllHinst);
 	Fix_ClientDLL_Bugs();
 
 	int result = oHUD_ClientAPI(iVersion, size, pClientFuncs);
@@ -119,9 +120,11 @@ void RunMetaHook()
 #endif
 
 
-	g_pClientDLL_Init = (void*)FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 01 00 00 84 C0 0F 85 D3", false);
-	if (!g_pClientDLL_Init)
+	if (!FindMemoryPattern(g_pClientDLL_Init, g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 01 00 00 84 C0 0F 85 D3", false))
 		return;
+
+	g_Pointers.g_pCL_EngineFuncs = *(cl_enginefuncs_s**)((DWORD)g_pClientDLL_Init + 0xC2);
+	//g_clmove = ((DWORD)g_pClientDLL_Init + 0xCD);
 
 	if (!HookFunctionWithMinHook(g_pClientDLL_Init, ClientDLL_Init, (void**)&g_oClientDLL_Init))
 		return;
@@ -140,13 +143,9 @@ void ShutdownMetaHook()
 	MH_Uninitialize();
 }
 
-
-#include <enginefuncs.h>
-#include <edict.h>
-
 void PostFrame()
 {
-	if (g_pCL_EngineFuncs->GetLevelName())
+	if (g_Pointers.g_pCL_EngineFuncs->GetLevelName())
 	{
 		for (int i = 1; i <= 32; ++i)
 		{

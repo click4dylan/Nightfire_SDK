@@ -19,9 +19,7 @@
 #include <NightfireFileSystem.h>
 //#include <r_studioint.h>
 
-typedef float vec_t;
-typedef float vec2_t[2];
-typedef float vec3_t[3];
+#include <vector_types.h>
 //#include <eiface.h>
 #include <com_model.h>
 #include <pmtrace.h>
@@ -33,85 +31,13 @@ typedef float vec3_t[3];
 #include <enginefuncs.h>
 #include <globalvars.h>
 #include <server.h>
+#include <nightfire_pointers.h>
+#include "nightfire_hooks.h"
 
+//#include <pm_defs.h>
+#include "fixes.h"
 
-server_t* g_psv = nullptr;
-struct cl_entity_s** g_rCurrentEntity = nullptr;
-int* svs_maxclients = 0;
-void(*EV_SetTraceHull)(int hull) = 0;
-DWORD g_PlayerMove = 0;
-DWORD offset = 0;
-int EV_GetTraceHull()
-{
-	return *(int*)(*(DWORD*)g_PlayerMove + offset);
-}
-void(*EV_PlayerTrace) (float* start, float* end, int brushFlags, int traceFlags, int ignore_pe, struct pmtrace_s* tr) = nullptr;
-void(*g_oLog_Printf)(const char*, ...) = nullptr;
-player_info_s* (*ENG_GetPlayerInfo)(int index) = nullptr;
-BOOL(*Host_IsSinglePlayerGame)() = nullptr;
-void(*R_ChangeMPSkin)() = nullptr;
-int(*g_oR_StudioSetupPlayerModel)(int);
-extern model_s* R_StudioSetupPlayerModel(int playerindex);
-char* DM_PlayerState = 0;
-
-void GetImportantEngineOffsets()
-{
-	if (!g_engineDllHinst)
-		return;
-
-	if (!EV_PlayerTrace)
-		EV_PlayerTrace = (void(*)(float*, float*, int, int, int, struct pmtrace_s*))FindMemoryPattern(g_engineDllHinst, "8B 44 24 14 8B 4C 24 10 8B 54 24 0C 83 EC 48", false);
-	if (!EV_SetTraceHull)
-		EV_SetTraceHull = (void(*)(int))FindMemoryPattern(g_engineDllHinst, "8B 44 24 04 8B 0D ? ? ? ? 89 81 ? 00 00 00 C3", false);
-	if (!EV_SetTraceHull)
-		return;
-	if (!g_pCL_EngineFuncs)
-	{
-		g_pCL_EngineFuncs = (cl_enginefuncs_s*)FindMemoryPattern(g_engineDllHinst, "68 ? ? ? ? FF 15 ? ? ? ? 68 ? ? ? ? FF 15 ? ? ? ? 83 C4 10", false);
-		if (g_pCL_EngineFuncs)
-			g_pCL_EngineFuncs = *(cl_enginefuncs_s**)((DWORD)g_pCL_EngineFuncs + 1);
-	}
-	if (!g_PlayerMove)
-		g_PlayerMove = *(DWORD*)((DWORD)EV_SetTraceHull + 6);
-	if (!offset)
-		offset = *(DWORD*)((DWORD)EV_SetTraceHull + 0xC);
-	if (!svs_maxclients)
-	{
-		svs_maxclients = (int*)FindMemoryPattern(g_engineDllHinst, "83 3D ? ? ? ? 01 7E 2E 8B 4C 24 0C 8D 44 24 10 50", false);
-		if (svs_maxclients)
-			svs_maxclients = *(int**)((DWORD)svs_maxclients + 2);
-	}
-	if (!g_oLog_Printf)
-		g_oLog_Printf = (void(*)(const char*, ...))FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 08 00 00 84 C0", false);
-	if (!ENG_GetPlayerInfo)
-		ENG_GetPlayerInfo = (player_info_s * (*)(int))FindMemoryPattern(g_engineDllHinst, "8B 44 24 04 69 C0 B4 01 00 00 05 ? ? ? ? C3 55", false);
-	if (!Host_IsSinglePlayerGame)
-		Host_IsSinglePlayerGame = (BOOL(*)())FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 84 C0 8B 0D ? ? ? ? 74 06", false);
-	if (!R_ChangeMPSkin)
-		R_ChangeMPSkin = (void(*)())FindMemoryPattern(g_engineDllHinst, "A1 ? ? ? ? 8B 08 8B 04 ? ? ? ? ? 85 C0", false);
-	if (!g_rCurrentEntity)
-	{
-		g_rCurrentEntity = (struct cl_entity_s**)FindMemoryPattern(g_engineDllHinst, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false);
-		DM_PlayerState = (char*)*(DWORD*)((DWORD)g_rCurrentEntity + 0x15);
-		if (g_rCurrentEntity)
-			g_rCurrentEntity = *(struct cl_entity_s***)((DWORD)g_rCurrentEntity + 1);
-	}
-	if (!g_psv)
-	{
-		DWORD adr = FindMemoryPattern(g_engineDllHinst, "68 ? ? ? ? FF 15 ? ? ? ? 8B 3D ? ? ? ? 6A 40", false);
-		if (adr)
-			g_psv = *(server_t**)(adr + 1);
-	}
-}
-
-void GetImportantClientOffsets()
-{
-	if (!g_clientDllHinst)
-		return;
-	DWORD studiorenderapi = FindMemoryPattern((DWORD)*g_clientDllHinst, "B9 ? ? ? ? E8 ? ? ? ? B8 01 00 00 00 5D C3", false);
-	if (studiorenderapi)
-		g_pStudioAPI = *(class CStudioModelRenderer**)FindMemoryPattern((DWORD)*g_clientDllHinst, "B9 ? ? ? ? E8 ? ? ? ? B8 01 00 00 00 5D C3", false);
-}
+nf_pointers g_Pointers;
 
 DWORD GUI_GetAction_JmpBack;
 __declspec(naked) void GUI_GetAction_Return()
@@ -152,15 +78,15 @@ __declspec(naked) void GUI_GetAction_Return()
 	{
 #if 0
 		//0x4307EFF6
-		DWORD find_name = FindMemoryPattern(g_engineDllHinst, "7E 27 8B F7 8D 45 48 8B D6 90", false);
-		if (find_name)
+		DWORD find_name;
+		if (FindMemoryPattern(find_name, g_engineDllHinst, "7E 27 8B F7 8D 45 48 8B D6 90", false))
 		{
 			// prevent CGBAudio::findName from reusing old slot when AudioAPIGetSoundID did not find any crc matching loaded sound filenames
 			PlaceShort((BYTE*)find_name, 0x27EB);
 
 			//0x430813D0
-			DWORD constructor = FindMemoryPattern(g_engineDllHinst, "68 00 FC 00 00 89 1D", false);
-			if (constructor)
+			DWORD constructor;
+			if (FindMemoryPattern(constructor, g_engineDllHinst, "68 00 FC 00 00 89 1D", false))
 			{
 				// increase max audio files limit in CGBAudio::findName from 768 to 4096
 				PlaceInt((BYTE*)(find_name + 0x2B), 4096);
@@ -176,8 +102,8 @@ __declspec(naked) void GUI_GetAction_Return()
 #endif
 
 		//0x4307ED40
-		DWORD end_precaching = FindMemoryPattern(g_engineDllHinst, "C6 41 05 00 A1 ?? ?? ?? ?? 57 33 FF 85 C0", false);
-		if (end_precaching)
+		DWORD end_precaching;
+		if (FindMemoryPattern(end_precaching, g_engineDllHinst, "C6 41 05 00 A1 ?? ?? ?? ?? 57 33 FF 85 C0", false))
 		{
 			// prevent CGBAudio::endPrecaching from unloading audio files when servercount changes
 			PlaceShort((BYTE*)(end_precaching + 0xE), 0x69EB);
@@ -185,8 +111,8 @@ __declspec(naked) void GUI_GetAction_Return()
 
 #if 0
 		//0x43080190
-		DWORD load_sound = FindMemoryPattern(g_engineDllHinst, "81 EC 54 03 00 00 53", false);
-		if (load_sound)
+		DWORD load_sound;
+		if (FindMemoryPattern(load_sound, g_engineDllHinst, "81 EC 54 03 00 00 53", false))
 		{
 			// stop CGBAudio::loadSound from dereferencing nullptr on first argument due to CGBAudio::findName returning nullptr
 			//PlaceJMP((BYTE*)load_sound, (DWORD)&loadSound_CrashFix, 5);
@@ -196,50 +122,18 @@ __declspec(naked) void GUI_GetAction_Return()
 	}
 //
 
-bool(*g_oUTIL_CheckForWater)(float, float, float, float, float, float, float*);
-
-bool UTIL_CheckForWater_Hook(float startx, float starty, float startz, float endx, float endy, float endz, float* dest)
-{
-	pmtrace_s tr;
-	int old_hull = EV_GetTraceHull(); //gearbox didn't have this
-	EV_SetTraceHull(2);
-	EV_PlayerTrace(&startx, &endx, 0x100000, 0x31, -1, &tr);
-	EV_SetTraceHull(old_hull);// this is the fix for broken hull bounds when in water!!
-	if (tr.fraction >= 1.0f || !tr.surface)
-		return false;
-	if (!tr.surface->parent_brush || !(tr.surface->parent_brush->contents & 0x100000) || tr.plane.normal[2] <= 0.99f)
-		return false;
-
-	dest[0] = tr.endpos[0];
-	dest[1] = tr.endpos[1];
-	dest[2] = tr.endpos[2];
-	return true;
-}
-
-void Fix_Water_Hull()
-{
-	//Fixes bug introduced somewhere between alpha demo and public build in UTIL_CheckForWater
-	//Hull gets set to point size and then not restored, causing major movement prediction errors, lag and audio glitches whenever this function gets called
-	DWORD adr = FindMemoryPattern(*g_clientDllHinst, "A1 ? ? ? ? 83 EC 48 6A 02", false);
-	if (!adr)
-		return;
-	
-	if (!HookFunctionWithMinHook((void*)adr, UTIL_CheckForWater_Hook, (void**)&g_oUTIL_CheckForWater))
-		return;
-}
-
 
 void __stdcall RainDropTrace(DWORD ESI, float* vecStart, float* vecEnd, int brushflags, int traceflags, int pSkip, pmtrace_s* tr)
 {
-	int old_hull = EV_GetTraceHull(); //gearbox didn't have this
-	g_oCL_EngineFuncs.pEventAPI->EV_SetTraceHull(2);
+	int old_hull = g_Pointers.EV_GetTraceHull(); //gearbox didn't have this
+	g_Pointers.g_pCL_EngineFuncs->pEventAPI->EV_SetTraceHull(2);
 
-	g_oCL_EngineFuncs.pEventAPI->EV_PlayerTrace(vecStart, vecEnd, brushflags, traceflags, pSkip, tr);
+	g_Pointers.g_pCL_EngineFuncs->pEventAPI->EV_PlayerTrace(vecStart, vecEnd, brushflags, traceflags, pSkip, tr);
 
 	const float groundzpos = tr->endpos[2];
 	*(float*)(ESI + 0x9C) = groundzpos + 3.0f;
 
-	EV_PlayerTrace(vecStart, vecEnd, 0x100000, 0x31, -1, tr);
+	g_Pointers.g_pCL_EngineFuncs->pEventAPI->EV_PlayerTrace(vecStart, vecEnd, 0x100000, 0x31, -1, tr);
 
 #if 1
 	if (tr->endpos[2] > groundzpos)
@@ -254,7 +148,7 @@ void __stdcall RainDropTrace(DWORD ESI, float* vecStart, float* vecEnd, int brus
 	}
 #endif
 
-	g_oCL_EngineFuncs.pEventAPI->EV_SetTraceHull(old_hull);
+	g_Pointers.g_pCL_EngineFuncs->pEventAPI->EV_SetTraceHull(old_hull);
 }
 
 __declspec(naked) void WaterDropRayTrace()
@@ -285,12 +179,12 @@ __declspec(naked) void WaterDropRayTrace()
 float splash_z_offset = 0.0f;
 void Fix_RainDrop_WaterCollision()
 {
-	DWORD adr = FindMemoryPattern(*g_clientDllHinst, "D9 44 24 7C D8 05 ? ? ? ? 83 C4 18 8A C3 D9", false);
-	if (!adr)
+	DWORD adr;
+	if (!FindMemoryPattern(adr, *g_clientDllHinst, "D9 44 24 7C D8 05 ? ? ? ? 83 C4 18 8A C3 D9", false))
 		return;
 	PlaceJMP((BYTE*)(adr - 0x15), (DWORD)&WaterDropRayTrace, 5);
-	DWORD touch = FindMemoryPattern(*g_clientDllHinst, "0F 85 ? ? ? ? D9 44 24 2C 8B 74 24 28", false);
-	if (!touch)
+	DWORD touch;
+	if (!FindMemoryPattern(touch, *g_clientDllHinst, "0F 85 ? ? ? ? D9 44 24 2C 8B 74 24 28", false))
 		return;
 	//increase frequency of splashes
 	DWORD old, old2;
@@ -304,98 +198,40 @@ void Fix_RainDrop_WaterCollision()
 	VirtualProtect((LPVOID)touch, 128, old, &old2);
 }
 
-float edict_yaw_times[4096] = { FLT_MIN };
-void(__fastcall *g_oAI_ChangeYaw)(void*, void*, int);
-// TODO: move this to AMX and do a proper fix for all entity types
-void __fastcall AI_ChangeYaw(void* ent, void* edx, int speed)
-{
-	//hack... can't access these tables without header madness
-	typedef int(*pIndexOfEdictFn)(struct edict_s*);
-	typedef edict_s* (*pFindEntityByVarsFn)(struct entvars_s*);
-#define pentityofentindex 0x4306FC90
-	pIndexOfEdictFn pIndexOfEdict = (pIndexOfEdictFn)0x4306FC40;//*(DWORD*)((DWORD)g_pEngineFuncs + 72);
-	pFindEntityByVarsFn pFindEntityByVars = (pFindEntityByVarsFn)0x4306FD00; //*(DWORD*)((DWORD)g_pEngineFuncs + 20);
-	struct entvars_s* entvars = *(entvars_s**)((DWORD)ent + 4);
-	float* globalvars2 = (float*)0x4217A168;
-	float frametime = globalvars2[1];
-
-	auto ed = pFindEntityByVars(entvars);
-	int entindex = pIndexOfEdict(ed);
-	if (entindex < 0 || entindex >= ARRAYSIZE(edict_yaw_times))
-		return g_oAI_ChangeYaw(ent, edx, speed);
-
-	auto time = Sys_FloatTime();
-	if (time < edict_yaw_times[entindex])
-		return;
-
-	globalvars2[1] = time - edict_yaw_times[entindex];
-
-	g_oAI_ChangeYaw(ent, edx, speed);
-
-	globalvars2[1] = frametime;
-	edict_yaw_times[entindex] = time + 0.03125f;
-}
-
-void Fix_AI_TurnSpeed()
-{
-	static bool already_fixed = false;
-	if (!already_fixed)
-	{
-		DWORD gamedll = (DWORD)GetModuleHandleA("game.dll");
-		if (!gamedll)
-			return;
-
-		already_fixed = true;
-
-		DWORD adr = FindMemoryPattern(gamedll, "90 90 90 90 90 90 83 EC 0C 56 8B F1 8B 46 04 8B 48 54 51", false);
-		if (!adr)
-			return;
-
-		adr += 6;
-
-		if (!HookFunctionWithMinHook((void*)adr, AI_ChangeYaw, (void**)&g_oAI_ChangeYaw))
-			return;
-	}
-}
-
 // Forces various entities on the server to not delete themselves and instead send to the client
 // Fixes things such as sprite render fx, model/breakable collision, etc
 void Force_ServerSide_Entities_GameDLL()
 {
-	DWORD adr = FindMemoryPattern(g_gameDllHinst, "39 98 ? ? 00 00 75 11 39 98 ? ? 00 00 75 09 56", false);
-	if (adr)
+	DWORD adr;
+	if (FindMemoryPattern(adr, g_gameDllHinst, "39 98 ? ? 00 00 75 11 39 98 ? ? 00 00 75 09 56", false))
 	{
 		//force CGenericItem to not remove itself on the server
 		PushProtection(adr);
 		*(unsigned char*)(adr + 6) = 0xEB;
 		PopProtection();
 	}
-	adr = FindMemoryPattern(g_gameDllHinst, "8B 88 ? ? 00 00 85 C9 75 13 8B 88 ? ? 00 00 85 C9", false);
-	if (adr)
+	if (FindMemoryPattern(adr, g_gameDllHinst, "8B 88 ? ? 00 00 85 C9 75 13 8B 88 ? ? 00 00 85 C9", false))
 	{
 		//force CBreakableItem to not remove itself on the server
 		PushProtection(adr);
 		*(unsigned char*)(adr + 8) = 0xEB;
 		PopProtection();
 	}
-	adr = FindMemoryPattern(g_gameDllHinst, "0F 94 C1 33 D2 85 DB 0F 94 C2 85 CA 74 09", false);
-	if (adr)
+	if (FindMemoryPattern(adr, g_gameDllHinst, "0F 94 C1 33 D2 85 DB 0F 94 C2 85 CA 74 09", false))
 	{
 		//force CHangingLantern to not remove itself on the server
 		PushProtection(adr);
 		*(unsigned char*)(adr + 12) = 0xEB;
 		PopProtection();
 	}
-	adr = FindMemoryPattern(g_gameDllHinst, "8B 82 ? ? 00 00 85 C0 75 09 56", false);
-	if (adr)
+	if (FindMemoryPattern(adr, g_gameDllHinst, "8B 82 ? ? 00 00 85 C0 75 09 56", false))
 	{
 		//force CEnvGlow to not remove itself on the server
 		PushProtection(adr);
 		*(unsigned char*)(adr + 8) = 0xEB;
 		PopProtection();
 	}
-	adr = FindMemoryPattern(g_gameDllHinst, "F6 80 ? ? 00 00 04 75 11 39 B8 ? ? 00 00 75 09", false);
-	if (adr)
+	if (FindMemoryPattern(adr, g_gameDllHinst, "F6 80 ? ? 00 00 04 75 11 39 B8 ? ? 00 00 75 09", false))
 	{
 		//force CEnvSprite to not remove itself on the server
 		PushProtection(adr);
@@ -415,8 +251,8 @@ void Force_ServerSide_Entities_ClientDLL()
 {
 	//TODO: FIXME: check if server we are connected to is running latest patch!!!
 	//Otherwise we will be missing clientside entities on old servers!
-	DWORD adr = FindMemoryPattern((DWORD)*g_clientDllHinst, "8B 0C F5 ? ? ? ? 51 50 FF D3", false);
-	if (adr)
+	DWORD adr;
+	if (FindMemoryPattern(adr, *g_clientDllHinst, "8B 0C F5 ? ? ? ? 51 50 FF D3", false))
 	{
 		// replace all the client side entity create functions with a dummy so the client doesn't create them!!
 		int numclientsidedentities = *(unsigned char*)(adr + 0x12);
@@ -470,261 +306,9 @@ void Fix_GameDLL_Bugs()
 	Fix_AI_TurnSpeed();
 }
 
-#include <studio.h>
-#include <StudioModelRenderer.h>
-
-mstudioanim_t* (__fastcall* g_oStudioGetAnim)(CStudioModelRenderer*, void*, model_t*, mstudioseqdesc_t*);
-mstudioanim_t* __fastcall CStudioModelRenderer_StudioGetAnim(CStudioModelRenderer* me, void* edx, model_t* m_pSubModel, mstudioseqdesc_t* pseqdesc)
-{
-	auto model = &me->m_pCurrentEntity->model;
-	mstudioseqgroup_t* pseqgroup;
-	cache_user_t* paSequences;
-	auto localplayer = g_pCL_EngineFuncs->GetLocalPlayer();
-	studiohdr_t* studiomodel = (studiohdr_t*)localplayer->model->cache;
-
-	if (localplayer)
-		g_pCL_EngineFuncs->Con_Printf("player model adr  %#010x\n", localplayer->model);
-	g_pCL_EngineFuncs->Con_Printf("render model adr %#010x\n", (DWORD)model);
-	g_pCL_EngineFuncs->Con_Printf("RenderModel name %s, ptr %#010x, adr %#010x\n", me->m_pRenderModel->name, me->m_pRenderModel, (DWORD)&me->m_pRenderModel);
-	g_pCL_EngineFuncs->Con_Printf("StudioHeader name %s, ptr %#010x, adr %#010x\n", me->m_pStudioHeader->name, me->m_pStudioHeader, (DWORD)&me->m_pStudioHeader);
-	pseqgroup = (mstudioseqgroup_t*)((byte*)me->m_pStudioHeader + me->m_pStudioHeader->seqgroupindex) + pseqdesc->seqgroup;
-
-	//if (!strstr(me->m_pRenderModel->name, me->m_pStudioHeader->name))
-	//	return (mstudioanim_t*)((byte*)me->m_pStudioHeader + pseqdesc->animindex);
-
-	if (pseqdesc->seqgroup == 0)
-	{
-		return (mstudioanim_t*)((byte*)me->m_pStudioHeader + pseqdesc->animindex);
-	}
-
-	paSequences = (cache_user_t*)m_pSubModel->submodels;
-
-	if (paSequences == NULL)
-	{
-		paSequences = (cache_user_t*)g_pNightfirePlatformFuncs->mallocx(16 * sizeof(cache_user_t)); // UNDONE: leak!
-		memset(paSequences, 0, 16 * sizeof(cache_user_t));
-		m_pSubModel->submodels = (dmodel_t*)paSequences;
-	}
-	if (!g_pNightfireFileSystem->Cache_Check((struct cache_user_s*)&(paSequences[pseqdesc->seqgroup])))
-	{
-		if (g_pCL_EngineFuncs)
-			g_pCL_EngineFuncs->Con_DPrintf("loading %s\n", pseqgroup->name);
-		g_pNightfireFileSystem->COM_LoadCacheFile(pseqgroup->name, (struct cache_user_s*)&paSequences[pseqdesc->seqgroup]);
-	}
-	return (mstudioanim_t*)((byte*)paSequences[pseqdesc->seqgroup].data + pseqdesc->animindex);
-}
-
-DWORD invalid_sequence_jmpback;
-DWORD valid_sequence_jmpback;
-bool StudioSequenceGetAnimPosOutOfBoundsCheck(CStudioModelRenderer* renderer, model_t* model)
-{
-	return renderer->m_pCurrentEntity->curstate.sequence < renderer->m_pStudioHeader->numseq;
-}
-
-__declspec(naked) void StudioGetAnimPos_Hook()
-{
-	__asm
-	{
-		JE invalid_seq
-
-		push eax
-		push esi
-		push ebx
-
-		push eax //model_t*
-		push esi //CStudioModelRenderer*
-		call StudioSequenceGetAnimPosOutOfBoundsCheck
-		add esp, 8
-		test al, al
-
-		pop ebx
-		pop esi
-		pop eax
-		
-	
-		je invalid_seq
-		jmp valid_sequence_jmpback
-
-		invalid_seq:
-		jmp invalid_sequence_jmpback
-	}
-}
-
-
-bool __cdecl StudioGaitSequenceBonesOutOfBoundsCheck(CStudioModelRenderer* renderer, player_info_s* info)
-{
-	if (info->gaitsequence == 0)
-		return true;
-
-	studiohdr_t* hdr = renderer->m_pStudioHeader;
-	if (info->gaitsequence >= hdr->numseq)
-	{
-		info->gaitsequence = 0;
-		return false;
-	}
-	
-	return true;
-}
-
-DWORD invalid_gaitsequence_jmpback;
-DWORD valid_gaitsequence_jmpback;
-__declspec(naked) void StudioSetupBones_Hook()
-{
-	__asm
-	{
-		push eax //1
-		push edx
-		push edi
-		push ebx //2
-		push esi //3
-		push ecx //4
-		push eax // m_PlayerInfo
-		push esi // thisptr
-		call StudioGaitSequenceBonesOutOfBoundsCheck
-		add esp, 8
-		pop ecx //4
-		pop esi //3
-		pop ebx //2
-		pop edi
-		pop edx
-		test al, al
-		je invalid
-		pop eax //1
-		mov eax, [eax + 0x17C]
-		jmp valid_gaitsequence_jmpback
-
-		invalid:
-		pop eax //1
-		jmp invalid_gaitsequence_jmpback
-	}
-}
-
-
-//studioapi_SetupPlayerModel
-model_s* R_StudioSetupPlayerModel(int playerindex)
-{
-	player_info_s* info = ENG_GetPlayerInfo(playerindex);
-	static ConsoleVariable* developer = g_pEngineFuncs->pfnGetConsoleVariableGame("developer");
-	DM_PlayerState_s* state = (DM_PlayerState_s*)DM_PlayerState;
-	cl_entity_s* current_entity = (*g_rCurrentEntity);
-
-	if (*g_rCurrentEntity)
-	{
-		if ((developer->getValueInt() || !Host_IsSinglePlayerGame()) && info->name[0])
-		{
-			if (strcmp(state->modelname, info->model) || !state->model || state->model->isloaded != 1)
-			{
-				strncpy(state->modelname, info->model, 260);
-				state->modelname[MAX_PATH - 1] = 0;
-
-#if 1
-				strncpy(state->modelpath, "models/player/", 260);
-				strncat(state->modelpath, info->model, 260);
-				state->modelpath[MAX_PATH - 1] = 0;
-				strncat(state->modelpath, "/", 260);
-				state->modelpath[MAX_PATH - 1] = 0;
-				strncat(state->modelpath, info->model, 260);
-				state->modelpath[MAX_PATH - 1] = 0;
-				strncat(state->modelpath, ".mdl", 260);
-				state->modelpath[MAX_PATH - 1] = 0;
-
-				if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
-					state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
-				else
-				{
-					strncpy(state->modelpath, "models/", 260);
-					strncat(state->modelpath, info->model, 260);
-					strncat(state->modelpath, ".mdl", 260);
-					state->modelpath[MAX_PATH - 1] = 0;
-					if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
-						state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
-					else
-					{
-						strncpy(state->modelpath, "models/water/", 260);
-						strncat(state->modelpath, info->model, 260);
-						state->modelpath[MAX_PATH - 1] = 0;
-						strncat(state->modelpath, ".mdl", 260);
-						state->modelpath[MAX_PATH - 1] = 0;
-						if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
-							state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
-						else
-						{
-							strncpy(state->modelpath, "models/sky/", 260);
-							strncat(state->modelpath, info->model, 260);
-							state->modelpath[MAX_PATH - 1] = 0;
-							strncat(state->modelpath, ".mdl", 260);
-							state->modelpath[MAX_PATH - 1] = 0;
-							if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
-								state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
-							else
-								state->model = nullptr;
-						}
-					}
-				}
-#else
-				//gearbox code
-				strncpy(state->modelpath, "models/player/", 260);
-				state->modelpath[MAX_PATH - 1] = 0;
-				strncat(state->modelpath, info->model, 260);
-				state->modelpath[MAX_PATH - 1] = 0;
-				strncat(state->modelpath, "/", 260);
-				state->modelpath[MAX_PATH - 1] = 0;
-				strncat(state->modelpath, info->model, 260);
-				state->modelpath[MAX_PATH - 1] = 0;
-				strncat(state->modelpath, ".mdl", 260);
-				state->modelpath[MAX_PATH - 1] = 0;
-
-				state->model = g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
-#endif
-
-				if (!state->model)
-					state->model = current_entity->model;
-
-				R_ChangeMPSkin();
-			}
-		}
-		else
-		{
-			state->modelname[0] = 0;
-			if (state->model != current_entity->model)
-			{
-				state->model = current_entity->model;
-				R_ChangeMPSkin();
-			}
-		}
-	}
-	return state->model;
-}
-
-void Fix_Model_Crash()
-{
-	DWORD adr = FindMemoryPattern((DWORD)*g_clientDllHinst, "56 8B 74 24 0C 8B 86 ? 00 00 00 85 C0 57 75 19", false);
-	if (!adr)
-		return;
-	//if (!HookFunctionWithMinHook((void*)adr, CStudioModelRenderer_StudioGetAnim, (void**)&g_oStudioGetAnim))
-	//	return;
-	adr = FindMemoryPattern(g_engineDllHinst, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false);
-	if (!HookFunctionWithMinHook((void*)adr, &R_StudioSetupPlayerModel, (void**)&g_oR_StudioSetupPlayerModel))
-		return;
-	adr = FindMemoryPattern(*g_clientDllHinst, "8B 80 ? ? ? ? 85 C0 0F ? ? ? ? ? 8B ? ? ? ? ? 69 ? ? ? ? ? 03", false);
-	if (adr)
-	{
-		invalid_gaitsequence_jmpback = adr + 0xDC;
-		valid_gaitsequence_jmpback = adr + 6;
-		PlaceJMP((BYTE*)adr, (DWORD)&StudioSetupBones_Hook, 5);
-	}
-	adr = FindMemoryPattern(*g_clientDllHinst, "50 FF 15 ? ? ? ? 89 46 ? 88 5E", false);
-	if (adr)
-	{
-		valid_sequence_jmpback = adr;
-		invalid_sequence_jmpback = adr + 0x1E3;
-		PlaceJMP((BYTE*)(adr - 6), (DWORD)&StudioGetAnimPos_Hook, 5);
-	}
-}
-
 void Fix_ClientDLL_Bugs()
 {
-	GetImportantEngineOffsets();
+	g_Pointers.GetImportantEngineOffsets(g_engineDllHinst);
 	Fix_Model_Crash();
 	Fix_Water_Hull();
 	Fix_RainDrop_WaterCollision();
@@ -1193,64 +777,58 @@ __declspec(naked) qboolean Netchan_Validate_Hook(netchan_s* chan, qboolean* frag
 
 void Fix_Netchan()
 {
-	DWORD adr = FindMemoryPattern(g_engineDllHinst, "56 8B 74 24 0C 8B 46 6C 85 C0 57 8B 7C 24 0C 7E 15 8D 46 5C", false);
-	if (!adr)
+	DWORD adr;
+	if (!FindMemoryPattern(adr, g_engineDllHinst, "56 8B 74 24 0C 8B 46 6C 85 C0 57 8B 7C 24 0C 7E 15 8D 46 5C", false))
 		return;
-	DWORD adr2 = FindMemoryPattern(g_engineDllHinst, "83 EC 10 57 8B 7C 24 20 8B 47 10 85 C0 C7 44 24 10 01 00 00 00", false);
-	if (!adr2)
+	DWORD adr2;
+	if (!FindMemoryPattern(adr2, g_engineDllHinst, "83 EC 10 57 8B 7C 24 20 8B 47 10 85 C0 C7 44 24 10 01 00 00 00", false))
 		return;
-	DWORD adr3 = FindMemoryPattern(g_engineDllHinst, "53 8B 5C 24 08 8A 83 DC 1F 00 00 84 C0 75 04 32 C0 5B C3", false);
-	if (!adr3)
+	DWORD adr3;
+	if (!FindMemoryPattern(adr3, g_engineDllHinst, "53 8B 5C 24 08 8A 83 DC 1F 00 00 84 C0 75 04 32 C0 5B C3", false))
 		return;
-	DWORD adr4 = FindMemoryPattern(g_engineDllHinst, "83 EC 08 53 55 8B 2D ? ? ? ? 56 8B 74 24 18", false);
-	if (!adr4)
+	DWORD adr4;
+	if (!FindMemoryPattern(adr4, g_engineDllHinst, "83 EC 08 53 55 8B 2D ? ? ? ? 56 8B 74 24 18", false))
 		return;
-	msg_readcount = (int*)FindMemoryPattern(g_engineDllHinst, "8B 15 ? ? ? ? 50 4A 52");
-	if (!msg_readcount)
+	if (!FindMemoryPattern(msg_readcount, g_engineDllHinst, "8B 15 ? ? ? ? 50 4A 52", false))
 		return;
 	msg_readcount = (int*)*(DWORD*)((DWORD)msg_readcount + 2);
 	g_net_message = *(sizebuf_s**)(adr3 + 0x37);
-	DWORD adr5 = FindMemoryPattern(g_engineDllHinst, "8B 35 ? ? ? ? 85 F6 74 3A A1", false);
-	if (!adr5)
+	DWORD adr5;
+	if (!FindMemoryPattern(adr5, g_engineDllHinst, "8B 35 ? ? ? ? 85 F6 74 3A A1", false))
 		return;
-	DWORD adr6 = FindMemoryPattern(g_engineDllHinst, "53 8B 5C 24 0C 56 57 53", false);
-	if (!adr6)
+	DWORD adr6;
+	if (!FindMemoryPattern(adr6, g_engineDllHinst, "53 8B 5C 24 0C 56 57 53", false))
 		return;
-	DWORD Netchan_Transmit = FindMemoryPattern(g_engineDllHinst, "B8 08 10 00 00 E8", false);
-	if (!Netchan_Transmit)
+	DWORD Netchan_Transmit;
+	if (!FindMemoryPattern(Netchan_Transmit, g_engineDllHinst, "B8 08 10 00 00 E8", false))
 		return;
-	DWORD adr7 = FindMemoryPattern(g_engineDllHinst, "8B 44 24 04 85 C0 74 47 53 56 57", false);
-	if (!adr7)
+	DWORD adr7;
+	if (!FindMemoryPattern(adr7, g_engineDllHinst, "8B 44 24 04 85 C0 74 47 53 56 57", false))
 		return;
-	g_Netchan_Transit_FragSend_Retadr = FindMemoryPattern(g_engineDllHinst, "8B 55 6C 33 C0 83 C4 04 3B D3 0F 95 C0", false);
-	DWORD adr8 = FindMemoryPattern(g_engineDllHinst, "81 FD ? ? ? ? 0F 95 C2 8D 4D 5C", false);
-	if (!adr8)
+	FindMemoryPattern(g_Netchan_Transit_FragSend_Retadr, g_engineDllHinst, "8B 55 6C 33 C0 83 C4 04 3B D3 0F 95 C0", false);
+	DWORD adr8;
+	if (!FindMemoryPattern(adr8, g_engineDllHinst, "81 FD ? ? ? ? 0F 95 C2 8D 4D 5C", false))
 		return;
-	DWORD adr9 = FindMemoryPattern(g_engineDllHinst, "53 55 8B 6C 24 14 56 8B F1 8B DD 57", false);
-	if (!adr9)
+	DWORD adr9;
+	if (!FindMemoryPattern(adr9, g_engineDllHinst, "53 55 8B 6C 24 14 56 8B F1 8B DD 57", false))
 		return;
-	DWORD adr10 = FindMemoryPattern(g_engineDllHinst, "53 56 8B 74 24 0C 56 E8 ? ? ? ? 33 DB 83 C4 04", false);
-	if (!adr10)
+	DWORD adr10;
+	if (!FindMemoryPattern(adr10, g_engineDllHinst, "53 56 8B 74 24 0C 56 E8 ? ? ? ? 33 DB 83 C4 04", false))
 		return;
 
 	realtime = *(double**)(adr6 + 0x3C);
 	svs_clients = (DWORD*)*(DWORD*)(adr5 + 2);
 	cls_netchan = (netchan_s*)*(DWORD*)(adr8 + 2);
 
-	SZ_Clear = (void(*)(sizebuf_s*))FindMemoryPattern(g_engineDllHinst, "8B 44 24 04 80 60 04 FD C7 40 10 00 00 00 00 C3", false);
-	if (!SZ_Clear)
+	if (!FindMemoryPattern(SZ_Clear, g_engineDllHinst, "8B 44 24 04 80 60 04 FD C7 40 10 00 00 00 00 C3", false))
 		return;
-	SZ_Write = (void(*)(sizebuf_t*, const void*, int))FindMemoryPattern(g_engineDllHinst, "8B 44 24 0C 8B 4C 24 08 8B 54 24 04 50 51 50 52", false);
-	if (!SZ_Write)
+	if (!FindMemoryPattern(SZ_Write, g_engineDllHinst, "8B 44 24 0C 8B 4C 24 08 8B 54 24 04 50 51 50 52", false))
 		return;
-	MSG_BeginReading = (void(*)())FindMemoryPattern(g_engineDllHinst, "33 C0 A3 ? ? ? ? A2 ? ? ? ? C3", false);
-	if (!MSG_BeginReading)
+	if (!FindMemoryPattern(MSG_BeginReading, g_engineDllHinst, "33 C0 A3 ? ? ? ? A2 ? ? ? ? C3", false))
 		return;
-	g_NetchanCreateFragments_Transmit_Retadr = FindMemoryPattern(g_engineDllHinst, "83 C4 0C 89 5D 6C 8D BD D0 1F 00 00 33 C0 8B CF", false);
-	if (!g_NetchanCreateFragments_Transmit_Retadr)
+	if (!FindMemoryPattern(g_NetchanCreateFragments_Transmit_Retadr, g_engineDllHinst, "83 C4 0C 89 5D 6C 8D BD D0 1F 00 00 33 C0 8B CF", false))
 		return;
-	host_client = (DWORD*)FindMemoryPattern(g_engineDllHinst, "A3 ? ? ? ? 7E 39 8B 7C 24 0C 80 38 00", false);
-	if (!host_client)
+	if (!FindMemoryPattern(host_client, g_engineDllHinst, "A3 ? ? ? ? 7E 39 8B 7C 24 0C 80 38 00", false))
 		return;
 	host_client = (DWORD*)(*(DWORD*)((DWORD)host_client + 1));
 #ifdef HOOK_NETCHAN_CLEAR_FRAGMENTS
@@ -1314,8 +892,8 @@ void Fix_RateLimiter()
 {
 	static const double maxrate = MAX_RATE;
 	static const float maxrate2 = MAX_RATE;
-	DWORD adr = FindMemoryPattern(g_engineDllHinst, "8D 97 D0 4C 00 00 52 FF 15 ? ? ? ? 68", false);
-	if (!adr)
+	DWORD adr;
+	if (!FindMemoryPattern(adr, g_engineDllHinst, "8D 97 D0 4C 00 00 52 FF 15 ? ? ? ? 68", false))
 		return;
 
 	// fix client sending incorrect rate command value to server
@@ -1324,8 +902,8 @@ void Fix_RateLimiter()
 	*(const char**)(adr + 0xE) = "rate";
 	VirtualProtect((void*)(adr + 0xE), 4, old, nullptr);
 
-	DWORD adr2 = FindMemoryPattern(g_engineDllHinst, "68 E8 03 00 00 68 20 4E 00 00", false);
-	if (!adr2)
+	DWORD adr2;
+	if (!FindMemoryPattern(adr2, g_engineDllHinst, "68 E8 03 00 00 68 20 4E 00 00", false))
 		return;
 
 	//fix limits
@@ -1341,8 +919,8 @@ void Fix_RateLimiter()
 
 void Fix_FpsCap()
 {
-	DWORD adr = FindMemoryPattern(g_engineDllHinst, "DF E0 F6 C4 05 8D 44 24 08 7B 04 8D 44 24 00 8B 08", false);
-	if (!adr)
+	DWORD adr;
+	if (!FindMemoryPattern(adr, g_engineDllHinst, "DF E0 F6 C4 05 8D 44 24 08 7B 04 8D 44 24 00 8B 08", false))
 		return;
 	DWORD old;
 	VirtualProtect((void*)(adr - 64), 128, PAGE_EXECUTE_READWRITE, &old);
@@ -1418,18 +996,18 @@ __declspec(naked) void Set_NextSVCmdTime()
 
 void Fix_RateDesync()
 {
-	DWORD adr = FindMemoryPattern(g_engineDllHinst, "DC 05 ? ? ? ? EB 06 DD 05 ? ? ? ? A1 ? ? ? ?", false);
-	if (!adr)
+	DWORD adr;
+	if (!FindMemoryPattern(adr, g_engineDllHinst, "DC 05 ? ? ? ? EB 06 DD 05 ? ? ? ? A1 ? ? ? ?", false))
 		return;
 	g_NextCLCmdTime = *(float**)(adr + 0x15);
 	PlaceJMP((BYTE*)(adr - 10), (DWORD)&Set_NextCLCmdTime, 5);
 	Set_NextCLCmdTimeCPP_Jmpback = adr + 0x13;
 
-	DWORD adr2 = FindMemoryPattern(g_engineDllHinst, "DD 05 ? ? ? ? A1 ? ? ? ? DC 80 ? ? 00 00 DC 05 ? ? ? ? DD 98 ? ? 00 00", false);
-	if (!adr2)
+	DWORD adr2;
+	if (!FindMemoryPattern(adr2, g_engineDllHinst, "DD 05 ? ? ? ? A1 ? ? ? ? DC 80 ? ? 00 00 DC 05 ? ? ? ? DD 98 ? ? 00 00", false))
 		return;
-	DWORD adr3 = FindMemoryPattern(g_engineDllHinst, "DD 05 ? ? ? ? D9 5C 24 0C D9 44 24 0C D8 0F", false);
-	if (!adr3)
+	DWORD adr3;
+	if (!FindMemoryPattern(adr3, g_engineDllHinst, "DD 05 ? ? ? ? D9 5C 24 0C D9 44 24 0C D8 0F", false))
 		return;
 	g_Player = *(DWORD**)(adr2 + 7);
 	g_NextSVCmdTimeOffset = *(DWORD*)(adr2 + 0x19);
@@ -1441,8 +1019,8 @@ void Fix_RateDesync()
 
 void Fix_UserInfoString()
 {
-	DWORD adr = FindMemoryPattern(g_engineDllHinst, "A0 ? ? ? ? 84 C0 0F 85 ? ? ? ? 68 00 01 00 00", false);
-	if (!adr)
+	DWORD adr;
+	if (!FindMemoryPattern(adr, g_engineDllHinst, "A0 ? ? ? ? 84 C0 0F 85 ? ? ? ? 68 00 01 00 00", false))
 		return;
 
 	DWORD old;
@@ -1463,11 +1041,11 @@ void AlertMessage(int a1, char* Format, ...)
 		g_pEngineFuncs->pfnGetConsoleVariableGame("developer");
 
 	va_start(ArgList, Format);
-	if (a1 == 5 && *svs_maxclients > 1)
+	if (a1 == 5 && *g_Pointers.svs_maxclients > 1)
 	{
 		vsnprintf(szOut, 1024, Format, ArgList);
 		szOut[1023] = 0;
-		g_oLog_Printf("%s", szOut);
+		g_Pointers.Log_Printf("%s", szOut);
 	}
 	else if (dev && dev->getValueInt())
 	{
@@ -1499,17 +1077,17 @@ void AlertMessage(int a1, char* Format, ...)
 		v2 = strlen(szOut);
 		vsnprintf(&szOut[v2], 1024 - v2, Format, ArgList); // this is the crash fix..., use vsnprintf
 		szOut[1023] = 0;
-		g_pCL_EngineFuncs->Con_Printf("%s", szOut);
+		g_Pointers.g_pCL_EngineFuncs->Con_Printf("%s", szOut);
 	}
 }
 
 void Fix_AlertMessage_Crash()
 {
-	DWORD adr = FindMemoryPattern(g_engineDllHinst, "56 8B 74 24 08 83 FE 05 75 37", false);
-	if (!adr)
+	DWORD adr;
+	if (!FindMemoryPattern(adr, g_engineDllHinst, "56 8B 74 24 08 83 FE 05 75 37", false))
 		return;
 
-	GetImportantEngineOffsets();
+	g_Pointers.GetImportantEngineOffsets(g_engineDllHinst);
 
 	if (!HookFunctionWithMinHook((void*)adr, (void*)&AlertMessage, (void**)&g_oAlertMessage))
 		return;
@@ -1531,20 +1109,20 @@ void Con_DPrintf(const char* fmt, ...)
 		msg[sizeof(msg) - 1] = 0;
 
 		*g_fIsDebugPrint = true;
-		g_pCL_EngineFuncs->Con_Printf(msg);
+		g_Pointers.g_pCL_EngineFuncs->Con_Printf(msg);
 		*g_fIsDebugPrint = false;
 	}
 }
 
 void Fix_Con_DPrintf_StackSmash_Crash()
 {
-	GetImportantEngineOffsets();
-	if (!g_pCL_EngineFuncs->Con_DPrintf)
+	g_Pointers.GetImportantEngineOffsets(g_engineDllHinst);
+	if (!g_Pointers.g_pCL_EngineFuncs->Con_DPrintf)
 		return;
 
-	g_fIsDebugPrint = *(bool**)((DWORD)g_pCL_EngineFuncs->Con_DPrintf + 0x44);
+	g_fIsDebugPrint = *(bool**)((DWORD)g_Pointers.g_pCL_EngineFuncs->Con_DPrintf + 0x44);
 	
-	if (!HookFunctionWithMinHook((void*)g_pCL_EngineFuncs->Con_DPrintf, (void*)&Con_DPrintf, (void**)&g_oAlertMessage))
+	if (!HookFunctionWithMinHook((void*)g_Pointers.g_pCL_EngineFuncs->Con_DPrintf, (void*)&Con_DPrintf, (void**)&g_oAlertMessage))
 		return;
 }
 
@@ -1574,8 +1152,8 @@ __declspec(naked) void LoadThisDll_Hook()
 
 void Hook_GameDLLLoadLibrary()
 {
-	DWORD adr = FindMemoryPattern(g_engineDllHinst, "57 53 FF 15 ? ? ? ? 8B F8 85 FF 75 17", false);
-	if (!adr)
+	DWORD adr;
+	if (!FindMemoryPattern(adr, g_engineDllHinst, "57 53 FF 15 ? ? ? ? 8B F8 85 FF 75 17", false))
 		return;
 
 	if (!HookFunctionWithMinHook((void*)adr, (void*)&LoadThisDll_Hook, (void**)&g_oLoadThisDll))
@@ -1597,14 +1175,14 @@ void Fix_Engine_Bugs()
 
 void Fix_Gamespy()
 {
-	DWORD adr = FindMemoryPattern(g_engineDllHinst, "6D 61 73 74 65 72 2E 67 61 6D 65 73 70 79 2E 63 6F 6D 00", false);
-	while (adr)
+	DWORD adr;
+	while (FindMemoryPattern(adr, g_engineDllHinst, "6D 61 73 74 65 72 2E 67 61 6D 65 73 70 79 2E 63 6F 6D 00", false))
 	{
 		DWORD old, old2;
 		VirtualProtect((void*)adr, 19, PAGE_READWRITE, &old);
 		strncpy((char*)adr, "master.openspy.net", 19);
 		VirtualProtect((void*)adr, 19, old, &old2);
-		adr = FindMemoryPattern(g_engineDllHinst, "6D 61 73 74 65 72 2E 67 61 6D 65 73 70 79 2E 63 6F 6D 00", false);
+		FindMemoryPattern(adr, g_engineDllHinst, "6D 61 73 74 65 72 2E 67 61 6D 65 73 70 79 2E 63 6F 6D 00", false);
 	}
 }
 
@@ -1614,8 +1192,8 @@ void Fix_GUI_GetAction_Crash()
 	if (!g_guiDllHinst)
 		return;
 
-	DWORD adr = FindMemoryPattern(g_guiDllHinst, "8B 10 53 8B C8 FF 52 08", false);
-	if (!adr)
+	DWORD adr;
+	if (!FindMemoryPattern(adr, g_guiDllHinst, "8B 10 53 8B C8 FF 52 08", false))
 		return;
 
 	PlaceJMP((BYTE*)adr, (DWORD)&GUI_GetAction_Return, 5);

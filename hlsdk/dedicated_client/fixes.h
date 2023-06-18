@@ -17,7 +17,3 @@ extern void Fix_RateLimiter();
 extern void Fix_UserInfoString();
 extern void Fix_FpsCap();
 extern void Fix_RateDesync();
-extern int EV_GetTraceHull();
-extern void GetImportantEngineOffsets();
-extern void GetImportantClientOffsets();
-extern bool UTIL_CheckForWater_Hook(float startx, float starty, float startz, float endx, float endy, float endz, float* dest);
