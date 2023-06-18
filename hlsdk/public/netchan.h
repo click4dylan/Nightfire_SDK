@@ -1,5 +1,9 @@
 #pragma once
 
+#include <const.h>
+#include <sizebuf.h>
+#include <fragbuf.h>
+
 //hacky temp netchan structs
 
 #define NET_MAX_PAYLOAD 65536
@@ -16,6 +20,10 @@
 #define FRAGMENT_S2C_MAX_SIZE 1024
 #define MAX_NORMAL_FRAGMENTS (NET_MAX_PAYLOAD / CLIENT_FRAGMENT_SIZE_ONCONNECT)
 #define MAX_FILE_FRAGMENTS (CUSTOMIZATION_MAX_SIZE / FRAGMENT_C2S_MIN_SIZE)
+
+// Size of fragmentation buffer internal buffers
+const int FRAGMENT_MAX_SIZE_ORIGINAL = 1400;
+const int MAX_FRAGMENTS_ORIGINAL = 25000;
 
 #define MAKE_FRAGID(id,count)	((( id & 0xffff) << 16) | (count & 0xffff))
 #define FRAG_GETID(fragid)		((fragid >> 16) & 0xffff)

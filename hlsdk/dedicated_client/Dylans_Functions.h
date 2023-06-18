@@ -2428,8 +2428,8 @@ typedef struct client_static_s
 
 typedef struct server_log_s
 {
-	qboolean active;
-	qboolean net_log_;
+	bool_nightfire active;
+	bool_nightfire net_log_;
 	netadr_t net_address_;
 	void *file;
 } server_log_t;
@@ -2454,7 +2454,7 @@ typedef struct server_stats_s
 
 typedef struct server_static_s
 {
-	qboolean dll_initialized;
+	bool_nightfire dll_initialized;
 	/*struct client_s*/client_t *clients;
 	int maxclients;
 	int maxclientslimit;
@@ -2464,7 +2464,7 @@ typedef struct server_static_s
 	double next_cleartime;
 	double next_sampletime;
 	server_stats_t stats;
-	qboolean isSecure;
+	//qboolean isSecure;
 } server_static_t;
 
 #define MAX_CONSISTENCY_LIST	512

@@ -138,6 +138,9 @@
     <ClCompile Include="WaterPrediction.cpp">
       <Filter>Source Files\fixes</Filter>
     </ClCompile>
+    <ClCompile Include="netchan.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc">

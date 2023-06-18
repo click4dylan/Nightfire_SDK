@@ -3,7 +3,7 @@
 typedef struct sizebuf_s
 {
 	const char *buffername;
-	uint16 flags;
+	unsigned short flags;
 	byte *data;
 	int maxsize;
 	int cursize;

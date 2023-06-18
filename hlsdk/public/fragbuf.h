@@ -1,5 +1,7 @@
 #pragma once
 
+#include <bool_nightfire.h>
+
 const int FRAGMENT_MAX_SIZE = 1400;
 
 // Generic fragment structure
@@ -14,10 +16,10 @@ typedef struct fragbuf_s
 	// The actual data sits here
 	byte frag_message_buf[FRAGMENT_MAX_SIZE];
 	// Is this a file buffer?
-	qboolean isfile;
+	bool_nightfire isfile;
 	// Is this file buffer from memory ( custom decal, etc. ).
-	qboolean isbuffer;
-	qboolean iscompressed;
+	bool_nightfire isbuffer;
+	bool_nightfire iscompressed;
 	// Name of the file to save out on remote host
 	char filename[MAX_PATH];
 	// Offset in file from which to read data

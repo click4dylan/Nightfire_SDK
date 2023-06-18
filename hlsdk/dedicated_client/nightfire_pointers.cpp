@@ -31,6 +31,9 @@ void nf_pointers::GetImportantEngineOffsets(long enginedll)
 	if (!enginedll)
 		return;
 
+	if (!FindMemoryPattern(psvs, enginedll, "E8 ? ? ? ? A0 ? ? ? ? 84 C0 74 0E 68", false, true, 6, 0, false))
+		return;
+
 	if (!EV_PlayerTrace)
 		FindMemoryPattern(EV_PlayerTrace, enginedll, "8B 44 24 14 8B 4C 24 10 8B 54 24 0C 83 EC 48", false);
 
