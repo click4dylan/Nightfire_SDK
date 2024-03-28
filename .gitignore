@@ -37,3 +37,5 @@ _clang-format
 *FileListAbsolute.txt
 /hlsdk/dedicated_client/Debug/Bond.exe
 /visual_c++_redistribs
+/hlsdk/dedicated_client/.vs/Dedicated/FileContentIndex
+/hlsdk/dedicated_client/Release
