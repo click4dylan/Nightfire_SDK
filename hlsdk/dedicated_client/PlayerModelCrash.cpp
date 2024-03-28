@@ -261,7 +261,9 @@ void Fix_Model_Crash()
 	//	return;
 	//if (!HookFunctionWithMinHook(adr, CStudioModelRenderer_StudioGetAnim, (void**)&g_oStudioGetAnim))
 	//	return;
-	if (!FindMemoryPattern(g_Pointers.R_StudioSetupPlayerModel, g_engineDllHinst, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false))
+	//if (!FindMemoryPattern(g_Pointers.R_StudioSetupPlayerModel, g_engineDllHinst, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false))
+	//	return;
+	if (!g_Pointers.R_StudioSetupPlayerModel)
 		return;
 	if (!HookFunctionWithMinHook(g_Pointers.R_StudioSetupPlayerModel, nf_hooks::R_StudioSetupPlayerModel, nullptr))
 		return;

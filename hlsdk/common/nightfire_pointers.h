@@ -31,7 +31,7 @@ public:
 	int* msg_readcount{};
 	sizebuf_s* g_net_message{};
 	netchan_s* cls_netchan{};
-	struct server_static_s **psvs{};						// &svs
+	struct server_static_s *psvs{};						// &svs
 	//struct client_static_s *pcls{};						// &cls
 	server_t** g_psv{};
 	int* svs_maxclients{};
@@ -59,6 +59,7 @@ public:
 	//client.dll
 	bool(*UTIL_CheckForWater)(float startx, float starty, float startz, float endx, float endy, float endz, float* dest) {};
 	class CStudioModelRenderer *g_pStudioAPI{};
+	class CStudioModelRenderer** g_ppStudioAPI{};
 
 
 	void GetImportantEngineOffsets(long enginedll);

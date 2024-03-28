@@ -602,6 +602,7 @@ void Fix_Engine_Bugs()
 
 void Fix_Gamespy()
 {
+	SUPPRESS_PATTERN_ERRORS
 	DWORD adr;
 	while (FindMemoryPattern(adr, g_engineDllHinst, "6D 61 73 74 65 72 2E 67 61 6D 65 73 70 79 2E 63 6F 6D 00", false))
 	{
@@ -611,6 +612,7 @@ void Fix_Gamespy()
 		VirtualProtect((void*)adr, 19, old, &old2);
 		FindMemoryPattern(adr, g_engineDllHinst, "6D 61 73 74 65 72 2E 67 61 6D 65 73 70 79 2E 63 6F 6D 00", false);
 	}
+	UNSUPRESS_PATTERN_ERRORS
 }
 
 // apply nullptr check from mac version

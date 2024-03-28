@@ -231,7 +231,7 @@ BOOL nf_hooks::Netchan_CopyNormalFragments(netchan_s* chan)
 		if (chan->player_slot == 0)
 			g_Pointers.g_pCL_EngineFuncs->Con_Printf("%s: Incoming overflowed\n", __func__);
 		else
-			g_Pointers.g_pCL_EngineFuncs->Con_Printf("%s: Incoming overflowed from %s\n", __func__, (*g_Pointers.psvs)->clients[chan->player_slot - 1].name);
+			g_Pointers.g_pCL_EngineFuncs->Con_Printf("%s: Incoming overflowed from %s\n", __func__, g_Pointers.psvs->clients[chan->player_slot - 1].name);
 		g_Pointers.SZ_Clear(g_Pointers.g_net_message);
 
 		chan->incomingbufs[FRAG_NORMAL_STREAM] = nullptr;
@@ -282,7 +282,7 @@ void Netchan_FlushIncoming(netchan_s* chan, int stream)
 {
 	fragbuf_t* p, *n;
 
-	int current_server_client = *g_Pointers.host_client - (*g_Pointers.psvs)->clients;
+	auto current_server_client = *g_Pointers.host_client - g_Pointers.psvs->clients;
 
 	if ((chan->player_slot - 1) == current_server_client)
 	{

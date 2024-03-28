@@ -91,9 +91,8 @@ void nf_pointers::GetImportantEngineOffsets(long enginedll)
 			g_psv = *(server_t***)(adr + 1);
 	}
 
-	FindMemoryPattern(R_StudioSetupPlayerModel, enginedll, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false);
-	if (!HookFunctionWithMinHook(R_StudioSetupPlayerModel, &nf_hooks::R_StudioSetupPlayerModel, nullptr))
-		return;
+	if (!R_StudioSetupPlayerModel)
+		FindMemoryPattern(R_StudioSetupPlayerModel, enginedll, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false);
 }
 
 void nf_pointers::GetImportantClientOffsets(long clientdll)
@@ -101,11 +100,16 @@ void nf_pointers::GetImportantClientOffsets(long clientdll)
 	if (!clientdll)
 		return;
 
-	FindMemoryPattern(g_Pointers.UTIL_CheckForWater, clientdll, "A1 ? ? ? ? 83 EC 48 6A 02", false);
+	if (!UTIL_CheckForWater)
+		FindMemoryPattern(UTIL_CheckForWater, clientdll, "A1 ? ? ? ? 83 EC 48 6A 02", false);
 
-	DWORD studiorenderapi;
-	if (FindMemoryPattern(studiorenderapi, clientdll, "B9 ? ? ? ? E8 ? ? ? ? B8 01 00 00 00 5D C3", false))
-		g_Pointers.g_pStudioAPI = *(class CStudioModelRenderer**)(studiorenderapi + 1);
+	if (!g_ppStudioAPI)
+	{
+		if (FindMemoryPattern(g_ppStudioAPI, clientdll, "B9 ? ? ? ? E8 ? ? ? ? B8 01 00 00 00 5D C3", false))
+			g_ppStudioAPI = (class CStudioModelRenderer**)((uintptr_t)g_ppStudioAPI + 1);
+	}
+	if (g_ppStudioAPI)
+		g_pStudioAPI = *g_ppStudioAPI;
 }
 
 int nf_pointers::EV_GetTraceHull()

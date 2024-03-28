@@ -42,7 +42,7 @@ void Sys_FreeLibrary( long library );
 void *Sys_GetProcAddress( long library, const char *name );
 void Sys_Printf(char *fmt, ...);
 extern __declspec(noreturn) void ErrorMessage( int level, const char *msg );
-extern __declspec(noreturn) void ErrorBox(const char* msg, const char* filename);
+extern __declspec(noreturn) void ErrorBox(const char* msg, const char* filename = nullptr);
 extern void linkEngineDll(const char* name);
 extern void linkGUIDll(const char* name);
 extern char* GetCDPath();

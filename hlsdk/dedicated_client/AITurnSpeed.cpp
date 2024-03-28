@@ -76,7 +76,7 @@ void Fix_AI_TurnSpeed()
 		already_fixed = true;
 
 		DWORD adr;
-		if (!FindMemoryPattern(adr, gamedll, "90 90 90 90 90 90 83 EC 0C 56 8B F1 8B 46 04 8B 48 54 51", false))
+		if (!FindMemoryPattern(pattern_t(adr, gamedll, "90 90 90 90 90 90 83 EC 0C 56 8B F1 8B 46 04 8B 48 54 51", false, "AI_ChangeYaw", true)))
 			return;
 
 		adr += 6;

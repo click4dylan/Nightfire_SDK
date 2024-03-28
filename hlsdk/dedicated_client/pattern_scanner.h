@@ -5,6 +5,19 @@
 #define PSAPI_VERSION 1
 #include <Psapi.h>
 #include "MinHook/MinHook.h"
+#include "sys_ded.h" // for ErrorBox
+
+
+#define LAZY_FIND_MEMORY_PATTERN_ENABLED
+
+#if defined(_DEBUG) && defined(LAZY_FIND_MEMORY_PATTERN_ENABLED)
+	extern bool g_bSuppressPatternErrors;
+	#define SUPPRESS_PATTERN_ERRORS g_bSuppressPatternErrors = true;
+	#define UNSUPRESS_PATTERN_ERRORS g_bSuppressPatternErrors = false;
+#else
+	#define SUPPRESS_PATTERN_ERRORS
+	#define UNSUPRESS_PATTERN_ERRORS
+#endif
 
 __inline void PlaceJMP(BYTE* bt_DetourAddress, DWORD dw_FunctionAddress, DWORD dw_Size)
 {
@@ -52,6 +65,26 @@ inline T RelativeToAbsolute(A address)
 {
 	return (T)((uintptr_t)address + 4 + *reinterpret_cast<unsigned int*>((uintptr_t)address));
 }
+
+struct pattern_t
+{
+	void*& dest;
+	void* module_handle;
+	const std::string strpattern;
+	bool double_wide;
+	bool dereference = false;
+	int addbeforedereference = 0;
+	int addatend = 0;
+	bool is_relative = false;
+	bool crash_if_not_found = false;
+	const char* debug_name;
+
+	template <class T, class M>
+	pattern_t(T& _dest, M _module_handle, const std::string& pattern, bool _double_wide_pattern, const char* _debug_name = "", bool _crash_if_not_found = false)
+		: dest((void*&) _dest), module_handle((void*)_module_handle), strpattern(pattern), double_wide(_double_wide_pattern), debug_name(_debug_name), crash_if_not_found(_crash_if_not_found)
+	{
+	}
+};
 
 template<class T>
 inline bool FindMemoryPattern2(T& dest, uintptr_t start, uintptr_t end, const char* strpattern, size_t length, bool double_wide, bool dereference = false, int addbeforedereference = 0, int addatend = 0, bool is_relative = false) {
@@ -153,26 +186,60 @@ inline bool FindMemoryPattern2(T& dest, uintptr_t start, uintptr_t end, const ch
 //	return FindMemoryPattern<T>(ModuleHandle, strpattern, strlen(strpattern), double_wide, dereference, addbeforedereference, addatend);
 //}
 
+inline bool FindMemoryPattern(pattern_t& pattern)
+{
+	uintptr_t start, end;
+	GetModuleStartEndPoints(pattern.module_handle, start, end);
+	bool result = FindMemoryPattern2(pattern.dest, start, end, pattern.strpattern.c_str(), pattern.strpattern.length(), pattern.double_wide, pattern.dereference, pattern.addbeforedereference, pattern.addatend, pattern.is_relative);
+	if (!result && pattern.crash_if_not_found)
+	{
+		char errormsg[2048];
+		sprintf_s(errormsg, "Error: could not find signature \"%s\" at %#010x with pattern \"%s\"", pattern.debug_name, (DWORD)start, pattern.strpattern.c_str());
+		ErrorBox(errormsg);
+	}
+
+	return result;
+}
+
+#ifdef LAZY_FIND_MEMORY_PATTERN_ENABLED
 template<class T, class M>
 inline bool FindMemoryPattern(T& dest, M ModuleHandle, std::string strpattern, bool double_wide, bool dereference = false, int addbeforedereference = 0, int addatend = 0, bool is_relative = false)
 {
 	uintptr_t start, end;
 	GetModuleStartEndPoints(ModuleHandle, start, end);
-	return FindMemoryPattern2(dest, start, end, strpattern.c_str(), strpattern.length(), double_wide, dereference, addbeforedereference, addatend, is_relative);
+	bool result = FindMemoryPattern2(dest, start, end, strpattern.c_str(), strpattern.length(), double_wide, dereference, addbeforedereference, addatend, is_relative);
+
+#if defined(_DEBUG)
+	if (!result && !g_bSuppressPatternErrors)
+	{
+		char errormsg[2048];
+		sprintf_s(errormsg, "Error: could not find signature at %#010x with pattern \"%s\"", (DWORD)start, strpattern.c_str());
+		MessageBoxA(NULL, errormsg, "Nightfire", MB_OK);
+	}
+#endif
+
+	return result;
 }
+#endif
 
 template <class A, class D, class O>
 inline bool HookFunctionWithMinHook(A pFunctionAddress, D pDetourAddress, O ppOriginal, const char* szDebugName = " ") {
-
+	char error_msg[512];
 	int nCreateHookRet = MH_CreateHook((LPVOID)pFunctionAddress, (LPVOID)pDetourAddress, reinterpret_cast<LPVOID*>(ppOriginal));
 	if (nCreateHookRet != MH_OK)
 	{
 		int nDisableHookRet = MH_DisableHook((LPVOID)pFunctionAddress);
 		if (nDisableHookRet != MH_OK)
 			return false;
+		sprintf_s(error_msg, "Error: function \"%s\" (%#010x) already hooked! Tried to detour to %#010x", szDebugName, (DWORD)pFunctionAddress, (DWORD)pDetourAddress);
+		ErrorBox(error_msg);
 		return false;
 	}
-	return MH_EnableHook((LPVOID)pFunctionAddress) == MH_OK;
+	if (MH_EnableHook((LPVOID)pFunctionAddress) == MH_OK)
+		return true;
+	sprintf_s(error_msg, "Error: function \"%s\" (%#010x) failed to hook! Tried to detour to %#010x", szDebugName, (DWORD)pFunctionAddress, (DWORD)pDetourAddress);
+	ErrorBox(error_msg);
+	return false;
 }
 
 extern DWORD old_protection;

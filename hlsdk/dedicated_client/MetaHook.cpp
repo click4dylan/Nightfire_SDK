@@ -119,14 +119,15 @@ void RunMetaHook()
 	Hook_CL_PrecacheResources();
 #endif
 
-
-	if (!FindMemoryPattern(g_pClientDLL_Init, g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 01 00 00 84 C0 0F 85 D3", false))
+	if (!FindMemoryPattern(pattern_t(g_pClientDLL_Init, g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 01 00 00 84 C0 0F 85 D3", false, "ClientDLL_Init", true)))
 		return;
 
 	g_Pointers.g_pCL_EngineFuncs = *(cl_enginefuncs_s**)((DWORD)g_pClientDLL_Init + 0xC2);
 	//g_clmove = ((DWORD)g_pClientDLL_Init + 0xCD);
 
-	if (!HookFunctionWithMinHook(g_pClientDLL_Init, ClientDLL_Init, (void**)&g_oClientDLL_Init))
+	MessageBoxA(NULL, "Hooking ClientDLL_Init", "", MB_OK);
+
+	if (!HookFunctionWithMinHook(g_pClientDLL_Init, ClientDLL_Init, (void**)&g_oClientDLL_Init, "ClientDLL_Init"))
 		return;
 }
 
