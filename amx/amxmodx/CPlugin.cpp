@@ -15,21 +15,18 @@
 #include "debugger.h"
 #include "libraries.h"
 #include <amxmodx_version.h>
+#include "engine_strucs.h"
 
 extern const char *no_function;
 
-#define ALLOC(type) (type*)VirtualAlloc(0, sizeof(type), MEM_COMMIT, PAGE_READWRITE) //NOEL
-#define ALLOCSIZE(size) (void*)VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE)
-#define FREE(pointer) VirtualFree((void*)pointer, 0, MEM_RELEASE)
-
-CPluginMngr::CPlugin* CPluginMngr::loadPlugin(const char* path, const char* name, char* error, int debug)
+CPluginMngr::CPlugin* CPluginMngr::loadPlugin(const char* path, const char* name, char* error, size_t maxLength, int debug)
 {	
 	CPlugin** a = &head;
 	
 	while (*a)
 		a = &(*a)->next;
 	
-	*a = new CPlugin(pCounter++, path, name, error, debug);
+	*a = new CPlugin(pCounter++, path, name, error, maxLength, debug);
 	
 	return (*a);
 }
@@ -65,8 +62,8 @@ void CPluginMngr::Finalize()
 
 int CPluginMngr::loadPluginsFromFile(const char* filename, bool warn)
 {
-	char file[256];
-	FILE *fp = fopen(build_pathname_r(file, sizeof(file) - 1, "%s", filename), "rt");
+	char file[PLATFORM_MAX_PATH];
+	FILE *fp = fopen(build_pathname_r(file, sizeof(file), "%s", filename), "rt");
 
 	if (!fp) 
 	{
@@ -141,7 +138,7 @@ int CPluginMngr::loadPluginsFromFile(const char* filename, bool warn)
 			continue;
 		}
 
-		CPlugin* plugin = loadPlugin(pluginsDir, pluginName, error, debugFlag);
+		CPlugin* plugin = loadPlugin(pluginsDir, pluginName, error, sizeof(error), debugFlag);
 		
 		if (plugin->getStatusCode() == ps_bad_load)
 		{
@@ -156,6 +153,37 @@ int CPluginMngr::loadPluginsFromFile(const char* filename, bool warn)
 			if (amx_FindPubVar(plugin->getAMX(), "MaxClients", &addr) != AMX_ERR_NOTFOUND)
 			{
 				*get_amxaddr(plugin->getAMX(), addr) = gpGlobals->maxClients;
+			}
+
+			if (amx_FindPubVar(plugin->getAMX(), "MapName", &addr) != AMX_ERR_NOTFOUND)
+			{
+				set_amxstring(plugin->getAMX(), addr, STRING(gpGlobals->mapname), MAX_MAPNAME_LENGTH - 1);
+			}
+
+			auto length = 0;
+			if (amx_FindPubVar(plugin->getAMX(), "PluginName", &addr) != AMX_ERR_NOTFOUND)
+			{
+				plugin->setTitle(get_amxstring(plugin->getAMX(), addr, 0, length));
+			}
+
+			if (amx_FindPubVar(plugin->getAMX(), "PluginVersion", &addr) != AMX_ERR_NOTFOUND)
+			{
+				plugin->setVersion(get_amxstring(plugin->getAMX(), addr, 0, length));
+			}
+
+			if (amx_FindPubVar(plugin->getAMX(), "PluginAuthor", &addr) != AMX_ERR_NOTFOUND)
+			{
+				plugin->setAuthor(get_amxstring(plugin->getAMX(), addr, 0, length));
+			}
+
+			if (amx_FindPubVar(plugin->getAMX(), "PluginURL", &addr) != AMX_ERR_NOTFOUND)
+			{
+				plugin->setUrl(get_amxstring(plugin->getAMX(), addr, 0, length));
+			}
+
+			if (amx_FindPubVar(plugin->getAMX(), "PluginDescription", &addr) != AMX_ERR_NOTFOUND)
+			{
+				plugin->setDescription(get_amxstring(plugin->getAMX(), addr, 0, length));
 			}
 
 			if (amx_FindPubVar(plugin->getAMX(), "NULL_STRING", &addr) != AMX_ERR_NOTFOUND)
@@ -271,7 +299,7 @@ const char* CPluginMngr::CPlugin::getStatus() const
 	return "error";
 }
 
-CPluginMngr::CPlugin::CPlugin(int i, const char* p, const char* n, char* e, int d) : name(n), title(n), m_pNullStringOfs(nullptr), m_pNullVectorOfs(nullptr)
+CPluginMngr::CPlugin::CPlugin(int i, const char* p, const char* n, char* e, size_t m, int d) : name(n), title(n), m_pNullStringOfs(nullptr), m_pNullVectorOfs(nullptr)
 {
 	const char* unk = "unknown";
 	
@@ -279,12 +307,13 @@ CPluginMngr::CPlugin::CPlugin(int i, const char* p, const char* n, char* e, int 
 	title = unk;
 	author = unk;
 	version = unk;
+	url = unk;
 	
-	char file[256];
-	char* path = build_pathname_r(file, sizeof(file) - 1, "%s/%s", p, n);
+	char file[PLATFORM_MAX_PATH];
+	char* path = build_pathname_r(file, sizeof(file), "%s/%s", p, n);
 	code = 0;
 	memset(&amx, 0, sizeof(AMX));
-	int err = load_amxscript(&amx, &code, path, e, d);
+	int err = load_amxscript_ex(&amx, &code, path, e, m, d);
 	
 	if (err == AMX_ERR_NONE)
 	{
@@ -506,16 +535,12 @@ char *CPluginMngr::ReadIntoOrFromCache(const char *file, size_t &bufsize)
 		}
 	}
 
-	pl = new plcache_entry; //DYLAN/NOEL new has been replaced by ALLOC
-	//pl = ALLOC(plcache_entry);
-	//pl->file = ALLOC(CAmxxReader);
-	//*pl->file = CAmxxReader(file, sizeof(cell));
+	pl = new plcache_entry;
+
 	pl->file = new CAmxxReader(file, sizeof(cell));
 	pl->buffer = NULL;
 	if (pl->file->GetStatus() != CAmxxReader::Err_None)
 	{
-		//FREE(pl->file);
-		//FREE(pl);
 		delete pl->file;
 		delete pl;
 		return NULL;
@@ -696,8 +721,8 @@ void CPluginMngr::CacheAndLoadModules(const char *plugin)
 
 void CPluginMngr::CALMFromFile(const char *file)
 {
-	char filename[256];
-	FILE *fp = fopen(build_pathname_r(filename, sizeof(filename) - 1, "%s", file), "rt");
+	char filename[PLATFORM_MAX_PATH];
+	FILE *fp = fopen(build_pathname_r(filename, sizeof(filename), "%s", file), "rt");
 
 	if (!fp) 
 	{
@@ -759,7 +784,7 @@ void CPluginMngr::CALMFromFile(const char *file)
 			continue;
 		}
 
-		build_pathname_r(filename, sizeof(filename)-1, "%s/%s", get_localinfo("amxx_pluginsdir", "addons/amxmodx/plugins"), pluginName);
+		build_pathname_r(filename, sizeof(filename), "%s/%s", get_localinfo("amxx_pluginsdir", "addons/amxmodx/plugins"), pluginName);
 
 		CacheAndLoadModules(filename);
 	}

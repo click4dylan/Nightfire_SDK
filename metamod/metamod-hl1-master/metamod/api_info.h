@@ -83,7 +83,7 @@ typedef struct dllapi_info_s {
 	api_info_t pfnParmsNewLevel;
 	api_info_t pfnParmsChangeLevel;
 	api_info_t pfnGetGameDescription;
-	api_info_t pfnGetPlayerSpawnSpot;
+	//api_info_t pfnGetPlayerSpawnSpot;
 	//api_info_t pfnPlayerCustomization;
 	api_info_t pfnSpectatorConnect;
 	api_info_t pfnSpectatorDisconnect;
@@ -91,11 +91,10 @@ typedef struct dllapi_info_s {
 	api_info_t pfnSys_Error;
 	api_info_t pfnPM_Move;
 	api_info_t pfnPM_Init;
-	api_info_t pfnSetupVisibility;
-	api_info_t pfnAddToFullPack;
-	api_info_t pfnUpdateClientData;
-	
 	api_info_t pfnPM_FindTextureType;
+	api_info_t pfnSetupVisibility;
+	api_info_t pfnUpdateClientData;
+	api_info_t pfnAddToFullPack;
 	api_info_t pfnCreateBaseline;
 	api_info_t pfnRegisterEncoders;
 	api_info_t pfnGetWeaponData;
@@ -106,14 +105,17 @@ typedef struct dllapi_info_s {
 	api_info_t pfnCreateInstancedBaselines;
 	api_info_t pfnInconsistentFile;
 	api_info_t pfnAllowLagCompensation;
+	api_info_t pfnSpawnPlayerAfterLevelLoad;
 	api_info_t END;
 } dllapi_info_t;
 
 
 // "New" api functions
 typedef struct newapi_info_s {
-	api_info_t pfnOnFreeEntPrivateData;
-	api_info_t pfnGameShutdown;
+	api_info_t pfnNullFunc0;
+	api_info_t pfnNullFunc1;
+	//api_info_t pfnOnFreeEntPrivateData;
+	//api_info_t pfnGameShutdown;
 	api_info_t pfnShouldCollide;
 	api_info_t pfnOnSaveGame;
 	api_info_t pfnOnLoadGame;

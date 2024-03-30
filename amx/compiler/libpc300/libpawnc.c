@@ -19,11 +19,11 @@
  *  2.  Altered source versions must be plainly marked as such, and must not be
  *      misrepresented as being the original software.
  *  3.  This notice may not be removed or altered from any source distribution.
- *
- *  Version: $Id: libpawnc.c 2969 2006-08-25 00:28:36Z dvander $
  */
+
 #include <assert.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include "sc.h"
@@ -52,10 +52,14 @@
   void extern __attribute__((visibility("default"))) EXCOMPILER(int argc, char **argv)
 # endif
   {
-	  pc_compile(argc, argv);
+      pc_compile(argc, argv);
   }
 #endif /* PAWNC_DLL */
 
+#if defined LINUX || defined __FreeBSD__ || defined __OpenBSD__ || defined __APPLE__
+  #include <sys/types.h>
+  #include <sys/stat.h>
+#endif
 
 /* pc_printf()
  * Called for general purpose "console" output. This function prints general
@@ -108,8 +112,16 @@ static char *prefix[3]={ "error", "fatal error", "warning" };
 
   if (number!=0) {
     char *pre;
+    int idx;
 
-    pre=prefix[number/100];
+    if (number < 100 || (number >= 200 && sc_warnings_are_errors))
+      idx = 0;
+    else if (number < 200)
+      idx = 1;
+    else
+      idx = 2;
+
+    pre=prefix[idx];
     if (firstline>=0)
       pc_printf("%s(%d -- %d) : %s %03d: ",filename,firstline,lastline,pre,number);
     else
@@ -119,6 +131,14 @@ static char *prefix[3]={ "error", "fatal error", "warning" };
 #endif
   return 0;
 }
+
+typedef struct src_file_s {
+  FILE *fp;         // Set if writing.
+  char *buffer;     // IO buffer.
+  char *pos;        // IO position.
+  char *end;        // End of buffer.
+  size_t maxlength; // Maximum length of the writable buffer.
+} src_file_t;
 
 /* pc_opensrc()
  * Opens a source file (or include file) for reading. The "file" does not have
@@ -134,7 +154,46 @@ static char *prefix[3]={ "error", "fatal error", "warning" };
  */
 void *pc_opensrc(char *filename)
 {
-  return fopen(filename,"rt");
+  FILE *fp = NULL;
+  long length;
+  src_file_t *src = NULL;
+
+#if defined LINUX || defined __FreeBSD__ || defined __OpenBSD__ || defined DARWIN
+  struct stat fileInfo;
+  if (stat(filename, &fileInfo) != 0) {
+    return NULL;
+  }
+
+  if (S_ISDIR(fileInfo.st_mode)) {
+    return NULL;
+  }
+#endif
+
+  if ((fp = fopen(filename, "rb")) == NULL)
+    return NULL;
+  if (fseek(fp, 0, SEEK_END) == -1)
+    goto err;
+  if ((length = ftell(fp)) == -1)
+    goto err;
+  if (fseek(fp, 0, SEEK_SET) == -1)
+    goto err;
+
+  if ((src = (src_file_t *)calloc(1, sizeof(src_file_t))) == NULL)
+    goto err;
+  if ((src->buffer = (char *)calloc(length, sizeof(char))) == NULL)
+    goto err;
+  if (fread(src->buffer, length, 1, fp) != 1)
+    goto err;
+
+  src->pos = src->buffer;
+  src->end = src->buffer + length;
+  fclose(fp);
+  return src;
+
+err:
+  pc_closesrc(src);
+  fclose(fp);
+  return NULL;
 }
 
 /* pc_createsrc()
@@ -151,7 +210,23 @@ void *pc_opensrc(char *filename)
  */
 void *pc_createsrc(char *filename)
 {
-  return fopen(filename,"wt");
+  src_file_t *src = (src_file_t *)calloc(1, sizeof(src_file_t));
+  if (!src)
+    return NULL;
+  if ((src->fp = fopen(filename, "wt")) == NULL) {
+    pc_closesrc(src);
+    return NULL;
+  }
+
+  src->maxlength = 1024;
+  if ((src->buffer = (char *)calloc(1, src->maxlength)) == NULL) {
+    pc_closesrc(src);
+    return NULL;
+  }
+
+  src->pos = src->buffer;
+  src->end = src->buffer;
+  return src;
 }
 
 /* pc_closesrc()
@@ -160,8 +235,15 @@ void *pc_createsrc(char *filename)
  */
 void pc_closesrc(void *handle)
 {
-  assert(handle!=NULL);
-  fclose((FILE*)handle);
+  src_file_t *src = (src_file_t *)handle;
+  if (!src)
+    return;
+  if (src->fp) {
+    fwrite(src->buffer, src->pos - src->buffer, 1, src->fp);
+    fclose(src->fp);
+  }
+  free(src->buffer);
+  free(src);
 }
 
 /* pc_resetsrc()
@@ -170,8 +252,12 @@ void pc_closesrc(void *handle)
  */
 void pc_resetsrc(void *handle,void *position)
 {
-  assert(handle!=NULL);
-  fsetpos((FILE*)handle,(fpos_t *)position);
+  src_file_t *src = (src_file_t *)handle;
+  ptrdiff_t pos = (ptrdiff_t)position;
+
+  assert(!src->fp);
+  assert(pos >= 0 && src->buffer + pos <= src->end);
+  src->pos = src->buffer + pos;
 }
 
 /* pc_readsrc()
@@ -180,7 +266,35 @@ void pc_resetsrc(void *handle,void *position)
  */
 char *pc_readsrc(void *handle,unsigned char *target,int maxchars)
 {
-  return fgets((char*)target,maxchars,(FILE*)handle);
+  src_file_t *src = (src_file_t *)handle;
+  char *outptr = (char *)target;
+  char *outend = outptr + maxchars;
+
+  assert(!src->fp);
+
+  if (src->pos == src->end)
+    return NULL;
+
+  while (outptr < outend && src->pos < src->end) {
+    char c = *src->pos++;
+    *outptr++ = c;
+
+    if (c == '\n')
+      break;
+    if (c == '\r') {
+      // Handle CRLF.
+      if (src->pos < src->end && *src->pos == '\n') {
+        src->pos++;
+        if (outptr < outend)
+          *outptr++ = '\n';
+      }
+      break;
+    }
+  }
+
+  // Caller passes in a buffer of size >= maxchars+1.
+  *outptr = '\0';
+  return (char *)target;
 }
 
 /* pc_writesrc()
@@ -189,20 +303,51 @@ char *pc_readsrc(void *handle,unsigned char *target,int maxchars)
  */
 int pc_writesrc(void *handle,unsigned char *source)
 {
-  return fputs((char*)source,(FILE*)handle) >= 0;
+  char *str = (char *)source;
+  size_t len = strlen(str);
+  src_file_t *src = (src_file_t *)handle;
+
+  assert(src->fp && src->maxlength);
+
+  if (src->pos + len > src->end) {
+    char *newbuf;
+    size_t newmax = src->maxlength;
+    size_t newlen = (src->pos - src->buffer) + len;
+    while (newmax < newlen) {
+      // Grow by 1.5X
+      newmax += newmax + newmax / 2;
+      if (newmax < src->maxlength)
+        abort();
+    }
+
+    newbuf = (char *)realloc(src->buffer, newmax);
+    if (!newbuf)
+      abort();
+    src->pos = newbuf + (src->pos - src->buffer);
+    src->end = newbuf + newmax;
+    src->buffer = newbuf;
+    src->maxlength = newmax;
+  }
+
+  strcpy(src->pos, str);
+  src->pos += len;
+  return 0;
 }
 
 void *pc_getpossrc(void *handle)
 {
-  static fpos_t lastpos;  /* may need to have a LIFO stack of such positions */
+  src_file_t *src = (src_file_t *)handle;
 
-  fgetpos((FILE*)handle,&lastpos);
-  return &lastpos;
+  assert(!src->fp);
+  return (void *)(ptrdiff_t)(src->pos - src->buffer);
 }
 
 int pc_eofsrc(void *handle)
 {
-  return feof((FILE*)handle);
+  src_file_t *src = (src_file_t *)handle;
+
+  assert(!src->fp);
+  return src->pos == src->end;
 }
 
 /* should return a pointer, which is used as a "magic cookie" to all I/O

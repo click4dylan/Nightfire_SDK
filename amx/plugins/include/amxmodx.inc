@@ -184,17 +184,32 @@ forward client_disconnect(id);
  * @note This will be called in some additional cases that client_disconnect doesn't cover, 
  *       most notably when a client aborts the connection process. It is guaranteed to pair 
  *       with the client_connect() forward.
- * @note By this point it is already too late to do anything that directly
- *       affects the client.
+ * @note When this fires the player entity is still valid (e.g. is_user_connected(id) will 
+ *       return true), but no networked commands will reach the client.
  *
  * @param id         Client index
- * @param drop       If true, client has been explicitly dropped by game
- * @param message    If drop is true, a disconnected message or buffer to copy a new message to
+ * @param drop       If true, the game has explicitly dropped the client
+ * @param message    If drop is true, a writable buffer containing the disconnect info message
  * @param maxlen     Maximum size of buffer
  *
  * @noreturn
  */
 forward client_disconnected(id, bool:drop, message[], maxlen);
+
+/**
+ * Called when a client entity has been removed from the server.
+ *
+ * @note This fires after the client_disconnected() forward, when the player entity has been
+ *       removed (e.g. is_user_connected(id) will return false).
+ *
+ * @param id         Client index
+ * @param drop       If true, the game has explicitly dropped the client
+ * @param message    If drop is true, contains the disconnect info message
+ *
+ * @noreturn
+ */
+forward client_remove(id, bool:drop, const message[]);
+
 
 /**
  * Called when a client attempts to execute a command.
@@ -228,10 +243,12 @@ forward client_putinserver(id);
  * @param plugin_name   Name of the plugin
  * @param version       Version of the plugin
  * @param author        Author of the plugin
+ * @param url           URL of the plugin
+ * @param description   Description of the plugin
  *
  * @return              Plugin id of the calling plugin
  */
-native register_plugin(const plugin_name[], const version[], const author[]);
+native register_plugin(const plugin_name[], const version[], const author[], const url[] = "", const description[] = "");
 
 /**
  * Precaches a model file.
@@ -444,7 +461,7 @@ native client_print_color(index, sender, const message[], any:...);
  *       last, to the client with the highest index.
  *
  * @param player    Client index, use 0 to display to all clients
- * @param type      Message type, see print_* destination constants in
+ * @param type      Message type, see engprint_* destination constants in
  *                  amxconst.inc
  * @param message   Formatting rules
  * @param ...       Variable number of formatting parameters
@@ -482,6 +499,8 @@ native console_cmd(id, const cmd[], any:...);
 /**
  * Registers a function to be called on a given game event.
  *
+ * @note Please consider using register_event_ex() instead which allows you to
+ *       use named constants for flags instead of letters.
  * @note Examples for event conditions:
  *       "2=c4" - Second parameter of message must be the string "c4"
  *       "3>10" - Third parameter of message must be greater than 10
@@ -524,9 +543,53 @@ native console_cmd(id, const cmd[], any:...);
 native register_event(const event[], const function[], const flags[], const cond[] = "", ...);
 
 /**
- * Enables a function hook of a game event which has been previously registered with register_event().
+ * Registers a function to be called on a given game event.
  *
- * @param handle    Value returned from register_event()
+ * @note Examples for event conditions:
+ *       "2=c4" - Second parameter of message must be the string "c4"
+ *       "3>10" - Third parameter of message must be greater than 10
+ *       "3!4" - Third parameter of message must not be equal to 4
+ *       "2&Buy" - Second parameter of message must contain "Buy" substring
+ *       "2!Buy" - Second parameter of message must not equal "Buy"
+ * @note Due to a long-standing bug that would break compatibility with older
+ *       plugins, the client id should be checked for alive/dead state if using
+ *       flags "d" or "e".
+ * @note If multiple conditions are specified for a single parameter, only one
+ *       of them has to hold true for the event function to be called.
+ *
+ * @param event     Name of event that should be hooked
+ * @param function  Name of callback function
+ * @param flags     Flags used for filtering events (enum RegisterEventFlags); the valid flags are:
+ *                    RegisterEvent_Global - Global event (sent to every client)
+ *                    RegisterEvent_Single - Event sent to single client
+ *                    RegisterEvent_OnceForMultiple - Call only once when repeated to multiple clients
+ *                    RegisterEvent_OnlyDead - Call only if sent to dead client
+ *                    RegisterEvent_OnlyAlive - Call only if sent to alive client
+ *                    RegisterEvent_OnlyHuman - Call only if sent to human client (RegisterEvent_Single required)
+ *                    RegisterEvent_OnlyBots - Call only if sent to bot (RegisterEvent_Single required)
+ * @param cond      Condition string used for filtering events, built as:
+ *                  "<argument number><comparison operator><value>"
+ *                  Argument number is the argument position to be filtered
+ *                  The comparison operator may be:
+ *                    "=" for equality comparison (all argument types)
+ *                    "!" for inequality comparison (all argument types)
+ *                    "&" for bitwise and (int argument) or substring
+ *                        comparison (string argument)
+ *                    "<" for less than comparison (int/float arguments)
+ *                    ">" for greater than comparison (int/float arguments)
+ *                  The argument is compared to the specified value accordingly
+ * @param ...       Any number of additional conditions
+ *
+ * @return          Event handle
+ * @error           If an invalid event name or callback function is provided,
+ *                  an error will be thrown.
+ */
+native register_event_ex(const event[], const function[], RegisterEventFlags:flags, const cond[] = "", ...);
+
+/**
+ * Enables a function hook of a game event which has been previously registered with register_event_ex().
+ *
+ * @param handle    Value returned from register_event() or register_event_ex()
  *
  * @noreturn
  * @error           If an invalid handle is provided, an error will be thrown.
@@ -534,9 +597,9 @@ native register_event(const event[], const function[], const flags[], const cond
 native enable_event(handle);
 
 /**
- * Disables a function hook of a game event which has been previously registered with register_event().
+ * Disables a function hook of a game event which has been previously registered with register_event_ex().
  *
- * @param handle    Value returned from register_event()
+ * @param handle    Value returned from register_event() or register_event_ex()
  *
  * @noreturn
  * @error           If an invalid handle is provided, an error will be thrown.
@@ -618,10 +681,12 @@ native disable_logevent(handle);
  * @param fadeintime    Time it takes the message to fully appear (fade-in)
  * @param fadeouttime   Time it takes the message to fully disappear (fade-out)
  * @param channel       Channel to use on the client
- *
+ * @param alpha1        Alpha component of hudmessage color
+ * @param color2[4]     Color 2 array {r,g,b,a}
+ * 
  * @noreturn
  */
-native set_hudmessage(red = 200, green = 100, blue = 0, Float:x = -1.0, Float:y = 0.35, effects = 0, Float:fxtime = 6.0, Float:holdtime = 12.0, Float:fadeintime = 0.1, Float:fadeouttime = 0.2, channel = -1);
+native set_hudmessage(red = 200, green = 100, blue = 0, Float:x = -1.0, Float:y = 0.35, effects = 0, Float:fxtime = 6.0, Float:holdtime = 12.0, Float:fadeintime = 0.1, Float:fadeouttime = 0.2, channel = -1, alpha1 = 0, color2[4] = {255, 255, 250, 0});
 
 /**
  * Displays a message on the client HUD.
@@ -724,7 +789,7 @@ native show_menu(index, keys, const menu[], time = -1, const title[] = "");
 /**
  * Retrieves values from a client message.
  *
- * @note For use within callbacks registered with register_event()
+ * @note For use within callbacks registered with register_event_ex()
  * @note Usage examples:
  *       value = read_data(1);
  *       read_data(2, floatvalue);
@@ -752,7 +817,7 @@ native read_data(value, any:...);
 /**
  * Returns the number of values in the client message.
  *
- * @note For use within callbacks registered with register_event()
+ * @note For use within callbacks registered with register_event_ex()
  *
  * @return      Number of values in client message
  */
@@ -761,7 +826,7 @@ native read_datanum();
 /**
  * Returns the message id of the client message.
  *
- * @note For use within callbacks registered with register_event()
+ * @note For use within callbacks registered with register_event_ex()
  *
  * @return      Message id of the client message
  */
@@ -861,6 +926,19 @@ native is_user_bot(index);
 native is_user_hltv(index);
 
 /**
+ * Returns if the client is authorized.
+ *
+ * @note This does not throw an error if the provided index is out of the
+ *       1 to MaxClients range. That means you can safely use this native
+ *       without manually verifying that the index is a valid client index.
+ *
+ * @param index     Client index
+ *
+ * @return          1 if client is authorized, 0 otherwise
+ */
+native is_user_authorized(index);
+
+/**
  * Returns if the client is connected.
  *
  * @note This does not throw an error if the provided index is out of the
@@ -949,6 +1027,7 @@ native get_user_attacker(index, ...);
  *
  * @note If the trace does not hit a client, id and body will be set to 0.
  * @note If the trace hits nothing within the specified distance, 0 is returned.
+ * @note For a list of possible body hitplaces see the HIT_* constants in amxconst.inc.
  *
  * @param index     Client index to trace aim from
  * @param id        Variable to store hit client index (if applicable)
@@ -959,7 +1038,7 @@ native get_user_attacker(index, ...);
  * @error           If the client index is not within the range of 1 to
  *                  MaxClients, an error will be thrown.
  */
-native Float:get_user_aiming(index, &id, &body, dist = 9999);
+native Float:get_user_aiming(index, &id, &body = HIT_GENERIC, dist = 9999);
 
 /**
  * Returns the client's frags.
@@ -1141,14 +1220,16 @@ native get_user_ping(index, &ping, &loss);
 /**
  * Retrieves an origin related to the client.
  *
+ * @note For a list of possible modes see the Origin_* constants in amxconst.inc.
+ *
  * @param index     Client index
  * @param origin    Array to store origin in
  * @param mode      What type of origin to retrieve:
- *                    0 - current position
- *                    1 - position of eyes (and weapon)
- *                    2 - aim end position from client position
- *                    3 - aim end position from eyes (hit point for weapon)
- *                    4 - position of last bullet hit (only for Counter-Strike)
+ *                    Origin_Client - current position
+ *                    Origin_Eyes - position of eyes (and weapon)
+ *                    Origin_AimEndClient - aim end position from client position
+ *                    Origin_AimEndEyes - aim end position from eyes (hit point for weapon)
+ *                    Origin_CS_LastBullet - position of last bullet hit (only for Counter-Strike)
  *
  * @return          1 on success, 0 if client is not connected
  * @error           If the client index is not within the range of 1 to
@@ -1274,6 +1355,19 @@ native log_amx(const string[], any:...);
 native log_message(const message[], any:...);
 
 /**
+ * Logs a message hookable by plugins to the current server log file.
+ *
+ * @note The log will include a timestamp with the message.
+ * @note The message can be hooked using "register_logevent".
+ *
+ * @param string    Formatting rules
+ * @param ...       Variable number of formatting parameters
+ *
+ * @return          Number of printed characters
+ */
+native elog_message(const message[], any:...);
+
+/**
  * Logs a message to the specified file
  *
  * @note The log will include a timestamp with the message.
@@ -1297,6 +1391,8 @@ native get_playersnum(flag = 0);
 /**
  * Stores a filtered list of client indexes to an array.
  *
+ * @note Please consider using get_players_ex() instead which allows you to
+ *       use named constants for flags instead of letters.
  * @note Example retrieving all alive CTs: get_players(players, num "ae", "CT")
  *
  * @param players   Array to store indexes to
@@ -1318,32 +1414,39 @@ native get_playersnum(flag = 0);
 native get_players(players[MAX_PLAYERS], &num, const flags[] = "", const team[] = "");
 
 /**
- * Retrieves argument of client command.
+ * Retrieves argument of client command as string.
  *
  * @note Should only be used inside of the client_command() forward.
- * @note Usage examples:
- *       value = read_argv(1);
- *       read_argv(2, floatvalue);
- *       written = read_argv(3, buffer, buffersize);
  *
  * @param id        Argument index starting from 1, 0 returns the command itself
- * @param ...       Changes the native's behavior depending on how many
- *                  additional parameters are provided:
- *                     0 - Return the argument integer value directly
- *                     1 - Store the argument float value in the variable passed
- *                         as the second parameter
- *                     2 - Copy the argument string value to the buffer provided
- *                         in the second parameter, using the third as the
- *                         maximum buffer size
+ * @param output    Buffer to copy command argument to
+ * @param len       Maximum buffer size
  *
- * @return          Changes depending on how many additional parameters are
- *                  provided:
- *                     0 - Returns the argument integer value
- *                     1 - Returns the argument float value, converted
- *                         (truncated) to an integer
- *                     2 - Returns the number of cells written to the buffer
+ * @return          Number of cells written to buffer
  */
-native read_argv(id, any:...);
+native read_argv(id, output[], len);
+
+/**
+ * Retrieves argument of client command as integer value.
+ *
+ * @note Should only be used inside of the client_command() forward.
+ *
+ * @param id        Argument index starting from 1
+ *
+ * @return          Integer value
+ */
+native read_argv_int(id);
+
+/**
+ * Retrieves argument of client command as float value.
+ *
+ * @note Should only be used inside of the client_command() forward.
+ *
+ * @param id        Argument index starting from 1
+ *
+ * @return          Float value
+ */
+native Float:read_argv_float(id);
 
 /**
  * Retrieves full client command string.
@@ -1396,6 +1499,8 @@ native get_flags(flags, output[], len);
 /**
  * Find a player given a filter.
  *
+ * @note Please consider using find_player_ex() instead which allows you to
+ *       use named constants for flags instead of letters.
  * @note If matching by userid, do not also specify the "a", "b" or "c" flags,
  *       or the function may not return a correct result.
  *
@@ -1418,6 +1523,32 @@ native get_flags(flags, output[], len);
  * @return          Client index, or 0 if no client was found
  */
 native find_player(const flags[], ...);
+
+/**
+ * Find a player given a filter.
+ *
+ * @note If matching by userid, do not also specify FindPlayer_MatchName, FindPlayer_MatchNameSubstring
+ *       or FindPlayer_MatchAuthId, or the function may not return a correct result.
+ *
+ * @param flags     Filtering flags (enum FindPlayerFlags); valid flags are:
+ *                    FindPlayer_MatchName - match with name
+ *                    FindPlayer_MatchNameSubstring - match with name substring
+ *                    FindPlayer_MatchAuthId - match with authid
+ *                    FindPlayer_MatchIP - match with ip
+ *                    FindPlayer_MatchTeam - match with team name
+ *                    FindPlayer_ExcludeDead - do not include dead clients
+ *                    FindPlayer_ExcludeAlive - do not include alive clients
+ *                    FindPlayer_ExcludeBots - do not include bots
+ *                    FindPlayer_ExcludeHuman - do not include human clients
+ *                    FindPlayer_LastMatched - return last matched client instead of the first
+ *                    FindPlayer_MatchUserId - match with userid
+ *                    FindPlayer_CaseInsensitive - match case insensitively
+ *                    FindPlayer_IncludeConnecting - include connecting clients
+ * @param ...       String to match against (integer if FindPlayer_MatchUserId is specified)
+ *
+ * @return          Client index, or 0 if no client was found
+ */
+native find_player_ex(FindPlayerFlags:flags, ...);
 
 /**
  * Removes double-quotes from the beginning and end of a string.
@@ -1630,6 +1761,16 @@ native parse_time(const input[], const format[], time = -1);
 /**
  * Calls a function after a specified time has elapsed.
  *
+ * @note Please consider using set_task_ex() instead which allows you to
+ *       use named constants for flags instead of letters.
+ *
+ * @note The function is called in the following manner if data is passed:
+ *   data[]          - Data passed
+ *   id              - Task index
+ *
+ * @note The function is called in the following manner if no data is passed:
+ *   id              - Task index
+ *
  * @param time          Time interval to assign
  * @param function      Function to execute
  * @param id            Task id to assign
@@ -1710,10 +1851,10 @@ native set_user_flags(index, flags = -1, id = 0);
  *       0 is actively used. You should not change the value of the second
  *       parameter from the default.
  *
- * @param index     Client index, 0 to set flags of server
+ * @param index     Client index, 0 to get flags of server
  * @param id        Flag set id, ranging from 0 to 31
  *
- * @noreturn
+ * @return          Bitflag sum of client's admin flags
  * @error           If the index is not within the range of 0 to MaxClients, an
  *                  error will be thrown.
  */
@@ -2028,6 +2169,9 @@ native random_num(a, b);
  * @note Example usage: get_user_msgid("TextMsg")
  * @note The message id is unique as long as the server is running, but might
  *       change between updates. They should not be hardcoded into plugins.
+ * @note On first server start, this function will return 0 if used inside
+ *       plugin_precache(). Consider hooking RegUserMsg in order to retrieve
+ *       the correct message id.
  *
  * @param name      Client message name
  *
@@ -2196,12 +2340,15 @@ native is_plugin_loaded(const name[], bool:usefilename = false);
  * @param len4      Maximum author buffer size
  * @param status    Buffer to copy plugin status flags to
  * @param len5      Maximum status buffer size
- * @param ...       Unused and ignored
+ * @param url       Buffer to copy plugin url to
+ * @param len6      Maximum url buffer size
+ * @param desc      Buffer to copy plugin description to
+ * @param len7      Maximum description buffer size
  *
  * @return          Plugin index on success, -1 if there is no plugin with given
  *                  index
  */
-native get_plugin(index, filename[] = "", len1 = 0, name[] = "", len2 = 0, version[] = "", len3 = 0, author[] = "", len4 = 0, status[] = "", len5 = 0, ...);
+native get_plugin(index, filename[] = "", len1 = 0, name[] = "", len2 = 0, version[] = "", len3 = 0, author[] = "", len4 = 0, status[] = "", len5 = 0, url[] = "", len6 = 0, desc[] = "", len7 = 0);
 
 /**
  * Returns the number of loaded AMXX plugins.
@@ -2298,7 +2445,7 @@ native callfunc_begin_i(func, plugin = -1);
  * @param pluginId  Plugin id, if -1 the calling plugin is targeted
  *                  The plugin id can be retrieved using find_plugin_byfile()
  *
- * @return          >0 Function id on success
+ * @return          >=0 Function id on success
  *                  -1 if plugin or function was not found
  */
 native get_func_id(const funcName[], pluginId = -1);
@@ -3139,7 +3286,7 @@ native PrepareArray(const array[], size, copyback = 0);
  * @note Passing arrays requires them to be prepared using PrepareArray()
  *
  * @param forward_handle    Forward handle
- * @param ret               Variable to store return value in
+ * @param ret               Optional variable to store return value in
  * @param ...               Variable number of parameters to pass through
  *
  * @return                  1 on success, 0 if forward can't be executed
@@ -3147,7 +3294,7 @@ native PrepareArray(const array[], size, copyback = 0);
  *                          of parameters that the forward was declared with,
  *                          an error is thrown.
  */
-native ExecuteForward(forward_handle, &ret, any:...);
+native ExecuteForward(forward_handle, &ret = 0, any:...);
 
 /**
  * Destroys and deallocates a forward.
@@ -3169,7 +3316,7 @@ native DestroyForward(forward_handle);
  *
  * @noreturn
  */
-native arrayset(array[], value, size);
+native arrayset(any:array[], any:value, size);
 
 /**
  * Returns the weapon id associated with a weapon name.
@@ -3282,6 +3429,19 @@ forward OnAutoConfigsBuffered();
  * @noreturn
  */
 native AutoExecConfig(bool:autoCreate = true, const name[] = "", const folder[] = "");
+
+/**
+ * Creates a single use hook for the next frame.
+ *
+ * @param callback      Function to be executed on the next frame.
+ * @param data          Optional data to be passed to the callback function.
+ *
+ * @note                Callback function prototype:
+ *                          public function(data)
+ *
+ * @noreturn
+ */
+native RequestFrame(const callback[], any:data = 0);
 
 // Always keep this at the bottom of this file
 #include <message_stocks>

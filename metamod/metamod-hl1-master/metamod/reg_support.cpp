@@ -126,14 +126,12 @@ public:
 			META_ERROR("Couldn't find registered plugin command: %s", cmd);
 			return;
 		}
-		if (icmd->call(numargs, args) != mTRUE)
+		if (icmd->call(this, numargs, args) != mTRUE)
 			META_CONS("[metamod: command '%s' unavailable; plugin unloaded]", cmd);
 	}
 	meta_command_handler(const char* _name, const char* _description = "", unsigned int _flags = 0)
+		: ConsoleFunction(_name, _description, _flags)
 	{
-		name = _name;
-		description = _description;
-		flags = _flags;
 	}
 };
 

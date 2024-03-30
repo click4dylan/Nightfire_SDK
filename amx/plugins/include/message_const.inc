@@ -549,7 +549,7 @@ enum
  * write_byte(color)
  * write_short(count)
  * write_short(base speed)
- * write_short(ramdon velocity)
+ * write_short(random velocity)
  */
 #define TE_STREAK_SPLASH            25
 
@@ -565,7 +565,6 @@ enum
  * write_byte(red)
  * write_byte(green)
  * write_byte(blue)
- * write_byte(brightness)
  * write_byte(life in 10's)
  * write_byte(decay rate in 10's)
  */
@@ -738,7 +737,7 @@ enum
  * write_byte(TE_FIZZ)
  * write_short(entity)
  * write_short(sprite index)
- * write_byte density)
+ * write_byte(density)
  */
 #define TE_FIZZ                     105
 

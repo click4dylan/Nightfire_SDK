@@ -60,11 +60,13 @@ typedef void (*pdummyfunc)(void);
 struct meta_new_dll_functions_t : public NEW_DLL_FUNCTIONS {
 		// Array of five dummy function pointers. Must be filled with NULL.
 		// nightfire has 2 dummies
-	   pdummyfunc dummies[2]; //NOEL COMMENTED
+	   //pdummyfunc dummies[2]; //NOEL COMMENTED
 	// functions :
 
 		meta_new_dll_functions_t();
 		meta_new_dll_functions_t(
+            void(*pfnNullFunc0)(),
+            void(*pfnNullFunc1)(),
 			/*void(*pfnOnFreeEntPrivateData) (edict_t*),
 			void(*pfnGameShutdown)         (void),*/
 			int				(*pfnShouldCollide)( edict_t *, edict_t *),

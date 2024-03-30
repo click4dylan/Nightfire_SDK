@@ -1,20 +1,28 @@
-/* AMX Mod script.
-*
-* (c) 2004, SidLuke
-* This file is provided as is (no warranties).
-*
-* Plugin works with Stats Settings Plugin. Just run both of them.
-* By amx_statscfg command (from Stats Settings Plugin)
-* you will be able to set all settings and save them to a file.
-* 
-* Example of usage for some options:
-* amx_statscfg on SayTop15
-* amx_statscfg on SayRank
-* 
-* Accept able are also parts of name:
-* amx_statscfg off say
-* amx_statscfg on End
-*/
+// vim: set ts=4 sw=4 tw=99 noet:
+//
+// AMX Mod X, based on AMX Mod by Aleksander Naszko ("OLO").
+// Copyright (C) The AMX Mod X Development Team.
+// Copyright (C) 2004 SidLuke.
+//
+// This software is licensed under the GNU General Public License, version 3 or higher.
+// Additional exceptions apply. For full license details, see LICENSE.txt or visit:
+//     https://alliedmods.net/amxmodx-license
+
+//
+// DoD Stats Plugin
+//
+
+// Plugin works with Stats Settings Plugin. Just run both of them.
+// By amx_statscfg command (from Stats Settings Plugin)
+// you will be able to set all settings and save them to a file.
+//
+// Example usage for some options:
+// amx_statscfg on SayTop15
+// amx_statscfg on SayRank
+//
+// Acceptable are also parts of name:
+// amx_statscfg off say
+// amx_statscfg on End
 
 #include <amxmodx>
 #include <amxmisc>
@@ -58,27 +66,27 @@ public EnemyGreKillSound
 public LeadSounds
 public MortarKill
 
-new g_streakKills[33][2]
-new g_multiKills[33][2]
+new g_streakKills[MAX_PLAYERS + 1][2]
+new g_multiKills[MAX_PLAYERS + 1][2]
 new Float:g_prevKill
 new g_prevKillerId
 new g_KillCount;
 new g_RoundScore[2]
 
-new g_userPosition[33]
-new g_userState[33]
-new g_userPlayers[33][32]
+new g_userPosition[MAX_PLAYERS + 1]
+new g_userState[MAX_PLAYERS + 1]
+new g_userPlayers[MAX_PLAYERS + 1][MAX_PLAYERS]
 new g_Buffer[2048]
 
-new g_Killers[33][3]
-new Float:g_DeathStats[33]
+new g_Killers[MAX_PLAYERS + 1][3]
+new Float:g_DeathStats[MAX_PLAYERS + 1]
 
 new g_damage_sync
 new g_center1_sync
 new g_center2_sync
 new g_left_sync
 
-new g_bodyParts[8][] = { 
+new g_bodyParts[MAX_BODYHITS][] = { 
                         "WHOLEBODY",
                         "HEAD",
                         "CHEST",
@@ -251,19 +259,19 @@ public cmdFF(id){
 public endGameStats(){
   new i
   if ( EndPlayer ){
-    new players[32], inum
+    new players[MAX_PLAYERS], inum
     get_players(players,inum)
     for(i = 0; i < inum; ++i){
         displayStats_steam(players[i],players[i])
     }
   } 
   else if ( EndTop15 ){
-    new players[32], inum
+    new players[MAX_PLAYERS], inum
     get_players(players,inum)
 
-    new g_Top[8], top = get_cvar_num("dodstats_topvalue") 
+    new g_Top[16], top = get_cvar_num("dodstats_topvalue") 
     for(i = 0; i < inum; ++i){
-      format(g_Top,15,"%L",i,"TOPX",top)
+      format(g_Top,charsmax(g_Top),"%L",i,"TOPX",top)
       getTop15_steam(i)
       show_motd(players[i],g_Buffer,g_Top)
     }
@@ -286,20 +294,19 @@ public cmdStats(id){
 
 /* build list of attackers */ 
 getAttackers(id) { 
-  new name[32],wpn[32], stats[9],body[8],found=0 
-  new pos = format(g_Buffer,2047,"%L^n",id,"ATTACKERS") 
-  new amax = get_maxplayers() 
-  for(new a = 1; a <= amax; ++a){ 
+  new name[MAX_NAME_LENGTH],wpn[32], stats[DODX_MAX_STATS],body[MAX_BODYHITS],found=0 
+  new pos = format(g_Buffer,charsmax(g_Buffer),"%L^n",id,"ATTACKERS") 
+  for(new a = 1; a <= MaxClients; ++a){ 
 
-    if(get_user_astats(id,a,stats,body,wpn,31))
+    if(get_user_astats(id,a,stats,body,wpn,charsmax(wpn)))
     { 
       found = 1 
-      if (stats[0]) 
-        format(wpn,31," -- %s",wpn) 
+      if (stats[DODX_KILLS]) 
+        format(wpn,charsmax(wpn)," -- %s",wpn) 
       else 
         wpn[0] = 0 
-      get_user_name(a,name,31) 
-      pos += format(g_Buffer[pos],2047-pos,"%s -- %d %L / %d %L%s^n",name,stats[6],id,"DMG",stats[5],id,"HIT_S",wpn) 
+      get_user_name(a,name,charsmax(name)) 
+      pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"%s -- %d %L / %d %L%s^n",name,stats[DODX_DAMAGE],id,"DMG",stats[DODX_HITS],id,"HIT_S",wpn) 
     } 
   } 
   return found 
@@ -308,19 +315,18 @@ getAttackers(id) {
 
 /* build list of victims */ 
 getVictims(id) { 
-  new name[32],wpn[32], stats[9],body[8],found=0 
-  new pos = format(g_Buffer,2047,"%L^n",id,"VICTIMS") 
-  new amax = get_maxplayers() 
-  for(new a = 1; a <= amax; ++a){ 
-    if(get_user_vstats(id,a,stats,body,wpn,31))
+  new name[MAX_NAME_LENGTH],wpn[32], stats[DODX_MAX_STATS],body[MAX_BODYHITS],found=0 
+  new pos = format(g_Buffer,charsmax(g_Buffer),"%L^n",id,"VICTIMS") 
+  for(new a = 1; a <= MaxClients; ++a){ 
+    if(get_user_vstats(id,a,stats,body,wpn,charsmax(wpn)))
     { 
       found = 1 
-      if (stats[1]) 
-        format(wpn,31," -- %s",wpn) 
+      if (stats[DODX_DEATHS]) 
+        format(wpn,charsmax(wpn)," -- %s",wpn) 
       else 
         wpn[0] = 0 
-      get_user_name(a,name,31) 
-      pos += format(g_Buffer[pos],2047-pos,"%s -- %d %L / %d %L%s^n",name,stats[6],id,"DMG",stats[5],id,"HITS",wpn) 
+      get_user_name(a,name,charsmax(name)) 
+      pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"%s -- %d %L / %d %L%s^n",name,stats[DODX_DAMAGE],id,"DMG",stats[DODX_HITS],id,"HITS",wpn) 
     } 
   } 
   return found 
@@ -328,24 +334,24 @@ getVictims(id) {
 
 /* build list of hita for AV List */ 
 getHits(id,killer) { 
-  new stats[9], body[8], pos = 0 
+  new stats[DODX_MAX_STATS], body[MAX_BODYHITS], pos = 0 
   g_Buffer[0] = 0 
   get_user_astats(id,killer,stats,body) 
-  for(new a = 1; a < 8; ++a) 
+  for(new a = 1; a < sizeof(body); ++a) 
     if(body[a]) 
-      pos += format(g_Buffer[pos],2047-pos,"%L: %d^n",id,g_bodyParts[a],body[a]) 
+      pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"%L: %d^n",id,g_bodyParts[a],body[a]) 
 } 
 
 /* build list of hits for say hp */ 
 getMyHits(id,killed) { 
-  new name[32], stats[9], body[8], found = 0 
-  get_user_name(killed,name,31) 
-  new pos = format(g_Buffer,2047,"%L",id,"YOU_HIT",name) 
+  new name[MAX_NAME_LENGTH], stats[DODX_MAX_STATS], body[MAX_BODYHITS], found = 0 
+  get_user_name(killed,name,charsmax(name)) 
+  new pos = format(g_Buffer,charsmax(g_Buffer),"%L",id,"YOU_HIT",name) 
   get_user_vstats(id,killed,stats,body) 
-  for(new a = 1; a < 8; ++a){ 
+  for(new a = 1; a < sizeof(body); ++a){ 
     if(body[a]){ 
       found = 1 
-      pos += format(g_Buffer[pos],2047-pos," %L: %d ",id,g_bodyParts[a],body[a]) 
+      pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos," %L: %d ",id,g_bodyParts[a],body[a]) 
     } 
   } 
   return found 
@@ -361,13 +367,13 @@ public cmdKiller(id) {
     return PLUGIN_HANDLED 
   } 
   if (g_Killers[id][0]) { 
-    new name[32], stats[9], body[8], wpn[33], mstats[9], mbody[8] 
-    get_user_name(g_Killers[id][0],name,31) 
-    get_user_astats(id,g_Killers[id][0],stats,body,wpn,31) 
+    new name[MAX_NAME_LENGTH], stats[DODX_MAX_STATS], body[MAX_BODYHITS], wpn[32], mstats[DODX_MAX_STATS], mbody[MAX_BODYHITS] 
+    get_user_name(g_Killers[id][0],name,charsmax(name)) 
+    get_user_astats(id,g_Killers[id][0],stats,body,wpn,charsmax(wpn)) 
     get_user_vstats(id,g_Killers[id][0],mstats,mbody) 
     client_print(id,print_chat,"%L",id,"KILL_INFO1", name,wpn,float(g_Killers[id][2]) * 0.0254 ) 
-    client_print(id,print_chat,"%L",id,"KILL_INFO2", stats[6],stats[5], g_Killers[id][1] ) 
-    client_print(id,print_chat,"%L",id,"KILL_INFO3", mstats[6], mstats[5] ) 
+    client_print(id,print_chat,"%L",id,"KILL_INFO2", stats[DODX_DAMAGE],stats[DODX_HITS], g_Killers[id][1] ) 
+    client_print(id,print_chat,"%L",id,"KILL_INFO3", mstats[DODX_DAMAGE], mstats[DODX_HITS] ) 
 
     if (getMyHits(id,g_Killers[id][0])) client_print(id,print_chat,"%L",id,"KILL_INFO4",g_Buffer) 
   } 
@@ -409,22 +415,22 @@ showStatsMenu(id,pos){
   get_players(g_userPlayers[id],inum)
   if (start >= inum) start = pos = g_userPosition[id] = 0
 
-  new len = format(menu_body,511,"\y%L\R%d/%d^n\w^n",id,"SERVER_STATS",pos + 1,((inum/max_menupos)+((inum%max_menupos)?1:0)))
-  new name[32], end = start + max_menupos, keys = (1<<9)|(1<<7)
+  new len = format(menu_body,charsmax(menu_body),"\y%L\R%d/%d^n\w^n",id,"SERVER_STATS",pos + 1,((inum/max_menupos)+((inum%max_menupos)?1:0)))
+  new name[MAX_NAME_LENGTH], end = start + max_menupos, keys = (1<<9)|(1<<7)
   if (end > inum) end = inum
   for(new a = start; a < end; ++a){
-    get_user_name(g_userPlayers[id][a],name,31)
+    get_user_name(g_userPlayers[id][a],name,charsmax(name))
     keys |= (1<<k)
-    len += format(menu_body[len],511-len,"%d. %s^n",++k,name)
+    len += format(menu_body[len],charsmax(menu_body)-len,"%d. %s^n",++k,name)
   }
-  len += format(menu_body[len],511-len,"^n8. %L^n",id,g_userState[id] ? "SHOW_RANK" : "SHOW_STATS" )
+  len += format(menu_body[len],charsmax(menu_body)-len,"^n8. %L^n",id,g_userState[id] ? "SHOW_RANK" : "SHOW_STATS" )
   if (end != inum){
-    len += format(menu_body[len],511-len,"^n9. More...^n0. %s" , pos ? "Back" : "Exit" )
+    len += format(menu_body[len],charsmax(menu_body)-len,"^n9. More...^n0. %s" , pos ? "Back" : "Exit" )
     keys |= (1<<8)
 
   }
 
-  else len += format(menu_body[len],511-len,"^n0. %s" , pos ? "Back" : "Exit" )
+  else len += format(menu_body[len],charsmax(menu_body)-len,"^n0. %s" , pos ? "Back" : "Exit" )
   show_menu(id,keys,menu_body,-1,"Server Stats")
   return PLUGIN_HANDLED
 }
@@ -439,10 +445,10 @@ public NadeCatch(id){
     new catch = ( ( get_user_team(id) == 1 && GreId == 15 ) ||  ( get_user_team(id) == 2 && GreId == 16 ) ) ? 1:0
     if ( catch ) {
       if ( GreCatch ){
-        new player_name[32] 
-        get_user_name(id,player_name,32)
+        new player_name[MAX_NAME_LENGTH] 
+        get_user_name(id,player_name,charsmax(player_name))
         set_hudmessage(200, 100, 0, -1.0, 0.20, 0, 6.0, 6.0, 0.5, 0.15, -1)
-        for (new i=1;i<=get_maxplayers();i++){
+        for (new i=1;i<=MaxClients;i++){
           if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
             continue
           show_hudmessage(i,"%L",i,"NADE_CAUGHT",player_name) 
@@ -473,56 +479,56 @@ public round_end(){
 
   if ( !EndRoundStats ) return PLUGIN_CONTINUE
 
-  new g_Buffer2[1024], len, players[32], pnum, stats[9],bodyhits[8]
+  new g_Buffer2[1024], len, players[MAX_PLAYERS], pnum, stats[DODX_MAX_STATS],bodyhits[MAX_BODYHITS]
   get_players( players , pnum ) 
 
 
   new score = 0, kills = 0, hs =0 , damage = 0, hits = 0, who1 = 0, who2 = 0, who3 = 0
-  new name1[32],name2[32],name3[32]
+  new name1[MAX_NAME_LENGTH],name2[MAX_NAME_LENGTH],name3[MAX_NAME_LENGTH]
 
   for(new i = 0; i < pnum; ++i){
      get_user_rstats( players[i],stats, bodyhits )
-     if ( stats[7] > score ){
+     if ( stats[DODX_POINTS] > score ){
         who1 = players[i]
-        score = stats[7]
+        score = stats[DODX_POINTS]
      }  
   }
   for(new i = 0; i < pnum; ++i){
      get_user_rstats( players[i],stats, bodyhits )
-     if ( stats[0] > kills ){
+     if ( stats[DODX_KILLS] > kills ){
         who2 = players[i]
-        kills = stats[0]
-        hs = stats[2]
+        kills = stats[DODX_KILLS]
+        hs = stats[DODX_HEADSHOTS]
      }  
   }
   for(new i = 0; i < pnum; ++i){
      get_user_rstats( players[i],stats, bodyhits )
-     if ( stats[6] > damage ){
+     if ( stats[DODX_DAMAGE] > damage ){
         who3 = players[i]
-        hits = stats[5]
-        damage = stats[6]
+        hits = stats[DODX_HITS]
+        damage = stats[DODX_DAMAGE]
      }  
   }
 
   if ( is_user_connected(who1) ) {
-     get_user_name( who1, name1, 31 )
+     get_user_name( who1, name1, charsmax(name1) )
   }
   if ( is_user_connected(who2) ) {
-     get_user_name( who2, name2, 31 )
+     get_user_name( who2, name2, charsmax(name2) )
 
   }
   if ( is_user_connected(who3) ) {
-     get_user_name( who3, name3, 31 )
+     get_user_name( who3, name3, charsmax(name3) )
   }
 
   get_players(players,pnum,"c")
   for (new i=0;i<pnum;i++) {
      len = 0
-     len += format(g_Buffer2[len] , 1023 - len ,
+     len += format(g_Buffer2[len] , charsmax(g_Buffer2) - len ,
      "%L: %s^n%d %L^n",players[i],"BEST_SCORE", name1 , score,players[i],"POINTS" )
-     len += format(g_Buffer2[len] , 1023 - len ,
+     len += format(g_Buffer2[len] , charsmax(g_Buffer2) - len ,
      "%L: %s^n%d %L / %d %L^n",players[i],"MOST_KILLS",name2,kills,players[i],(kills == 1) ? "KILL":"KILLS",hs,players[i],(hs == 1) ? "HEADSHOT":"HEADSHOTS" )
-     len += format(g_Buffer2[len] , 1023 - len ,
+     len += format(g_Buffer2[len] , charsmax(g_Buffer2) - len ,
      "%L: %s^n%d %L / %d %L^n",players[i],"MOST_DAMAGE",name3 , damage,players[i],"DAMAGE",hits,players[i],(hits == 1) ? "HIT": "HITS" )
      set_hudmessage(100,200,0,0.02,0.40,2, 0.01, 5.0, 0.01, 0.01, -1 )
      show_hudmessage( players[i] , "%s", g_Buffer2 )
@@ -541,8 +547,8 @@ public client_damage(attacker,victim,damage,wpnindex,hitplace,TA)
 { 
   if ( TA ){
     if ( TAInfo && is_user_alive(victim) ){
-      new attacker_name[32]
-      get_user_name(attacker,attacker_name,31) 
+      new attacker_name[MAX_NAME_LENGTH]
+      get_user_name(attacker,attacker_name,charsmax(attacker_name)) 
       client_print(0,print_chat,"%L",LANG_PLAYER,"TA_MSG",attacker_name)
     }
     return PLUGIN_CONTINUE
@@ -563,8 +569,8 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
   if (!is_user_connected(killer) || !is_user_connected(victim))
     return PLUGIN_CONTINUE
 
-  new killer_name[32]
-  get_user_name(killer,killer_name,31) 
+  new killer_name[MAX_NAME_LENGTH]
+  get_user_name(killer,killer_name,charsmax(killer_name)) 
   
   new enemygre = ( ( (wpnindex == DODW_HANDGRENADE || wpnindex == DODW_MILLS_BOMB) && get_user_team(killer) == 2 ) || ( wpnindex == DODW_STICKGRENADE && get_user_team(killer) == 1 ) ) ? 1:0
 
@@ -585,8 +591,8 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
   new headshot = ( hitplace == HIT_HEAD ) ? 1:0
   new selfKill = ( killer == victim ) ? 1:0
 
-  new victim_name[32] 
-  get_user_name(victim,victim_name,31) 
+  new victim_name[MAX_NAME_LENGTH] 
+  get_user_name(victim,victim_name,charsmax(victim_name)) 
 
   new Float:statstime = get_cvar_float("dodstats_statstime")
 
@@ -603,7 +609,7 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
     set_hudmessage(255, 100, 100, -1.0, 0.15, 1, 6.0, 6.0, 0.5, 0.15, -1)
     if ( !enemygre ) ShowSyncHudMsg(0, g_center1_sync,"%L",LANG_PLAYER,g_SHeMessages[ random_num(0,3) ],victim_name) 
     else
-      for (new i=1;i<=get_maxplayers();i++){
+      for (new i=1;i<=MaxClients;i++){
         if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
           continue
         ShowSyncHudMsg(i, g_center1_sync, "%L",i,"NADE_FAILED",victim_name) 
@@ -626,21 +632,21 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
 
 
   if ( ShowKiller && !(!get_cvar_num("dodstats_rankbots") &&  (is_user_bot(killer) || is_user_bot(victim)))  ){ 
-    new stats[9], body[8], wpn[33], mstats[9], mbody[8] 
+    new stats[DODX_MAX_STATS], body[MAX_BODYHITS], wpn[32], mstats[DODX_MAX_STATS], mbody[MAX_BODYHITS] 
   
-    get_user_astats(victim,killer,stats,body,wpn,31) 
+    get_user_astats(victim,killer,stats,body,wpn,charsmax(wpn)) 
     get_user_vstats(victim,killer,mstats,mbody) 
     set_hudmessage(220,80,0,0.05,0.15,0, statstime, 12.0, 1.0, 2.0, -1) 
     getHits(victim,killer) 
     show_hudmessage(victim,"%L%L%L%L",victim,"KILL_INFO1",killer_name,wpn,float(g_Killers[victim][2]) * 0.0254,
-			/*2*/ victim,"KILL_INFO2",stats[6],stats[5],g_Killers[victim][1],
-			/*3*/ victim,"KILL_INFO3",mstats[6],mstats[5],
+			/*2*/ victim,"KILL_INFO2",stats[DODX_DAMAGE],stats[DODX_HITS],g_Killers[victim][1],
+			/*3*/ victim,"KILL_INFO3",mstats[DODX_DAMAGE],mstats[DODX_HITS],
 			/*4*/ victim,"KILL_INFO4",g_Buffer ) 
   } 
 
   if ( KillerHp ){
     new kmsg[128]
-    format(kmsg,127,"%L",victim,"STILL_HAS",killer_name,g_Killers[victim][1])
+    format(kmsg,charsmax(kmsg),"%L",victim,"STILL_HAS",killer_name,g_Killers[victim][1])
     client_print(victim,print_console,"%s^n",kmsg)
     set_hudmessage(255,255,255,0.02,0.9,2, 1.5, 3.0, 0.02, 5.0, -1)
     show_hudmessage(victim, "%s", kmsg)
@@ -654,7 +660,7 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
       if ( (a >>= 1) > 6 ) a = 6
       if ( KillingStreak ){
         set_hudmessage(0, 100, 255, 0.05, 0.55, 2, 0.02, 6.0, 0.01, 0.1, -1)
-        for (new i=1;i<=get_maxplayers();i++){
+        for (new i=1;i<=MaxClients;i++){
           if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
             continue
           ShowSyncHudMsg(i, g_left_sync, "%L",i,g_KillingMsg[ a ], killer_name) 
@@ -672,7 +678,7 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
       new param[2]
       param[0] = killer 
       param[1] = g_multiKills[killer][0] 
-      set_task( 4.0 + float( param[1] ) ,"checkKills",0,param,2)
+      set_task( 4.0 + float( param[1] ) ,"checkKills",0,param,sizeof(param))
   }
 
   if ( xmod_is_melee_wpn(wpnindex) && ( KnifeKill || KnifeKillSound )  ){
@@ -680,7 +686,7 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
 
 
       set_hudmessage(255, 100, 100, -1.0, 0.15, 1, 6.0, 6.0, 0.5, 0.15, -1)
-      for (new i=1;i<=get_maxplayers();i++){
+      for (new i=1;i<=MaxClients;i++){
         if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
 
           continue
@@ -693,7 +699,7 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
     if ( enemygre ){
       if ( EnemyGreKill ){
         set_hudmessage(255, 100, 100, -1.0, 0.15, 1, 6.0, 6.0, 0.5, 0.15, -1) 
-        for (new i=1;i<=get_maxplayers();i++){
+        for (new i=1;i<=MaxClients;i++){
           if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
             continue
           ShowSyncHudMsg(i, g_center1_sync, "%L",LANG_PLAYER,"NADE_MASTER",killer_name) 
@@ -703,7 +709,7 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
     }
     else if ( GrenadeKill ){
       set_hudmessage(255, 100, 100, -1.0, 0.15, 1, 6.0, 6.0, 0.5, 0.15, -1) 
-      for (new i=1;i<=get_maxplayers();i++){
+      for (new i=1;i<=MaxClients;i++){
         if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
           continue
         ShowSyncHudMsg(i, g_center1_sync, "%L",i,g_HeMessages[ random_num(0,3)],killer_name,victim_name) 
@@ -713,17 +719,17 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
 
   if ( headshot && (HeadShotKill || HeadShotKillSound) && !xmod_is_melee_wpn(wpnindex) ){
     if ( HeadShotKill ){
-      new weapon[32], message[256], players[32], pnum
-      xmod_get_wpnname(wpnindex,weapon,31) 
+      new weapon[32], message[256], players[MAX_PLAYERS], pnum
+      xmod_get_wpnname(wpnindex,weapon,charsmax(weapon)) 
 
       get_players(players,pnum,"c")
       for (new i=0;i<pnum;i++) {
         if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
           continue
-        format( message, sizeof(message)-1, "%L",players[i],g_HeadShots[ random_num(0,6) ] )
-        replace( message, sizeof(message)-1, "$vn", victim_name )
-        replace( message, sizeof(message)-1, "$wn", weapon )    
-        replace( message, sizeof(message)-1, "$kn", killer_name )
+        format( message, charsmax(message), "%L",players[i],g_HeadShots[ random_num(0,6) ] )
+        replace( message, charsmax(message), "$vn", victim_name )
+        replace( message, charsmax(message), "$wn", weapon )    
+        replace( message, charsmax(message), "$kn", killer_name )
         set_hudmessage(100, 100, 255, -1.0, 0.19, 0, 6.0, 6.0, 0.5, 0.15, -1)  
         ShowSyncHudMsg(players[i], g_center2_sync, "%s", message) 
       }
@@ -733,7 +739,7 @@ public client_death(killer,victim,wpnindex,hitplace,TK)
 
   if ( wpnindex == DODW_MORTAR && MortarKill ){
     set_hudmessage(100, 100, 255, -1.0, 0.19, 0, 6.0, 6.0, 0.5, 0.15, -1) 
-    for (new i=1;i<=get_maxplayers();i++){
+    for (new i=1;i<=MaxClients;i++){
       if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
         continue
       ShowSyncHudMsg(i, g_center2_sync, "%L",i,mortarmsg[random_num(0,1)],killer_name,victim_name)
@@ -763,14 +769,14 @@ public showDoubleKill(){
   new pos = g_KillCount - 2
   if ( pos > 2 ) pos = 2
   if ( DoubleKill ) {
-    new name[32]
-    get_user_name(g_prevKillerId,name,31)
+    new name[MAX_NAME_LENGTH]
+    get_user_name(g_prevKillerId,name,charsmax(name))
     if ( pos == 2 ){
       new kills[3]
-      num_to_str(g_KillCount,kills,2)
+      num_to_str(g_KillCount,kills,charsmax(kills))
     }
     set_hudmessage(65, 102, 158, -1.0, 0.25, 0, 6.0, 6.0, 0.5, 0.15, -1)
-    for (new i=1;i<=get_maxplayers();i++){
+    for (new i=1;i<=MaxClients;i++){
       if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
         continue
       show_hudmessage(i,"%L",i,g_DoubleKillMsg[pos],name,g_KillCount) 
@@ -788,11 +794,11 @@ public checkKills(param[]){
     a -= 3 
     if ( a > -1 ){
       if ( MultiKill ) {
-        new name[32]
-        get_user_name(id,name,31)
+        new name[MAX_NAME_LENGTH]
+        get_user_name(id,name,charsmax(name))
         set_hudmessage(255, 0, 100, 0.05, 0.65, 2, 0.02, 6.0, 0.01, 0.1, -1)
         if ( a > 6 ) a = 6
-        for (new i=1;i<=get_maxplayers();i++){
+        for (new i=1;i<=MaxClients;i++){
           if ( g_Killers[i][0] && g_DeathStats[i] > get_gametime() )
             continue
           ShowSyncHudMsg(i, g_left_sync, "%L",i,g_MultiKillMsg[a],name,g_multiKills[id][0],g_multiKills[id][1]) 
@@ -811,16 +817,16 @@ public checkKills(param[]){
 new LeaderScore 
 new NumOfLeaders 
 new LeaderID 
-new PScore[33] 
+new PScore[MAX_PLAYERS + 1] 
 
-public client_disconnect(id) { 
+public client_disconnected(id) { 
   if ( !LeadSounds || isDSMActive() ) return PLUGIN_CONTINUE
   if ( PScore[id] == LeaderScore && LeaderScore > 0 ){ 
     NumOfLeaders -- 
     PScore[id] = 0 
     if ( NumOfLeaders == 0 ){ 
       LeaderScore = 0 
-      for ( new i=1; i<33; i++ ) 
+      for ( new i=1; i<=MAX_PLAYERS; i++ ) 
         if ( PScore[i] > LeaderScore ){ 
 
 
@@ -836,7 +842,7 @@ public client_disconnect(id) {
       else if ( NumOfLeaders == 1 ) 
         client_cmd( LeaderID,"spk misc/takenlead" ) 
       else if ( NumOfLeaders > 1 ) 
-        for ( new i=1; i<33; i++ ) 
+        for ( new i=1; i<=MaxClients; i++ ) 
           if ( PScore[i] == LeaderScore ) 
             client_cmd( i,"spk misc/tiedlead") 
       //else no players on server or have 0 score 
@@ -847,7 +853,7 @@ public client_disconnect(id) {
         client_cmd( LeaderID,"spk misc/takenlead" ) 
       } 
       else { 
-        for ( new i=1; i<33; i++ ) 
+        for ( new i=1; i<=MAX_PLAYERS; i++ ) 
         if ( PScore[i] == LeaderScore ) client_cmd( i,"spk misc/takenlead" ) 
       } 
   } 
@@ -872,13 +878,13 @@ public get_score(){
       } 
       else if ( NumOfLeaders > 1 ){ 
 
-        for ( new i=1; i<33; i++ ) 
+        for ( new i=1; i<=MAX_PLAYERS; i++ ) 
           if ( PScore[i] == LeaderScore  && i != PlayerID ) 
             client_cmd( i,"spk misc/lostlead" ) 
         client_cmd( PlayerID,"spk misc/takenlead" ) 
       } 
       else if ( NumOfLeaders == 0 ){ // start 
-        for ( new i=1; i<33; i++ ) 
+        for ( new i=1; i<=MAX_PLAYERS; i++ ) 
           if ( i != PlayerID && is_user_connected(i) ) client_cmd( i,"spk misc/lostlead" ) 
         client_cmd( PlayerID,"spk misc/takenlead" ) 
       } 
@@ -913,31 +919,31 @@ public cmdStatsMe(id){
 }
 
 displayStats_steam(id,dest) {
- new name[32], stats[9], body[8]
+ new name[MAX_NAME_LENGTH], stats[DODX_MAX_STATS], body[MAX_BODYHITS]
  get_user_wstats(id,0,stats,body)
 
- new pos = copy(g_Buffer,2047,"<html><head><style type=^"text/css^">pre{color:#FFB000;}body{background:Black;margin-left:8px;margin-top:0px; color:#FFB000;}</style></head><pre><body>")
- pos += format(g_Buffer[pos],2047-pos,"<table><tr><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td></tr>",
+ new pos = copy(g_Buffer,charsmax(g_Buffer),"<html><head><meta charset=utf-8><style type=^"text/css^">pre{color:#FFB000;}body{background:Black;margin-left:8px;margin-top:0px; color:#FFB000;}</style></head><pre><body>")
+ pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"<table><tr><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td></tr>",
                dest,"M_KILLS",dest,"M_DEATHS",dest,"M_SCORE",dest,"M_TKS",dest,"M_HITS",dest,"M_SHOTS",dest,"M_HS")
 
- pos += format(g_Buffer[pos],2047-pos,"<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr></table><br><br><br>",
-		stats[0],stats[1],stats[7],stats[3],stats[5],stats[4],stats[2])
+ pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr></table><br><br><br>",
+		stats[DODX_KILLS],stats[DODX_DEATHS],stats[DODX_POINTS],stats[DODX_TEAMKILLS],stats[DODX_HITS],stats[DODX_SHOTS],stats[DODX_HEADSHOTS])
 
- pos += format(g_Buffer[pos],2047-pos,"<table><tr><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L<td></tr>",
+ pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"<table><tr><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L<td></tr>",
                dest,"M_WEAPON",dest,"M_SHOTS",dest,"M_HITS",dest,"M_DAMAGE",dest,"M_KILLS",dest,"M_DEATHS")
 
  for(new a = 1; a < DODMAX_WEAPONS; ++a) {
    if (get_user_wstats(id,a,stats,body)){
      if ( xmod_is_melee_wpn(a) )
-       stats[4] = -1;
-     xmod_get_wpnname(a,name,31)
-     pos += format(g_Buffer[pos],2047-pos,"<tr><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>^n",
-		name,stats[4],stats[5],stats[6],stats[0],stats[1])
+       stats[DODX_SHOTS] = -1;
+     xmod_get_wpnname(a,name,charsmax(name))
+     pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"<tr><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>^n",
+		name,stats[DODX_SHOTS],stats[DODX_HITS],stats[DODX_DAMAGE],stats[DODX_KILLS],stats[DODX_DEATHS])
    }
  }
- copy(g_Buffer[pos],2047-pos,"</table></pre></body></html>")
+ copy(g_Buffer[pos],charsmax(g_Buffer)-pos,"</table></pre></body></html>")
 
- get_user_name(id,name,31)
+ get_user_name(id,name,charsmax(name))
  show_motd(dest,g_Buffer,name)
 }
 
@@ -952,26 +958,26 @@ public cmdRank(id){
 }
 
 displayRank_steam(id,dest) {
- new name[32], stats[9], body[8]
+ new name[MAX_NAME_LENGTH], stats[DODX_MAX_STATS], body[MAX_BODYHITS]
  new rank_pos = get_user_stats(id,stats,body)
 
- new pos = copy(g_Buffer,2047,"<html><head><style type=^"text/css^">pre{color:#FFB000;}body{background:Black;margin-left:8px;margin-top:0px;color:#FFB000;}</style></head><pre><body>")
+ new pos = copy(g_Buffer,charsmax(g_Buffer),"<html><head><meta charset=utf-8><style type=^"text/css^">pre{color:#FFB000;}body{background:Black;margin-left:8px;margin-top:0px;color:#FFB000;}</style></head><pre><body>")
 
- pos += format(g_Buffer[pos],2047-pos,
+ pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,
                "<table><tr><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td></tr>",dest,"M_KILLS",dest,"M_DEATHS",dest,"M_SCORE",dest,"M_TKS",dest,"M_HITS",dest,"M_SHOTS",dest,"M_HS")
 
- pos += format(g_Buffer[pos],2047-pos,
+ pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,
                "<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr></table><br><br>",
-               stats[0],stats[1],stats[7],stats[3],stats[5],stats[4],stats[2])
+               stats[DODX_KILLS],stats[DODX_DEATHS],stats[DODX_POINTS],stats[DODX_TEAMKILLS],stats[DODX_HITS],stats[DODX_SHOTS],stats[DODX_HEADSHOTS])
 
- pos += format(g_Buffer[pos],2047-pos,"%L^n%L: %d^n%L: %d^n%L: %d^n%L: %d^n%L: %d^n%L: %d^n%L: %d^n",dest,"M_HITS",dest,g_bodyParts[1],body[1],dest,g_bodyParts[2],body[2],dest,g_bodyParts[3],body[3],dest,g_bodyParts[4],body[4],dest,g_bodyParts[5],body[5],dest,g_bodyParts[6],body[6],dest,g_bodyParts[7],body[7])
+ pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"%L^n%L: %d^n%L: %d^n%L: %d^n%L: %d^n%L: %d^n%L: %d^n%L: %d^n",dest,"M_HITS",dest,g_bodyParts[HIT_HEAD],body[HIT_HEAD],dest,g_bodyParts[HIT_CHEST],body[HIT_CHEST],dest,g_bodyParts[HIT_STOMACH],body[HIT_STOMACH],dest,g_bodyParts[HIT_LEFTARM],body[HIT_LEFTARM],dest,g_bodyParts[HIT_RIGHTARM],body[HIT_RIGHTARM],dest,g_bodyParts[HIT_LEFTLEG],body[HIT_LEFTLEG],dest,g_bodyParts[HIT_RIGHTLEG],body[HIT_RIGHTLEG])
 
- pos += format(g_Buffer[pos],2047-pos,"%L <b>%d</b> %L <b>%d</b>",dest,(id==dest)?"M_YOUR_RANK_IS":"M_THEIR_RANK_IS",
+ pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"%L <b>%d</b> %L <b>%d</b>",dest,(id==dest)?"M_YOUR_RANK_IS":"M_THEIR_RANK_IS",
 											rank_pos,dest,"M_OF",get_statsnum())
 
- pos += format(g_Buffer[pos],2047-pos,"</pre></body></html>")
+ pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"</pre></body></html>")
 
- get_user_name(id,name,31)
+ get_user_name(id,name,charsmax(name))
 
  show_motd(dest,g_Buffer,name)
 }
@@ -982,8 +988,8 @@ public cmdTop15(id) {
     return PLUGIN_HANDLED
   }
   getTop15_steam(id)
-  new g_Top[8]
-  format(g_Top,7,"%L",id,"TOPX",get_cvar_num("dodstats_topvalue")) 
+  new g_Top[16]
+  format(g_Top,charsmax(g_Top),"%L",id,"TOPX",get_cvar_num("dodstats_topvalue")) 
 
   show_motd(id,g_Buffer,g_Top)
   return PLUGIN_CONTINUE
@@ -991,23 +997,23 @@ public cmdTop15(id) {
 
 /* get top 15 */
 getTop15_steam(id){
-  new stats[9], body[8], name[32]
+  new stats[DODX_MAX_STATS], body[MAX_BODYHITS], name[MAX_NAME_LENGTH]
 
-  new pos = copy(g_Buffer,2047,"<html><head><style type=^"text/css^">pre{color:#FFB000;}body{background:Black;margin-left:8px;margin-top:0px;color:#FFB000;}</style></head><pre><body>")
+  new pos = copy(g_Buffer,charsmax(g_Buffer),"<html><head><meta charset=utf-8><style type=^"text/css^">pre{color:#FFB000;}body{background:Black;margin-left:8px;margin-top:0px;color:#FFB000;}</style></head><pre><body>")
 
-  pos += format(g_Buffer[pos],2047-pos,"<table><tr><td>#</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td></tr>",
+  pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"<table><tr><td>#</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td><td>%L</td></tr>",
 		id,"M_NICK",id,"M_KILLS",id,"M_DEATHS",id,"M_SCORE",id,"M_TKS",id,"M_HITS",id,"M_SHOTS",id,"M_HS")
   new imax = get_statsnum()
   new itmax =  get_cvar_num("dodstats_topvalue")
   if (imax > itmax ) 
     imax = itmax
   for(new a = 0; a < imax; ++a){
-    get_stats(a,stats,body,name,31);
-    replace_all(name, 31, "<", "[")
-    replace_all(name, 31, ">", "]")
-    pos += format(g_Buffer[pos],2047-pos,"<tr><td>%d.</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>^n",
-		a+1,name,stats[0],stats[1],stats[7],stats[3],stats[5],stats[4],stats[2])
+    get_stats(a,stats,body,name,charsmax(name));
+    replace_all(name, charsmax(name), "<", "[")
+    replace_all(name, charsmax(name), ">", "]")
+    pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"<tr><td>%d.</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td></tr>^n",
+		a+1,name,stats[DODX_KILLS],stats[DODX_DEATHS],stats[DODX_POINTS],stats[DODX_TEAMKILLS],stats[DODX_HITS],stats[DODX_SHOTS],stats[DODX_HEADSHOTS])
   }
-  pos += format(g_Buffer[pos],2047-pos,"</table></pre></body></html>") 
+  pos += format(g_Buffer[pos],charsmax(g_Buffer)-pos,"</table></pre></body></html>") 
 
 }

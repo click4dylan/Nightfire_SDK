@@ -1,0 +1,32 @@
+# vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
+import os.path
+
+binary = AMXX.MetaModule(builder, 'hamsandwich')
+
+binary.compiler.defines += [
+  'HAVE_STDINT_H',
+]
+
+binary.sources = [
+  '../../public/sdk/amxxmodule.cpp',
+  '../../public/memtools/MemoryUtils.cpp',
+  'amxx_api.cpp',
+  'config_parser.cpp',
+  'hook_callbacks.cpp',
+  'hook_native.cpp',
+  'srvcmd.cpp',
+  'call_funcs.cpp',
+  'hook_create.cpp',
+  'DataHandler.cpp',
+  'pdata.cpp',
+  'hook_specialbot.cpp',
+]
+
+if builder.target_platform == 'windows':
+    binary.sources += ['version.rc']
+    binary.compiler.linkflags += [
+      '/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1',
+      '/SECTION:.data,RW',
+    ]
+
+AMXX.modules += [builder.Add(binary)]

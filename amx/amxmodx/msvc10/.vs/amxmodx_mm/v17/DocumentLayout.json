@@ -1,0 +1,465 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "E:\\nightfire_sdk\\amx\\amxmodx\\msvc10\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\CLibrarySys.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\meta_api.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\cvars.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\CvarManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\amxmodx.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\CGameConfigs.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\CPlugin.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\CvarManager.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\nightfire_sdk\\amx\\public\\amtl\\am-hashtable.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files (x86)\\Windows Kits\\10\\Source\\10.0.10240.0\\ucrt\\startup\\assert.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\CLang.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\CTextParsers.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\CLibrarySys.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\CGameConfigs.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\nightfire_sdk\\amx\\public\\sm_stringhashmap.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\nightfire_sdk\\amx\\public\\amtl\\am-hashmap.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\third_party\\zlib\\compress.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\third_party\\zlib\\deflate.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\third_party\\zlib\\zcrc32.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\third_party\\zlib\\zcrc32.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\third_party\\hashing\\hashers\\crc32.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\third_party\\hashing\\hashers\\crc32.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\third_party\\zlib\\deflate.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\amxmodx\\string.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2BF64D1A-AC89-41B0-9D02-FB8CB610F850}|amxmodx_mm.vcxproj|E:\\nightfire_sdk\\amx\\third_party\\zlib\\zutil.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\nightfire_sdk\\amx\\public\\IGameConfigs.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.1A\\Include\\WinPerf.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.22000.0\\um\\winnt.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\nightfire_sdk\\amx\\public\\amtl\\am-autoptr.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\nightfire_sdk\\amx\\public\\amtl\\am-string.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "CLibrarySys.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\CLibrarySys.h",
+              "RelativeDocumentMoniker": "..\\CLibrarySys.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\CLibrarySys.h",
+              "RelativeToolTip": "..\\CLibrarySys.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAQAAAACAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T19:53:28.919Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "meta_api.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\meta_api.cpp",
+              "RelativeDocumentMoniker": "..\\meta_api.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\meta_api.cpp",
+              "RelativeToolTip": "..\\meta_api.cpp",
+              "ViewState": "AQIAAGkAAAAAAAAAAAAYwIQAAAA7AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T19:30:51.673Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "cvars.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\cvars.cpp",
+              "RelativeDocumentMoniker": "..\\cvars.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\cvars.cpp",
+              "RelativeToolTip": "..\\cvars.cpp",
+              "ViewState": "AQIAAAgAAAAAAAAAAAAAAA4AAABSAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T19:30:49.171Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CvarManager.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\CvarManager.cpp",
+              "RelativeDocumentMoniker": "..\\CvarManager.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\CvarManager.cpp",
+              "RelativeToolTip": "..\\CvarManager.cpp",
+              "ViewState": "AQIAAIIBAAAAAAAAAAAnwJEBAAACAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T19:05:32.512Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "amxmodx.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\amxmodx.cpp",
+              "RelativeDocumentMoniker": "..\\amxmodx.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\amxmodx.cpp",
+              "RelativeToolTip": "..\\amxmodx.cpp",
+              "ViewState": "AQIAADoKAAAAAAAAAAAnwEgKAAA9AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T18:44:43.32Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "winnt.h",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.22000.0\\um\\winnt.h",
+              "ToolTip": "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.22000.0\\um\\winnt.h",
+              "ViewState": "AQIAANIJAAAAAAAAAAAYwPkJAAA8AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T18:14:23.579Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CGameConfigs.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\CGameConfigs.h",
+              "RelativeDocumentMoniker": "..\\CGameConfigs.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\CGameConfigs.h",
+              "RelativeToolTip": "..\\CGameConfigs.h",
+              "ViewState": "AQIAADMAAAAAAAAAAAAIwD4AAAAUAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T18:12:38.183Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "CvarManager.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\CvarManager.h",
+              "RelativeDocumentMoniker": "..\\CvarManager.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\CvarManager.h",
+              "RelativeToolTip": "..\\CvarManager.h",
+              "ViewState": "AQIAACIAAAAAAAAAAAAnwDYAAAAMAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T18:12:33.568Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "CPlugin.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\CPlugin.h",
+              "RelativeDocumentMoniker": "..\\CPlugin.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\CPlugin.h",
+              "RelativeToolTip": "..\\CPlugin.h",
+              "ViewState": "AQIAADYAAAAAAAAAAAAIwEwAAAAYAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T18:10:58.162Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "am-autoptr.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\public\\amtl\\am-autoptr.h",
+              "RelativeDocumentMoniker": "..\\..\\public\\amtl\\am-autoptr.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\public\\amtl\\am-autoptr.h",
+              "RelativeToolTip": "..\\..\\public\\amtl\\am-autoptr.h",
+              "ViewState": "AQIAABEAAAAAAAAAAAAIwCQAAAAWAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T18:07:50.989Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "CLibrarySys.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\CLibrarySys.cpp",
+              "RelativeDocumentMoniker": "..\\CLibrarySys.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\CLibrarySys.cpp",
+              "RelativeToolTip": "..\\CLibrarySys.cpp",
+              "ViewState": "AQIAAGgAAAAAAAAAAAAxwGkAAAAQAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T17:50:40.097Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "assert.cpp",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Windows Kits\\10\\Source\\10.0.10240.0\\ucrt\\startup\\assert.cpp",
+              "ToolTip": "C:\\Program Files (x86)\\Windows Kits\\10\\Source\\10.0.10240.0\\ucrt\\startup\\assert.cpp",
+              "ViewState": "AQIAAIMBAAAAAAAAAAApwJQBAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T07:19:54.663Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "am-string.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\public\\amtl\\am-string.h",
+              "RelativeDocumentMoniker": "..\\..\\public\\amtl\\am-string.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\public\\amtl\\am-string.h",
+              "RelativeToolTip": "..\\..\\public\\amtl\\am-string.h",
+              "ViewState": "AQIAAB0AAAAAAAAAAAAnwCwAAAASAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T07:12:45.24Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "CLang.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\CLang.cpp",
+              "RelativeDocumentMoniker": "..\\CLang.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\CLang.cpp",
+              "RelativeToolTip": "..\\CLang.cpp",
+              "ViewState": "AQIAANoBAAAAAAAAAAAAAOMBAAASAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T17:52:15.049Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "am-hashmap.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\public\\amtl\\am-hashmap.h",
+              "RelativeDocumentMoniker": "..\\..\\public\\amtl\\am-hashmap.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\public\\amtl\\am-hashmap.h",
+              "RelativeToolTip": "..\\..\\public\\amtl\\am-hashmap.h",
+              "ViewState": "AQIAAGsAAAAAAAAAAAAkwHQAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T07:12:44.877Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "CTextParsers.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\CTextParsers.cpp",
+              "RelativeDocumentMoniker": "..\\CTextParsers.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\CTextParsers.cpp",
+              "RelativeToolTip": "..\\CTextParsers.cpp",
+              "ViewState": "AQIAAGsCAAAAAAAAAAApwHgCAAAHAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T06:57:13.197Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "am-hashtable.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\public\\amtl\\am-hashtable.h",
+              "RelativeDocumentMoniker": "..\\..\\public\\amtl\\am-hashtable.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\public\\amtl\\am-hashtable.h",
+              "RelativeToolTip": "..\\..\\public\\amtl\\am-hashtable.h",
+              "ViewState": "AQIAALoAAAAAAAAAAAApwNUAAAAwAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T07:12:45.236Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "CGameConfigs.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\CGameConfigs.cpp",
+              "RelativeDocumentMoniker": "..\\CGameConfigs.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\CGameConfigs.cpp",
+              "RelativeToolTip": "..\\CGameConfigs.cpp",
+              "ViewState": "AQIAAOYBAAAAAAAAAAAtwPYBAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T06:51:45.381Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "sm_stringhashmap.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\public\\sm_stringhashmap.h",
+              "RelativeDocumentMoniker": "..\\..\\public\\sm_stringhashmap.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\public\\sm_stringhashmap.h",
+              "RelativeToolTip": "..\\..\\public\\sm_stringhashmap.h",
+              "ViewState": "AQIAAIQAAAAAAAAAAAAtwJQAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T07:12:45.235Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "compress.c",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\compress.c",
+              "RelativeDocumentMoniker": "..\\..\\third_party\\zlib\\compress.c",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\compress.c",
+              "RelativeToolTip": "..\\..\\third_party\\zlib\\compress.c",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA8AAAA+AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
+              "WhenOpened": "2024-03-29T06:42:38.775Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "zcrc32.c",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\zcrc32.c",
+              "RelativeDocumentMoniker": "..\\..\\third_party\\zlib\\zcrc32.c",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\zcrc32.c",
+              "RelativeToolTip": "..\\..\\third_party\\zlib\\zcrc32.c",
+              "ViewState": "AQIAACIAAAAAAAAAAAAAwB0AAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
+              "WhenOpened": "2024-03-29T06:41:32.234Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "deflate.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\deflate.h",
+              "RelativeDocumentMoniker": "..\\..\\third_party\\zlib\\deflate.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\deflate.h",
+              "RelativeToolTip": "..\\..\\third_party\\zlib\\deflate.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABIAAAAfAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T06:36:28.146Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "zcrc32.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\zcrc32.h",
+              "RelativeDocumentMoniker": "..\\..\\third_party\\zlib\\zcrc32.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\zcrc32.h",
+              "RelativeToolTip": "..\\..\\third_party\\zlib\\zcrc32.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAEAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T06:35:25.112Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "crc32.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\third_party\\hashing\\hashers\\crc32.h",
+              "RelativeDocumentMoniker": "..\\..\\third_party\\hashing\\hashers\\crc32.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\third_party\\hashing\\hashers\\crc32.h",
+              "RelativeToolTip": "..\\..\\third_party\\hashing\\hashers\\crc32.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAEAAAADAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T06:35:20.39Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "crc32.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\third_party\\hashing\\hashers\\crc32.cpp",
+              "RelativeDocumentMoniker": "..\\..\\third_party\\hashing\\hashers\\crc32.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\third_party\\hashing\\hashers\\crc32.cpp",
+              "RelativeToolTip": "..\\..\\third_party\\hashing\\hashers\\crc32.cpp",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAKAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T06:35:17.366Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "IGameConfigs.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\public\\IGameConfigs.h",
+              "RelativeDocumentMoniker": "..\\..\\public\\IGameConfigs.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\public\\IGameConfigs.h",
+              "RelativeToolTip": "..\\..\\public\\IGameConfigs.h",
+              "ViewState": "AQIAACAAAAAAAAAAAAAAwCUAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T07:12:45.239Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "deflate.c",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\deflate.c",
+              "RelativeDocumentMoniker": "..\\..\\third_party\\zlib\\deflate.c",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\deflate.c",
+              "RelativeToolTip": "..\\..\\third_party\\zlib\\deflate.c",
+              "ViewState": "AQIAAEMDAAAAAAAAAAAlwFIDAAAZAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
+              "WhenOpened": "2024-03-29T06:25:50.903Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "string.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\amxmodx\\string.cpp",
+              "RelativeDocumentMoniker": "..\\string.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\amxmodx\\string.cpp",
+              "RelativeToolTip": "..\\string.cpp",
+              "ViewState": "AQIAAGQAAAAAAAAAAAAAwHIAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T06:32:44.766Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "WinPerf.h",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.1A\\Include\\WinPerf.h",
+              "ToolTip": "C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.1A\\Include\\WinPerf.h",
+              "ViewState": "AQIAACwAAAAAAAAAAAAAwDoAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T07:12:45.247Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "zutil.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\zutil.h",
+              "RelativeDocumentMoniker": "..\\..\\third_party\\zlib\\zutil.h",
+              "ToolTip": "E:\\nightfire_sdk\\amx\\third_party\\zlib\\zutil.h",
+              "RelativeToolTip": "..\\..\\third_party\\zlib\\zutil.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAIBJwAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T06:26:41.701Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

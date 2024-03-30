@@ -1,48 +1,27 @@
-/* AMX Mod X
-*   Maps Menu Plugin
-*
-* by the AMX Mod X Development Team
-*  originally developed by OLO
-*
-* This file is part of AMX Mod X.
-*
-*
-*  This program is free software; you can redistribute it and/or modify it
-*  under the terms of the GNU General Public License as published by the
-*  Free Software Foundation; either version 2 of the License, or (at
-*  your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful, but
-*  WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-*  General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with this program; if not, write to the Free Software Foundation,
-*  Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*
-*  In addition, as a special exception, the author gives permission to
-*  link the code of this program with the Half-Life Game Engine ("HL
-*  Engine") and Modified Game Libraries ("MODs") developed by Valve,
-*  L.L.C ("Valve"). You must obey the GNU General Public License in all
-*  respects for all of the code used other than the HL Engine and MODs
-*  from Valve. If you modify this file, you may extend this exception
-*  to your version of the file, but you are not obligated to do so. If
-*  you do not wish to do so, delete this exception statement from your
-*  version.
-*/
+// vim: set ts=4 sw=4 tw=99 noet:
+//
+// AMX Mod X, based on AMX Mod by Aleksander Naszko ("OLO").
+// Copyright (C) The AMX Mod X Development Team.
+//
+// This software is licensed under the GNU General Public License, version 3 or higher.
+// Additional exceptions apply. For full license details, see LICENSE.txt or visit:
+//     https://alliedmods.net/amxmodx-license
+
+//
+// Maps Menu Plugin
+//
 
 #include <amxmodx>
 #include <amxmisc>
 
 new Array:g_mapName;
 new g_mapNums
-new g_menuPosition[33]
+new g_menuPosition[MAX_PLAYERS + 1]
 
 new g_voteCount[5]
 
-new g_voteSelected[33][4]
-new g_voteSelectedNum[33]
+new g_voteSelected[MAX_PLAYERS + 1][4]
+new g_voteSelectedNum[MAX_PLAYERS + 1]
 
 new g_coloredMenus
 
@@ -65,14 +44,14 @@ public plugin_init()
 	g_mapName=ArrayCreate(32);
 	
 	new maps_ini_file[64];
-	get_configsdir(maps_ini_file, 63);
-	format(maps_ini_file, 63, "%s/maps.ini", maps_ini_file);
+	get_configsdir(maps_ini_file, charsmax(maps_ini_file));
+	format(maps_ini_file, charsmax(maps_ini_file), "%s/maps.ini", maps_ini_file);
 
 	if (!file_exists(maps_ini_file))
-		get_cvar_string("mapcyclefile", maps_ini_file, sizeof(maps_ini_file) - 1);
+		get_cvar_string("mapcyclefile", maps_ini_file, charsmax(maps_ini_file));
 		
 	if (!file_exists(maps_ini_file))
-		format(maps_ini_file, 63, "mapcycle.txt")
+		format(maps_ini_file, charsmax(maps_ini_file), "mapcycle.txt")
 	
 	load_settings(maps_ini_file)
 
@@ -94,7 +73,7 @@ public actionResult(id, key)
 		case 0:
 		{
 			new _modName[10]
-			get_modname(_modName, 9)
+			get_modname(_modName, charsmax(_modName))
 			
 			if (!equal(_modName, "zp"))
 			{
@@ -118,7 +97,7 @@ public actionResult(id, key)
 public checkVotes(id)
 {
 	id -= 34567
-	new num, ppl[32], a = 0
+	new num, ppl[MAX_PLAYERS], a = 0
 	
 	get_players(ppl, num, "c")
 	if (num == 0) num = 1
@@ -148,16 +127,16 @@ public checkVotes(id)
 			new menuBody[512]
 			new tempMap[32];
 			ArrayGetString(g_mapName, g_choosed, tempMap, charsmax(tempMap));
-			new len = format(menuBody, 511, g_coloredMenus ? "\y%L: \w%s^n^n" : "%L: %s^n^n", id, "THE_WINNER", tempMap)
+			new len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L: \w%s^n^n" : "%L: %s^n^n", id, "THE_WINNER", tempMap)
 			
-			len += format(menuBody[len], 511 - len, g_coloredMenus ? "\y%L^n\w" : "%L^n", id, "WANT_CONT")
-			format(menuBody[len], 511-len, "^n1. %L^n2. %L", id, "YES", id, "NO")
+			len += format(menuBody[len], charsmax(menuBody) - len, g_coloredMenus ? "\y%L^n\w" : "%L^n", id, "WANT_CONT")
+			format(menuBody[len], charsmax(menuBody) - len, "^n1. %L^n2. %L", id, "YES", id, "NO")
 
 			show_menu(id, 0x03, menuBody, 10, "The winner: ")
 			set_task(10.0, "autoRefuse", 4545454)
 		} else {
 			new _modName[10]
-			get_modname(_modName, 9)
+			get_modname(_modName, charsmax(_modName))
 			
 			if (!equal(_modName, "zp"))
 			{
@@ -190,9 +169,9 @@ public voteCount(id, key)
 	
 	if (get_cvar_float("amx_vote_answers"))
 	{
-		new name[32]
+		new name[MAX_NAME_LENGTH]
 		
-		get_user_name(id, name, 31)
+		get_user_name(id, name, charsmax(name))
 		client_print(0, print_chat, "%L", LANG_PLAYER, "X_VOTED_FOR", name, key + 1)
 	}
 	
@@ -219,7 +198,7 @@ displayVoteMapsMenu(id, pos)
 	if (start >= g_mapNums)
 		start = pos = g_menuPosition[id] = 0
 
-	new len = format(menuBody, 511, g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "VOTEMAP_MENU", pos + 1, (g_mapNums / 7 + ((g_mapNums % 7) ? 1 : 0)))
+	new len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "VOTEMAP_MENU", pos + 1, (g_mapNums / 7 + ((g_mapNums % 7) ? 1 : 0)))
 	new end = start + 7, keys = MENU_KEY_0
 
 	if (end > g_mapNums)
@@ -233,49 +212,49 @@ displayVoteMapsMenu(id, pos)
 		{
 			++b
 			if (g_coloredMenus)
-				len += format(menuBody[len], 511-len, "\d%d. %s^n\w", b, tempMap)
+				len += format(menuBody[len], charsmax(menuBody) - len, "\d%d. %s^n\w", b, tempMap)
 			else
-				len += format(menuBody[len], 511-len, "#. %s^n", tempMap)
+				len += format(menuBody[len], charsmax(menuBody) - len, "#. %s^n", tempMap)
 		} else {
 			keys |= (1<<b)
-			len += format(menuBody[len], 511-len, "%d. %s^n", ++b, tempMap)
+			len += format(menuBody[len], charsmax(menuBody) - len, "%d. %s^n", ++b, tempMap)
 		}
 	}
 
 	if (g_voteSelectedNum[id])
 	{
 		keys |= MENU_KEY_8
-		len += format(menuBody[len], 511-len, "^n8. %L^n", id, "START_VOT")
+		len += format(menuBody[len], charsmax(menuBody) - len, "^n8. %L^n", id, "START_VOT")
 	}
 	else
-		len += format(menuBody[len], 511-len, g_coloredMenus ? "^n\d8. %L^n\w" : "^n#. %L^n", id, "START_VOT")
+		len += format(menuBody[len], charsmax(menuBody) - len, g_coloredMenus ? "^n\d8. %L^n\w" : "^n#. %L^n", id, "START_VOT")
 
 	if (end != g_mapNums)
 	{
-		len += format(menuBody[len], 511-len, "^n9. %L...^n0. %L^n", id, "MORE", id, pos ? "BACK" : "EXIT")
+		len += format(menuBody[len], charsmax(menuBody) - len, "^n9. %L...^n0. %L^n", id, "MORE", id, pos ? "BACK" : "EXIT")
 		keys |= MENU_KEY_9
 	}
 	else
-		len += format(menuBody[len], 511-len, "^n0. %L^n", id, pos ? "BACK" : "EXIT")
+		len += format(menuBody[len], charsmax(menuBody) - len, "^n0. %L^n", id, pos ? "BACK" : "EXIT")
 
 	if (g_voteSelectedNum[id])
-		len += format(menuBody[len], 511-len, g_coloredMenus ? "^n\y%L:^n\w" : "^n%L:^n", id, "SEL_MAPS")
+		len += format(menuBody[len], charsmax(menuBody) - len, g_coloredMenus ? "^n\y%L:^n\w" : "^n%L:^n", id, "SEL_MAPS")
 	else
-		len += format(menuBody[len], 511-len, "^n^n")
+		len += format(menuBody[len], charsmax(menuBody) - len, "^n^n")
 
 	for (new c = 0; c < 4; c++)
 	{
 		if (c < g_voteSelectedNum[id])
 		{
 			ArrayGetString(g_mapName, g_voteSelected[id][c], tempMap, charsmax(tempMap));
-			len += format(menuBody[len], 511-len, "%s^n", tempMap)
+			len += format(menuBody[len], charsmax(menuBody) - len, "%s^n", tempMap)
 		}
 		else
-			len += format(menuBody[len], 511-len, "^n")
+			len += format(menuBody[len], charsmax(menuBody) - len, "^n")
 	}
 
 	new menuName[64]
-	format(menuName, 63, "%L", "en", "VOTEMAP_MENU")
+	format(menuName, charsmax(menuName), "%L", "en", "VOTEMAP_MENU")
 
 	show_menu(id, keys, menuBody, -1, menuName)
 }
@@ -321,7 +300,9 @@ public cmdMapsMenu(id, level, cid)
 }
 
 public delayedChange(mapname[])
-	server_cmd("changelevel %s", mapname)
+{
+	engine_changelevel(mapname)
+}
 
 public actionVoteMapMenu(id, key)
 {
@@ -353,45 +334,45 @@ public actionVoteMapMenu(id, key)
 			set_task(vote_time, "checkVotes", 34567 + id)
 
 			new menuBody[512]
-			new players[32]
+			new players[MAX_PLAYERS]
 			new pnum, keys, len
 
 			get_players(players, pnum)
 
 			if (g_voteSelectedNum[id] > 1)
 			{
-				len = format(menuBody, 511, g_coloredMenus ? "\y%L^n\w^n" : "%L^n^n", id, "WHICH_MAP")
+				len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L^n\w^n" : "%L^n^n", id, "WHICH_MAP")
 				
 				for (new c = 0; c < g_voteSelectedNum[id]; ++c)
 				{
 					ArrayGetString(g_mapName, g_voteSelected[id][c], tempMap, charsmax(tempMap));
-					len += format(menuBody[len], 511, "%d. %s^n", c + 1, tempMap)
+					len += format(menuBody[len], charsmax(menuBody) - len, "%d. %s^n", c + 1, tempMap)
 					keys |= (1<<c)
 				}
 				
 				keys |= (1<<8)
-				len += format(menuBody[len], 511, "^n9. %L^n", id, "NONE")
+				len += format(menuBody[len], charsmax(menuBody) - len, "^n9. %L^n", id, "NONE")
 			} else {
 				ArrayGetString(g_mapName, g_voteSelected[id][0], tempMap, charsmax(tempMap));
-				len = format(menuBody, 511, g_coloredMenus ? "\y%L^n%s?^n\w^n1. %L^n2. %L^n" : "%L^n%s?^n^n1. %L^n2. %L^n", id, "CHANGE_MAP_TO", tempMap, id, "YES", id, "NO")
+				len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L^n%s?^n\w^n1. %L^n2. %L^n" : "%L^n%s?^n^n1. %L^n2. %L^n", id, "CHANGE_MAP_TO", tempMap, id, "YES", id, "NO")
 				keys = MENU_KEY_1|MENU_KEY_2
 			}
 
 			new menuName[64]
-			format(menuName, 63, "%L", "en", "WHICH_MAP")
+			format(menuName, charsmax(menuName), "%L", "en", "WHICH_MAP")
 
 			for (new b = 0; b < pnum; ++b)
 				if (players[b] != id)
 					show_menu(players[b], keys, menuBody, iVoteTime, menuName)
 
-			format(menuBody[len], 511, "^n0. %L", id, "CANC_VOTE")
+			format(menuBody[len], charsmax(menuBody), "^n0. %L", id, "CANC_VOTE")
 			keys |= MENU_KEY_0
 			show_menu(id, keys, menuBody, iVoteTime, menuName)
 
-			new authid[32], name[32]
+			new authid[32], name[MAX_NAME_LENGTH]
 			
-			get_user_authid(id, authid, 31)
-			get_user_name(id, name, 31)
+			get_user_authid(id, authid, charsmax(authid))
+			get_user_name(id, name, charsmax(name))
 
 			show_activity_key("ADMIN_V_MAP_1", "ADMIN_V_MAP_2", name);
 
@@ -459,17 +440,17 @@ public actionMapsMenu(id, key)
 			new a = g_menuPosition[id] * 8 + key
 			new _modName[10]
 
-			get_modname(_modName, 9)
+			get_modname(_modName, charsmax(_modName))
 			if (!equal(_modName, "zp"))
 			{
 				message_begin(MSG_ALL, SVC_INTERMISSION)
 				message_end()
 			}
 			
-			new authid[32], name[32]
+			new authid[32], name[MAX_NAME_LENGTH]
 			
-			get_user_authid(id, authid, 31)
-			get_user_name(id, name, 31)
+			get_user_authid(id, authid, charsmax(authid))
+			get_user_name(id, name, charsmax(name))
 
 			new tempMap[32];
 			ArrayGetString(g_mapName, a, tempMap, charsmax(tempMap));
@@ -498,7 +479,7 @@ displayMapsMenu(id, pos)
 	if (start >= g_mapNums)
 		start = pos = g_menuPosition[id] = 0
 
-	new len = format(menuBody, 511, g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "CHANGLE_MENU", pos + 1, (g_mapNums / 8 + ((g_mapNums % 8) ? 1 : 0)))
+	new len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "CHANGLE_MENU", pos + 1, (g_mapNums / 8 + ((g_mapNums % 8) ? 1 : 0)))
 	new end = start + 8
 	new keys = MENU_KEY_0
 
@@ -509,16 +490,16 @@ displayMapsMenu(id, pos)
 	{
 		keys |= (1<<b)
 		ArrayGetString(g_mapName, a, tempMap, charsmax(tempMap));
-		len += format(menuBody[len], 511-len, "%d. %s^n", ++b, tempMap)
+		len += format(menuBody[len], charsmax(menuBody) - len, "%d. %s^n", ++b, tempMap)
 	}
 
 	if (end != g_mapNums)
 	{
-		format(menuBody[len], 511-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody) - len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
 		keys |= MENU_KEY_9
 	}
 	else
-		format(menuBody[len], 511-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody) - len, "^n0. %L", id, pos ? "BACK" : "EXIT")
 
 	new menuName[64]
 	format(menuName, 63, "%L", "en", "CHANGLE_MENU")
@@ -568,10 +549,8 @@ load_settings(filename[])
 	new text[256];
 	new tempMap[32];
 	
-	while (!feof(fp))
+	while (fgets(fp, text, charsmax(text)))
 	{
-		fgets(fp, text, charsmax(text));
-		
 		if (text[0] == ';')
 		{
 			continue;
@@ -592,4 +571,9 @@ load_settings(filename[])
 	fclose(fp);
 
 	return 1;
+}
+
+public plugin_end()
+{
+	ArrayDestroy(g_mapName)
 }

@@ -1,0 +1,32 @@
+# vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
+import os.path
+
+binary = AMXX.MetaModule(builder, 'regex')
+
+if builder.target_platform == 'linux':
+  binary.compiler.postlink += [binary.Dep('lib_linux/libpcre.a')]
+elif builder.target_platform == 'mac':
+  binary.compiler.postlink += [binary.Dep('lib_darwin/libpcre.a')]
+elif builder.target_platform == 'windows':
+  binary.compiler.postlink += [binary.Dep('lib_win\\pcre.lib')]
+
+binary.compiler.defines += [
+  'PCRE_STATIC',
+  'HAVE_STDINT_H',
+]
+
+binary.sources = [
+  '../../public/sdk/amxxmodule.cpp',
+  'module.cpp',
+  'CRegEx.cpp',
+  'utils.cpp',
+]
+
+if builder.target_platform == 'windows':
+  binary.sources += ['version.rc']
+  if binary.compiler.vendor == 'msvc' and binary.compiler.version >= 1900:
+    binary.sources += [
+    '../../public/msvc/msvc15hack.c'
+  ]
+
+AMXX.modules += [builder.Add(binary)]

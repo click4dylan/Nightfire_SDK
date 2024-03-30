@@ -96,12 +96,14 @@ static cell AMX_NATIVE_CALL read_file(AMX *amx, cell *params)
 	{
 		length = strlen(buffer);
 
+		if (length > 0)
+		{
 		if (buffer[length - 1] == '\n')
 			buffer[--length] = '\0';
 
 		if (buffer[length - 1] == '\r')
 			buffer[--length] = '\0';
-
+		}
 		cell* textLen = get_amxaddr(amx, params[5]);
 		*textLen = set_amxstring_utf8(amx, params[3], buffer, length, params[4]);
 
@@ -601,7 +603,7 @@ static cell AMX_NATIVE_CALL amx_fputs(AMX *amx, cell *params)
 		++length;
 	}
 
-	if (fp->Write(string, length) != length)
+	if (fp->Write(string, length) != (size_t)length)
 	{
 		return -1;
 	}
@@ -744,13 +746,19 @@ enum FileType
 
 struct DirectoryHandle
 {
-	DirectoryHandle(void* handle_, bool valvefs_) : handle(handle_), valvefs(valvefs_) {}
+	DirectoryHandle(CDirectory *handle_) : handle(handle_), valvefs(false) {}
+	DirectoryHandle(FileFindHandle_t handle_) : handle_vfs(handle_), valvefs(true) {}
 
-	void* handle;
+	union
+	{
+		CDirectory*      handle;
+		FileFindHandle_t handle_vfs;
+	};
+
 	bool  valvefs;
 };
 
-// native open_dir(dir[], firstfile[], length, &FileType:type = FileType_Unknown, bool:use_valve_fs=false, const valve_path_id[] = "GAME");
+// native open_dir(const dir[], firstfile[], length, &FileType:type = FileType_Unknown, bool:use_valve_fs=false, const valve_path_id[] = "GAME");
 static cell AMX_NATIVE_CALL amx_open_dir(AMX *amx, cell *params)
 {
 	int length;
@@ -768,7 +776,7 @@ static cell AMX_NATIVE_CALL amx_open_dir(AMX *amx, cell *params)
 		const char* wildcardedPath = g_LibSys.PathFormat("%s%s*", path, (path[length - 1] != '/' && path[length - 1] != '\\') ? "/" : "");
 		const char* pathID = get_amxstring_null(amx, params[6], 1, length);
 
-		static FileFindHandle_t handle;
+		FileFindHandle_t handle;
 		const char* pFirst = g_FileSystem->FindFirst(wildcardedPath, &handle, pathID);
 
 		if (!pFirst)
@@ -781,7 +789,7 @@ static cell AMX_NATIVE_CALL amx_open_dir(AMX *amx, cell *params)
 
 		*fileType = g_FileSystem->FindIsDirectory(handle) ? FileType_Directory : FileType_File;
 
-		return reinterpret_cast<cell>(new DirectoryHandle(reinterpret_cast<void*>(&handle), true));
+		return reinterpret_cast<cell>(new DirectoryHandle(handle));
 	}
 
 	CDirectory* dir = g_LibSys.OpenDirectory(build_pathname("%s", path));
@@ -800,7 +808,7 @@ static cell AMX_NATIVE_CALL amx_open_dir(AMX *amx, cell *params)
 	const char* entry = dir->GetEntryName();
 	set_amxstring_utf8(amx, params[2], entry, strlen(entry), params[3]);
 
-	return reinterpret_cast<cell>(new DirectoryHandle(reinterpret_cast<void*>(dir), false));
+	return reinterpret_cast<cell>(new DirectoryHandle(dir));
 }
 
 // native close_dir(dirh);
@@ -815,8 +823,8 @@ static cell AMX_NATIVE_CALL amx_close_dir(AMX *amx, cell *params)
 
 	if (p->valvefs)
 	{
-		FileFindHandle_t* handle = reinterpret_cast<FileFindHandle_t*>(p->handle);
-		g_FileSystem->FindClose(*handle);
+		FileFindHandle_t handle = p->handle_vfs;
+		g_FileSystem->FindClose(handle);
 	}
 	else
 	{
@@ -841,14 +849,9 @@ static cell AMX_NATIVE_CALL amx_get_dir(AMX *amx, cell *params)
 
 	if (p->valvefs)
 	{
-		FileFindHandle_t* handle = reinterpret_cast<FileFindHandle_t*>(p->handle);
+		FileFindHandle_t handle = p->handle_vfs;
 
-		if (!handle)
-		{
-			return 0;
-		}
-
-		const char* entry = g_FileSystem->FindNext(*handle);
+		const char* entry = g_FileSystem->FindNext(handle);
 
 		if (!entry)
 		{
@@ -858,14 +861,14 @@ static cell AMX_NATIVE_CALL amx_get_dir(AMX *amx, cell *params)
 		if (numParams >= 4)
 		{
 			cell* fileType = get_amxaddr(amx, params[4]);
-			*fileType = g_FileSystem->FindIsDirectory(*handle) ? FileType_Directory : FileType_File;
+			*fileType = g_FileSystem->FindIsDirectory(handle) ? FileType_Directory : FileType_File;
 		}
 
 		set_amxstring_utf8(amx, params[2], entry, strlen(entry), params[3]);
 	}
 	else
 	{
-		CDirectory* handle = reinterpret_cast<CDirectory*>(p->handle);
+		CDirectory* handle = p->handle;
 
 		if (!handle)
 		{
@@ -1015,8 +1018,8 @@ static cell AMX_NATIVE_CALL rename_file(AMX *amx, cell *params)
 
 	if (params[0] / sizeof(cell) >= 3 && params[3] > 0)
 	{
-		build_pathname_r(file_old_r, sizeof(file_old_r) - 1, "%s", file_old);
-		build_pathname_r(file_new_r, sizeof(file_new_r) - 1, "%s", file_new);
+		build_pathname_r(file_old_r, sizeof(file_old_r), "%s", file_old);
+		build_pathname_r(file_new_r, sizeof(file_new_r), "%s", file_new);
 	}
 	else
 	{

@@ -21,9 +21,8 @@
  *  2.  Altered source versions must be plainly marked as such, and must not be
  *      misrepresented as being the original software.
  *  3.  This notice may not be removed or altered from any source distribution.
- *
- *  Version: $Id: sclist.c 3736 2008-08-16 20:13:12Z damagedsoul $
  */
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -236,15 +235,6 @@ static stringlist includepaths = {NULL, NULL};  /* directory list for include fi
 
 SC_FUNC stringlist *insert_path(char *path)
 {
-  char *extra_path = malloc(strlen(path) + 16);
-  strcpy(extra_path, path);
-#if defined __linux__ || defined __APPLE__
-  strcat(extra_path, "/amxmod_compat/");
-#elif defined WIN32 || defined _WIN32
-  strcat(extra_path, "\\amxmod_compat\\");
-#endif
-  insert_string(&includepaths, extra_path);
-  free(extra_path);
   return insert_string(&includepaths,path);
 }
 
@@ -265,16 +255,16 @@ SC_FUNC void delete_pathtable(void)
 
 static stringpair substpair = { NULL, NULL, NULL};  /* list of substitution pairs */
 
-static stringpair *substindex['z'-'A'+1]; /* quick index to first character */
+static stringpair *substindex['z'-PUBLIC_CHAR+1]; /* quick index to first character */
 static void adjustindex(char c)
 {
   stringpair *cur;
-  assert(c>='A' && c<='Z' || c>='a' && c<='z' || c=='_');
-  assert('A'<'_' && '_'<'z');
+  assert(c>='A' && c<='Z' || c>='a' && c<='z' || c=='_' || c==PUBLIC_CHAR);
+  assert(PUBLIC_CHAR<'A' && 'A'<'_' && '_'<'z');
 
   for (cur=substpair.next; cur!=NULL && cur->first[0]!=c; cur=cur->next)
     /* nothing */;
-  substindex[(int)c-'A']=cur;
+  substindex[(int)c-PUBLIC_CHAR]=cur;
 }
 
 SC_FUNC stringpair *insert_subst(char *pattern,char *substitution,int prefixlen)
@@ -286,6 +276,26 @@ SC_FUNC stringpair *insert_subst(char *pattern,char *substitution,int prefixlen)
   if ((cur=insert_stringpair(&substpair,pattern,substitution,prefixlen))==NULL)
     error(103);       /* insufficient memory (fatal error) */
   adjustindex(*pattern);
+
+  if (pc_deprecate != NULL) {
+    assert(cur != NULL);
+    cur->flags |= flgDEPRECATED;
+    if (sc_status == statWRITE) {
+      if (cur->documentation != NULL) {
+        free(cur->documentation);
+        cur->documentation = NULL;
+      } /* if */
+      cur->documentation = pc_deprecate;
+    }
+    else {
+      free(pc_deprecate);
+    } /* if */
+    pc_deprecate = NULL;
+  }
+  else {
+    cur->flags = 0;
+    cur->documentation = NULL;
+  } /* if */
   return cur;
 }
 
@@ -294,10 +304,26 @@ SC_FUNC stringpair *find_subst(char *name,int length)
   stringpair *item;
   assert(name!=NULL);
   assert(length>0);
-  assert(*name>='A' && *name<='Z' || *name>='a' && *name<='z' || *name=='_');
-  item=substindex[(int)*name-'A'];
+  assert(*name>='A' && *name<='Z' || *name>='a' && *name<='z' || *name=='_' || *name==PUBLIC_CHAR);
+  item=substindex[(int)*name-PUBLIC_CHAR];
   if (item!=NULL)
     item=find_stringpair(item,name,length);
+
+  if (item && (item->flags & flgDEPRECATED) != 0) {
+    static char macro[128];
+    char *rem, *msg = (item->documentation != NULL) ? item->documentation : "";
+    strncpy(macro, item->first, sizeof(macro));
+    macro[sizeof(macro) - 1] = '\0';
+
+    /* If macro contains an opening parentheses and a percent sign, then assume that
+    * it takes arguments and remove them from the warning message.
+    */
+    if ((rem = strchr(macro, '(')) != NULL && strchr(macro, '%') > rem) {
+      *rem = '\0';
+    }
+
+    error(233, macro, msg);  /* deprecated (macro/constant) */
+  }
   return item;
 }
 
@@ -306,8 +332,8 @@ SC_FUNC int delete_subst(char *name,int length)
   stringpair *item;
   assert(name!=NULL);
   assert(length>0);
-  assert(*name>='A' && *name<='Z' || *name>='a' && *name<='z' || *name=='_');
-  item=substindex[(int)*name-'A'];
+  assert(*name>='A' && *name<='Z' || *name>='a' && *name<='z' || *name=='_' || *name==PUBLIC_CHAR);
+  item=substindex[(int)*name-PUBLIC_CHAR];
   if (item!=NULL)
     item=find_stringpair(item,name,length);
   if (item==NULL)
@@ -328,7 +354,7 @@ SC_FUNC void delete_substtable(void)
 #endif /* !defined NO_SUBST */
 
 
-/* ----- input file list ----------------------------------------- */
+/* ----- input file list (explicit files)------------------------- */
 static stringlist sourcefiles = {NULL, NULL};
 
 SC_FUNC stringlist *insert_sourcefile(char *string)
@@ -345,6 +371,28 @@ SC_FUNC void delete_sourcefiletable(void)
 {
   delete_stringtable(&sourcefiles);
   assert(sourcefiles.next==NULL);
+}
+
+
+/* ----- parsed file list (explicit + included files) ------------ */
+static stringlist inputfiles = {NULL, NULL};
+
+SC_FUNC stringlist *insert_inputfile(char *string)
+{
+  if (sc_status!=statFIRST)
+    return insert_string(&inputfiles,string);
+  return NULL;
+}
+
+SC_FUNC char *get_inputfile(int index)
+{
+  return get_string(&inputfiles,index);
+}
+
+SC_FUNC void delete_inputfiletable(void)
+{
+  delete_stringtable(&inputfiles);
+  assert(inputfiles.next==NULL);
 }
 
 
@@ -395,6 +443,52 @@ SC_FUNC void delete_autolisttable(void)
 }
 
 
+/* ----- value pair list ----------------------------------------- */
+static valuepair heaplist = {NULL, 0, 0};
+
+SC_FUNC valuepair *push_heaplist(long first, long second)
+{
+  valuepair *cur, *last;
+  if ((cur=malloc(sizeof(valuepair)))==NULL)
+    error(103);       /* insufficient memory (fatal error) */
+
+  cur->first=first;
+  cur->second=second;
+  cur->next=NULL;
+
+  for (last=&heaplist; last->next!=NULL; last=last->next)
+    /* nothing */;
+  last->next=cur;
+  return cur;
+}
+
+SC_FUNC int popfront_heaplist(long *first, long *second)
+{
+  valuepair *front=heaplist.next;
+  if (front==NULL)
+    return 0;
+
+  /* copy fields */
+  *first=front->first;
+  *second=front->second;
+
+  /* unlink and free */
+  heaplist.next=front->next;
+  free(front);
+  return 1;
+}
+
+SC_FUNC void delete_heaplisttable(void)
+{
+  valuepair *cur;
+  while (heaplist.next!=NULL) {
+    cur=heaplist.next;
+    heaplist.next=cur->next;
+    free(cur);
+  } /* while */
+}
+
+
 /* ----- debug information --------------------------------------- */
 
 static stringlist dbgstrings = {NULL, NULL};
@@ -425,9 +519,9 @@ SC_FUNC stringlist *insert_dbgline(int linenr)
 }
 
 #ifdef WIN32
-#define	LONGCAST	long
+#define LONGCAST    long
 #else
-#define	LONGCAST	cell
+#define LONGCAST    cell
 #endif
 
 SC_FUNC stringlist *insert_dbgsymbol(symbol *sym)
@@ -460,7 +554,7 @@ SC_FUNC stringlist *insert_dbgsymbol(symbol *sym)
     if (sym->ident==iARRAY || sym->ident==iREFARRAY) {
       symbol *sub;
 #if !defined NDEBUG
-	  count = sym->dim.array.level;
+      count = sym->dim.array.level;
 #endif
       strcat(string," [ ");
       for (sub=sym; sub!=NULL; sub=finddepend(sub)) {

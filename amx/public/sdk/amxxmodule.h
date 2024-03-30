@@ -635,7 +635,7 @@ void FN_CreateInstancedBaselines(void);
 #endif // FN_CreateInstancedBaselines
 
 #ifdef FN_InconsistentFile
-int FN_InconsistentFile(const edict_t *player, const char *filename, char *disconnect_message);
+int FN_InconsistentFile(const edict_t *player, const char *filename, char *disconnect_message, unsigned int buffersize);
 #endif // FN_InconsistentFile
 
 #ifdef FN_AllowLagCompensation
@@ -838,7 +838,7 @@ void FN_CreateInstancedBaselines_Post(void);
 #endif // FN_CreateInstancedBaselines_Post
 
 #ifdef FN_InconsistentFile_Post
-int FN_InconsistentFile_Post(const edict_t *player, const char *filename, char *disconnect_message);
+int FN_InconsistentFile_Post(const edict_t *player, const char *filename, char *disconnect_message, unsigned int buffersize);
 #endif // FN_InconsistentFile_Post
 
 #ifdef FN_AllowLagCompensation_Post
@@ -1072,7 +1072,7 @@ void FN_WriteEntity(int iValue);
 #endif // FN_WriteEntity
 
 #ifdef FN_CVarRegister
-void FN_CVarRegister(cvar_t *pCvar);
+void FN_CVarRegister(ConsoleVariable*pCvar);
 #endif // FN_CVarRegister
 
 #ifdef FN_CVarGetFloat
@@ -1248,7 +1248,7 @@ void FN_GetGameDir(char *szGetGameDir);
 #endif // FN_GetGameDir
 
 #ifdef FN_Cvar_RegisterVariable
-void FN_Cvar_RegisterVariable(cvar_t *variable);
+void FN_Cvar_RegisterVariable(ConsoleVariable*variable);
 #endif // FN_Cvar_RegisterVariable
 
 #ifdef FN_FadeClientVolume
@@ -1312,7 +1312,7 @@ int FN_IsDedicatedServer(void);
 #endif // FN_IsDedicatedServer
 
 #ifdef FN_CVarGetPointer
-cvar_t *FN_CVarGetPointer(const char *szVarName);
+ConsoleVariable* FN_CVarGetPointer(const char *szVarName);
 #endif // FN_CVarGetPointer
 
 #ifdef FN_GetPlayerWONId
@@ -1653,7 +1653,7 @@ void FN_WriteEntity_Post(int iValue);
 #endif // FN_WriteEntity_Post
 
 #ifdef FN_CVarRegister_Post
-void FN_CVarRegister_Post(cvar_t *pCvar);
+void FN_CVarRegister_Post(ConsoleVariable*pCvar);
 #endif // FN_CVarRegister_Post
 
 #ifdef FN_CVarGetFloat_Post
@@ -1829,7 +1829,7 @@ void FN_GetGameDir_Post(char *szGetGameDir);
 #endif // FN_GetGameDir_Post
 
 #ifdef FN_Cvar_RegisterVariable_Post
-void FN_Cvar_RegisterVariable_Post(cvar_t *variable);
+void FN_Cvar_RegisterVariable_Post(ConsoleVariable*variable);
 #endif // FN_Cvar_RegisterVariable_Post
 
 #ifdef FN_FadeClientVolume_Post
@@ -1893,7 +1893,7 @@ int FN_IsDedicatedServer_Post(void);
 #endif // FN_IsDedicatedServer_Post
 
 #ifdef FN_CVarGetPointer_Post
-cvar_t *FN_CVarGetPointer_Post(const char *szVarName);
+ConsoleVariable*FN_CVarGetPointer_Post(const char *szVarName);
 #endif // FN_CVarGetPointer_Post
 
 #ifdef FN_GetPlayerWONId_Post
@@ -2199,6 +2199,7 @@ typedef int				(*PFN_AMX_ALLOT)				(AMX* /*amx*/, int /*length*/, cell* /*amx_ad
 typedef int				(*PFN_AMX_FINDPUBLIC)			(AMX* /*amx*/, const char* /*func name*/, int* /*index*/);
 typedef int				(*PFN_AMX_FINDNATIVE)			(AMX* /*amx*/, const char* /*func name*/, int* /*index*/);
 typedef int				(*PFN_LOAD_AMXSCRIPT)			(AMX* /*amx*/, void** /*code*/, const char* /*path*/, char[64] /*error info*/, int /* debug */);
+typedef int				(*PFN_LOAD_AMXSCRIPT_EX)		(AMX* /*amx*/, void** /*code*/, const char* /*path*/, char* /*error info*/, size_t /* max length */, int /* debug */);
 typedef int				(*PFN_UNLOAD_AMXSCRIPT)			(AMX* /*amx*/,void** /*code*/);
 typedef cell			(*PFN_REAL_TO_CELL)				(REAL /*x*/);
 typedef REAL			(*PFN_CELL_TO_REAL)				(cell /*x*/);
@@ -2274,6 +2275,7 @@ extern PFN_AMX_EXEC					g_fn_AmxExec;
 extern PFN_AMX_ALLOT				g_fn_AmxAllot;
 extern PFN_AMX_FINDPUBLIC			g_fn_AmxFindPublic;
 extern PFN_LOAD_AMXSCRIPT			g_fn_LoadAmxScript;
+extern PFN_LOAD_AMXSCRIPT_EX		g_fn_LoadAmxScriptEx;
 extern PFN_UNLOAD_AMXSCRIPT			g_fn_UnloadAmxScript;
 extern PFN_REAL_TO_CELL				g_fn_RealToCell;
 extern PFN_CELL_TO_REAL				g_fn_CellToReal;
@@ -2437,6 +2439,7 @@ void MF_LogError(AMX *amx, int err, const char *fmt, ...);
 #define MF_AmxAllot g_fn_AmxAllot
 #define MF_AmxFindNative g_fn_AmxFindNative
 #define MF_LoadAmxScript g_fn_LoadAmxScript
+#define MF_LoadAmxScriptEx g_fn_LoadAmxScriptEx
 #define MF_UnloadAmxScript g_fn_UnloadAmxScript
 #define MF_MergeDefinitionFile g_fn_MergeDefinition_File
 #define amx_ctof g_fn_CellToReal

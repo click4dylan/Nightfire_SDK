@@ -1,0 +1,29 @@
+# vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
+import os.path
+
+binary = AMXX.MetaModule(builder, 'engine')
+
+binary.compiler.defines += [
+  'HAVE_STDINT_H',
+]
+
+binary.sources = [
+  '../../public/sdk/amxxmodule.cpp',
+  'amxxapi.cpp',
+  'engine.cpp',
+  'entity.cpp',
+  'globals.cpp',
+  'forwards.cpp',
+  '../../public/memtools/MemoryUtils.cpp',
+  '../../public/memtools/CDetour/detours.cpp',
+  '../../public/memtools/CDetour/asm/asm.c',
+]
+
+if builder.target_platform == 'windows':
+  binary.sources += ['version.rc']
+  binary.compiler.linkflags += [
+    '/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1',
+    '/SECTION:.data,RW',
+  ]
+
+AMXX.modules += [builder.Add(binary)]

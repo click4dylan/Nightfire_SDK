@@ -1,0 +1,49 @@
+# vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
+import os.path
+
+binary = AMXX.MetaModule(builder, 'sqlite')
+binary.compiler.cxxincludes += [
+  os.path.join(builder.currentSourcePath, 'sqlitepp'),
+  os.path.join(builder.currentSourcePath, 'thread'),
+  os.path.join(builder.currentSourcePath, '..', '..', 'third_party', 'sqlite'),
+]
+binary.compiler.defines += [
+  'SM_DEFAULT_THREADER',
+  'HAVE_STDINT_H',
+]
+
+if builder.target_platform == 'linux' or builder.target_platform == 'mac':
+  binary.compiler.defines += ['stricmp=strcasecmp']
+  binary.compiler.postlink += ['-lpthread']
+
+binary.sources += [
+  'basic_sql.cpp',
+  'handles.cpp',
+  'module.cpp',
+  'threading.cpp',
+  '../../public/sdk/amxxmodule.cpp',
+  'oldcompat_sql.cpp',
+  'thread/BaseWorker.cpp',
+  'thread/ThreadWorker.cpp',
+  'sqlitepp/SqliteQuery.cpp',
+  'sqlitepp/SqliteResultSet.cpp',
+  'sqlitepp/SqliteDatabase.cpp',
+  'sqlitepp/SqliteDriver.cpp',
+  '../../third_party/sqlite/sqlite3.c',
+]
+
+if builder.target_platform == 'windows':
+  binary.sources += [
+    'thread/WinThreads.cpp',
+    'version.rc'
+  ]
+  binary.compiler.linkflags += [
+    '/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1',
+    '/SECTION:.data,RW',
+  ]
+else:
+  binary.sources += [
+    'thread/PosixThreads.cpp',
+  ]
+
+AMXX.modules += [builder.Add(binary)]

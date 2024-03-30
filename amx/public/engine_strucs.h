@@ -17,11 +17,12 @@
 #include <usercmd.h>
 
 #define MAX_CLIENTS            32
-#define MAX_EDICTS             900
+#define MAX_EDICTS             2048 //NIGHTFIRE IS 2048 //900
 #define MAX_NAME               32
 #define MAX_LIGHTSTYLES        64
 #define MAX_PACKET_ENTITIES    256
 #define MAX_PATH_LENGTH        260
+#define MAX_MAPNAME_LENGTH	   64
 
 #define MAX_LATENT             32
 #define FRAGMENT_SIZE          1400
@@ -65,6 +66,12 @@
 
 // This is the packet payload without any header bytes (which are attached for actual sending)
 #define NET_MAX_PAYLOAD        3990
+
+typedef enum sv_delta_s
+{
+	sv_packet_nodelta,
+	sv_packet_delta,
+} sv_delta_t;
 
 typedef enum netsrc_s
 {
@@ -509,5 +516,17 @@ typedef struct client_s
 	int             m_sendrescount;
 
 } client_t;
+
+using cvar_callback_t = void (*)(const char *pszNewValue);
+
+struct cvar_listener_t
+{
+	cvar_listener_t(const char *var_name, cvar_callback_t handler) :
+		func(handler), name(var_name) {}
+
+	cvar_callback_t func;
+	const char      *name;
+};
+
 
 #endif //_ENGINE_STRUCTS_H_

@@ -232,10 +232,10 @@ const char *mm_GetGameDescription(void) {
 	META_DLLAPI_HANDLE_void(FN_PLAYERCUSTOMIZATION, pfnPlayerCustomization, (pEntity, pCust));
 	RETURN_API_void();
 }*/
-edict_t *mm_GetPlayerSpawnSpot(int* pPlayer) {
+/*edict_t* mm_GetPlayerSpawnSpot(int* pPlayer) {
 	META_DLLAPI_HANDLE(edict_t*, NULL, FN_GETPLAYERSPAWNSPOT, pfnGetPlayerSpawnSpot, (pPlayer));
 	RETURN_API();
-}
+}*/
 void mm_SpectatorConnect(edict_t *pEntity) {
 	META_DLLAPI_HANDLE_void(FN_SPECTATORCONNECT, pfnSpectatorConnect, (pEntity));
 	RETURN_API_void();
@@ -312,17 +312,33 @@ void mm_CreateInstancedBaselines (void) {
 	META_DLLAPI_HANDLE_void(FN_CREATEINSTANCEDBASELINES, pfnCreateInstancedBaselines, ());
 	RETURN_API_void();
 }
-int mm_InconsistentFile(const edict_t *player, const char *filename, char *disconnect_message) {
-	META_DLLAPI_HANDLE(int, 0, FN_INCONSISTENTFILE, pfnInconsistentFile, (player, filename, disconnect_message));
+int mm_InconsistentFile(const edict_t *player, const char *filename, char *disconnect_message, unsigned int buffersize) {
+	META_DLLAPI_HANDLE(int, 0, FN_INCONSISTENTFILE, pfnInconsistentFile, (player, filename, disconnect_message, buffersize));
 	RETURN_API();
 }
 int mm_AllowLagCompensation(void) {
 	META_DLLAPI_HANDLE(int, 0, FN_ALLOWLAGCOMPENSATION, pfnAllowLagCompensation, ());
 	RETURN_API();
 }
+void mm_SpawnPlayerAfterLevelLoad(edict_t* player)
+{
+	META_DLLAPI_HANDLE_void(FN_SPAWNPLAYERAFTERLEVELLOAD, pfnSpawnPlayerAfterLevelLoad, (player));
+	RETURN_API_void();
+}
 
 
 // New API functions
+void mm_NullFunc0(void)
+{
+	META_NEWAPI_HANDLE_void(FN_NULLFUNC0, pfnNullFunc0, ());
+	RETURN_API_void();
+}
+
+void mm_NullFunc1(void)
+{
+	META_NEWAPI_HANDLE_void(FN_NULLFUNC1, pfnNullFunc1, ());
+	RETURN_API_void();
+}
 
 int mm_ShouldCollide(edict_t *pentTouched, edict_t *pentOther) {
 	//printf("%s\n", STRING(pentOther->v.model));
@@ -421,8 +437,9 @@ static DLL_FUNCTIONS sFunctionTable =
 	mm_CreateInstancedBaselines,	//! pfnCreateInstancedBaselines()	(wd) SDK2
 	mm_InconsistentFile,			//! pfnInconsistentFile()		(wd) SDK2
 	mm_AllowLagCompensation,		//! pfnAllowLagCompensation()	(wd) SDK2
+	mm_SpawnPlayerAfterLevelLoad	//! pfnpfnSpawnPlayerAfterLevelLoad() nightfire
 	//mm_PlayerCustomization,			//! pfnPlayerCustomization()	Notifies .dll of new customization for player.
-	mm_GetPlayerSpawnSpot,
+	//mm_GetPlayerSpawnSpot,
 };
 
 DLL_FUNCTIONS *pHookedDllFunctions = &sFunctionTable;
@@ -500,6 +517,8 @@ static meta_new_dll_functions_t sNewFunctionTable (
 	//int Movie here!!!!!!!! todo
 	/*&mm_OnFreeEntPrivateData,		//! pfnOnFreeEntPrivateData()	Called right before the object's memory is freed.  Calls its destructor.
 	&mm_GameShutdown,		*/		//! pfnGameShutdown()
+	&mm_NullFunc0,
+	&mm_NullFunc1,
 	&mm_ShouldCollide,
 	&mm_OnSaveGame, 
 	&mm_OnLoadGame,

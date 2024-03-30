@@ -181,7 +181,7 @@ mBOOL IS_VALID_PTR(void *memptr);
 
 
 // Attempt to call the given function pointer, without segfaulting.
-mBOOL os_safe_call(REG_CMD_FN pfn, unsigned int numargs, const char** args);
+mBOOL os_safe_call(REG_CMD_FN pfn, void* ecx, unsigned int numargs, const char** args);
 
 
 // Windows doesn't have an strtok_r() routine, so we write our own.

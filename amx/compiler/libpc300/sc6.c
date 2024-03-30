@@ -17,9 +17,8 @@
  *  2.  Altered source versions must be plainly marked as such, and must not be
  *      misrepresented as being the original software.
  *  3.  This notice may not be removed or altered from any source distribution.
- *
- *  Version: $Id: sc6.c 2018 2005-09-06 21:34:33Z dvander $
  */
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>     /* for macro max() */
@@ -71,7 +70,7 @@ static ucell hex2long(char *s,char **n)
     s++;
   } /* if */
 
-  assert((*s>='0' && *s<='9') || (*s>='a' && *s<='f') || (*s>='a' && *s<='f'));
+  assert((*s>='0' && *s<='9') || (*s>='a' && *s<='f') || (*s>='A' && *s<='F'));
   for ( ;; ) {
     if (*s>='0' && *s<='9')
       digit=*s-'0';
@@ -620,7 +619,7 @@ SC_FUNC int assemble(FILE *fout,FILE *fin)
         assert(sym->vclass==sGLOBAL);
         mainaddr=sym->addr;
       } /* if */
-    } else if (sym->ident==iVARIABLE) {
+    } else if (sym->ident==iVARIABLE || sym->ident == iARRAY || sym->ident == iREFARRAY) {
       if ((sym->usage & uPUBLIC)!=0 && (sym->usage & (uREAD | uWRITTEN))!=0)
         match=++numpubvars;
     } /* if */
@@ -795,7 +794,8 @@ SC_FUNC int assemble(FILE *fout,FILE *fin)
   /* write the public variables table */
   count=0;
   for (sym=glbtab.next; sym!=NULL; sym=sym->next) {
-    if (sym->ident==iVARIABLE && (sym->usage & uPUBLIC)!=0 && (sym->usage & (uREAD | uWRITTEN))!=0) {
+    if ((sym->ident==iVARIABLE || sym->ident==iARRAY || sym->ident==iREFARRAY) 
+        && (sym->usage & uPUBLIC)!=0 && (sym->usage & (uREAD | uWRITTEN))!=0) {
       assert((sym->usage & uDEFINE)!=0);
       assert(sym->vclass==sGLOBAL);
       func.address=sym->addr;

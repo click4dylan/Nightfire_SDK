@@ -10,43 +10,8 @@
 #ifndef CMISC_H
 #define CMISC_H
 
-#include "CList.h"
 #include "sh_list.h"
 
-#define ALLOC(type) (type*) VirtualAlloc(NULL, sizeof(type), MEM_COMMIT, PAGE_READWRITE) //NOEL DYLAN
-#define FREE(pointer) VirtualFree((void*)pointer, 0, MEM_RELEASE);
-
-// *****************************************************
-// class CCVar
-// *****************************************************
-#if 0
-class CCVar
-{
-	cvar_t cvar;
-	String name;
-	String plugin;
-
-public:	
-	CCVar(const char* pname, const char* realvalue, const char* pplugin, int pflags, float pvalue) : name(pname), plugin(pplugin)
-	{ //dylan changed for cvar_register
-		int size = sizeof(realvalue) * 3;
-		char *str = new char[size];//(char*)VirtualAlloc(NULL, 64, MEM_COMMIT, PAGE_READWRITE);
-		memset(str, 0, sizeof(str));
-		sprintf(str, "%s", realvalue);
-		cvar.type = CVAR_STRING;
-		cvar.name = (char*)name.c_str();
-		cvar.string = "";
-		cvar.flags = pflags;
-		cvar.value = (int*)str;
-	}
-	
-	inline cvar_t* getCvar() { return &cvar; }
-	inline const char* getPluginName() { return plugin.c_str(); }
-	inline const char* getName() { return name.c_str(); }
-	inline bool operator == (const char* string) { return (strcmp(name.c_str(), string) == 0); }
-	int plugin_id;
-};
-#endif
 // *****************************************************
 // class CPlayer
 // *****************************************************
@@ -237,7 +202,7 @@ public:
 // class CScript
 // *****************************************************
 
-class CScript
+class CScript : public ke::InlineListNode<CScript>
 {
 	ke::AString filename;
 	AMX* amx;
@@ -247,7 +212,6 @@ public:
 	
 	inline AMX* getAMX() { return amx; }
 	inline const char* getName() { return filename.chars(); }
-	inline bool operator==(void* a) { return (amx == (AMX*)a); }
 	inline void* getCode() { return code; }
 };
 

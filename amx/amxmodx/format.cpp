@@ -44,8 +44,8 @@ template size_t atcprintf<char, char>(char *, size_t, const char *, AMX *, cell 
 
 THash<ke::AString, lang_err> BadLang_Table;
 
-static cvar_t *amx_mldebug = nullptr;
-static cvar_t *amx_cl_langs = nullptr;
+static ConsoleVariable* amx_mldebug = nullptr;
+static ConsoleVariable* amx_cl_langs = nullptr;
 
 const char *playerlang(const cell index)
 {
@@ -58,9 +58,9 @@ const char *playerlang(const cell index)
 			amx_cl_langs = CVAR_GET_POINTER("amx_client_languages");
 		}
 
-		if (static_cast<int>(*amx_cl_langs->value) == 0)
+		if (static_cast<int>(amx_cl_langs->getValueInt()) == 0)
 		{
-			pLangName = amxmodx_language->string;
+			pLangName = amxmodx_language->getValueString();
 		}
 		else
 		{
@@ -69,7 +69,7 @@ const char *playerlang(const cell index)
 	}
 	else if (index == LANG_SERVER)
 	{
-		pLangName = amxmodx_language->string;
+		pLangName = amxmodx_language->getValueString();
 	}
 	else if (index >= 1 && index <= gpGlobals->maxClients)
 	{
@@ -78,9 +78,9 @@ const char *playerlang(const cell index)
 			amx_cl_langs = CVAR_GET_POINTER("amx_client_languages");
 		}
 
-		if (static_cast<int>(*amx_cl_langs->value) == 0)
+		if (static_cast<int>(amx_cl_langs->getValueInt()) == 0)
 		{
-			pLangName = amxmodx_language->string;
+			pLangName = amxmodx_language->getValueString();
 		}
 		else
 		{
@@ -98,7 +98,7 @@ const char *translate(AMX *amx, const char *lang, const char *key)
 
 	if (!pLangName || !isalpha(pLangName[0]))
 	{
-		pLangName = amxmodx_language->string;
+		pLangName = amxmodx_language->getValueString();
 	}
 
 	auto def = g_langMngr.GetDef(pLangName, key, status);
@@ -108,13 +108,13 @@ const char *translate(AMX *amx, const char *lang, const char *key)
 		amx_mldebug = CVAR_GET_POINTER("amx_mldebug");
 	}
 
-	auto debug = (amx_mldebug && amx_mldebug->string && (amx_mldebug->string[0] != '\0'));
+	auto debug = (amx_mldebug && amx_mldebug->getValueString() && (amx_mldebug->getValueString()[0] != '\0'));
 
 	if (debug)
 	{
 		int debug_status;
 		auto validlang = true;
-		auto testlang = amx_mldebug->string;
+		auto testlang = amx_mldebug->getValueString();
 
 		if (!g_langMngr.LangExists(testlang))
 		{
@@ -145,12 +145,12 @@ const char *translate(AMX *amx, const char *lang, const char *key)
 			}
 		}
 
-		if (strcmp(pLangName, amxmodx_language->string) != 0)
+		if (strcmp(pLangName, amxmodx_language->getValueString()) != 0)
 		{
-			def = g_langMngr.GetDef(amxmodx_language->string, key, status);
+			def = g_langMngr.GetDef(amxmodx_language->getValueString(), key, status);
 		}
 
-		if (!def && (strcmp(pLangName, "en") != 0 && strcmp(amxmodx_language->string, "en") != 0))
+		if (!def && (strcmp(pLangName, "en") != 0 && strcmp(amxmodx_language->getValueString(), "en") != 0))
 		{
 			def = g_langMngr.GetDef("en", key, status);
 		}
@@ -728,7 +728,7 @@ reswitch:
 						return 0;
 					}
 
-					unsigned int auth = GETPLAYERAUTHID(player->pEdict); //DYLAN FIX GETPLAYERAUTHID(player->pEdict);
+					const char* auth = "0";//GETPLAYERAUTHID(player->pEdict); //DYLAN FIX GETPLAYERAUTHID(player->pEdict);
 #if 0
 					if (!auth || auth[0] == '\0')
 					{
@@ -737,7 +737,7 @@ reswitch:
 #endif
 
 					int userid = GETPLAYERUSERID(player->pEdict);
-					ke::SafeSprintf(buffer, sizeof(buffer), "%s<%d><%u><%s>", player->name.chars(), userid, auth, player->team.chars());
+					ke::SafeSprintf(buffer, sizeof(buffer), "%s<%d><%s><%s>", player->name.chars(), userid, auth, player->team.chars());
 				}
 				else
 				{

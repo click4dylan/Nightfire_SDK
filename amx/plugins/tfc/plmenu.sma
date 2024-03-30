@@ -1,49 +1,28 @@
-/* AMX Mod X
-*   Players Menu Plugin
-*
-* by the AMX Mod X Development Team
-*  originally developed by OLO
-*
-* This file is part of AMX Mod X.
-*
-*
-*  This program is free software; you can redistribute it and/or modify it
-*  under the terms of the GNU General Public License as published by the
-*  Free Software Foundation; either version 2 of the License, or (at
-*  your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful, but
-*  WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-*  General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with this program; if not, write to the Free Software Foundation,
-*  Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*
-*  In addition, as a special exception, the author gives permission to
-*  link the code of this program with the Half-Life Game Engine ("HL
-*  Engine") and Modified Game Libraries ("MODs") developed by Valve,
-*  L.L.C ("Valve"). You must obey the GNU General Public License in all
-*  respects for all of the code used other than the HL Engine and MODs
-*  from Valve. If you modify this file, you may extend this exception
-*  to your version of the file, but you are not obligated to do so. If
-*  you do not wish to do so, delete this exception statement from your
-*  version.
-*/
+// vim: set ts=4 sw=4 tw=99 noet:
+//
+// AMX Mod X, based on AMX Mod by Aleksander Naszko ("OLO").
+// Copyright (C) The AMX Mod X Development Team.
+//
+// This software is licensed under the GNU General Public License, version 3 or higher.
+// Additional exceptions apply. For full license details, see LICENSE.txt or visit:
+//     https://alliedmods.net/amxmodx-license
+
+//
+// Players Menu Plugin
+//
 
 #include <amxmodx>
 #include <amxmisc>
 #include <tfcx>
 
-new g_menuPosition[33]
-new g_menuPlayers[33][32]
-new g_menuPlayersNum[33]
-new g_menuOption[33]
-new g_menuSettings[33]
+new g_menuPosition[MAX_PLAYERS + 1]
+new g_menuPlayers[MAX_PLAYERS + 1][MAX_PLAYERS]
+new g_menuPlayersNum[MAX_PLAYERS + 1]
+new g_menuOption[MAX_PLAYERS + 1]
+new g_menuSettings[MAX_PLAYERS + 1]
 
-new g_menuSelect[33][64]
-new g_menuSelectNum[33]
+new g_menuSelect[MAX_PLAYERS + 1][64]
+new g_menuSelectNum[MAX_PLAYERS + 1]
 
 #define MAX_CLCMDS 24
 
@@ -56,6 +35,9 @@ new g_coloredMenus
 
 new g_teamNames[6][] = {"", "Blue", "Red", "Yellow", "Green", "Spectator"}
 
+new p_amx_tempban_maxtime;
+new Trie:g_tempBans;
+
 public plugin_init()
 {
 	register_plugin("Players Menu",AMXX_VERSION_STR,"AMXX Dev Team")
@@ -65,7 +47,7 @@ public plugin_init()
 	register_dictionary("admincmd.txt")
 
 	register_clcmd("amx_kickmenu","cmdKickMenu",ADMIN_KICK,"- displays kick menu")
-	register_clcmd("amx_banmenu","cmdBanMenu",ADMIN_BAN,"- displays ban menu")
+	register_clcmd("amx_banmenu","cmdBanMenu",ADMIN_BAN|ADMIN_BAN_TEMP,"- displays ban menu")
 	register_clcmd("amx_slapmenu","cmdSlapMenu",ADMIN_SLAY,"- displays slap/slay menu")
 	register_clcmd("amx_teammenu","cmdTeamMenu",ADMIN_LEVEL_A,"- displays team menu")
 	register_clcmd("amx_clcmdmenu","cmdClcmdMenu",ADMIN_LEVEL_A,"- displays client cmds menu")
@@ -79,9 +61,25 @@ public plugin_init()
 	g_coloredMenus = colored_menus()
 
 	new clcmds_ini_file[64]
-	get_configsdir(clcmds_ini_file, 63)
-	format(clcmds_ini_file, 63, "%s/clcmds.ini", clcmds_ini_file)
+	get_configsdir(clcmds_ini_file, charsmax(clcmds_ini_file))
+	format(clcmds_ini_file, charsmax(clcmds_ini_file), "%s/clcmds.ini", clcmds_ini_file)
 	load_settings(clcmds_ini_file)
+}
+
+public plugin_cfg()
+{
+	new x = get_xvar_id("g_tempBans")
+	if( x )
+	{
+		g_tempBans = Trie:get_xvar_num(x)
+	}
+	new amx_tempban_maxtime[] = "amx_tempban_maxtime";
+	p_amx_tempban_maxtime = get_cvar_pointer(amx_tempban_maxtime);
+	if( !p_amx_tempban_maxtime )
+	{
+		p_amx_tempban_maxtime = register_cvar(amx_tempban_maxtime, "4320");
+		server_cmd("amx_cvar add %s", amx_tempban_maxtime);
+	}
 }
 
 /* Ban menu */
@@ -110,13 +108,20 @@ public actionBanMenu(id, key)
 		
 		default:
 		{
+			new banTime = g_menuSettings[id]
+			if( ~get_user_flags(id) & ( ADMIN_BAN | ADMIN_RCON ) && (banTime <= 0 || banTime > get_pcvar_num(p_amx_tempban_maxtime)) )
+			{
+				console_print(id, "%L", id, "NO_ACC_COM");
+				displayBanMenu(id, g_menuPosition[id])
+				return PLUGIN_HANDLED
+			}
 			new player = g_menuPlayers[id][g_menuPosition[id] * 7 + key]
       
-			new name[32], name2[32], authid[32], authid2[32]
-			get_user_name(player, name2, 31)
-			get_user_authid(id, authid, 31)
-			get_user_authid(player, authid2, 31)
-			get_user_name(id, name, 31)
+			new name[MAX_NAME_LENGTH], name2[MAX_NAME_LENGTH], authid[32], authid2[32]
+			get_user_name(player, name2, charsmax(name2))
+			get_user_authid(id, authid, charsmax(authid))
+			get_user_authid(player, authid2, charsmax(authid2))
+			get_user_name(id, name, charsmax(name))
 			new userid2 = get_user_userid(player)
 
 			log_amx("Ban: ^"%s<%d><%s><>^" ban and kick ^"%s<%d><%s><>^" (minutes ^"%d^")", name, get_user_userid(id), authid, name2, userid2, authid2, g_menuSettings[id])
@@ -132,7 +137,7 @@ public actionBanMenu(id, key)
 					else
 					{
 						new tempTime[32];
-						formatex(tempTime,sizeof(tempTime)-1,"%d",g_menuSettings[id]);
+						formatex(tempTime,charsmax(tempTime),"%d",g_menuSettings[id]);
 						client_print(0, print_chat, "%L %s: %L %s %L", LANG_PLAYER, "ADMIN", name, LANG_PLAYER, "BAN", name2, LANG_PLAYER, "FOR_MIN", tempTime);
 					}
 				}
@@ -145,7 +150,7 @@ public actionBanMenu(id, key)
 					else
 					{
 						new tempTime[32];
-						formatex(tempTime,sizeof(tempTime)-1,"%d",g_menuSettings[id]);
+						formatex(tempTime,charsmax(tempTime),"%d",g_menuSettings[id]);
 						client_print(0, print_chat, "%L: %L %s %L", LANG_PLAYER, "ADMIN", LANG_PLAYER, "BAN", name2, LANG_PLAYER, "FOR_MIN", tempTime);
 					}
 				}
@@ -154,11 +159,21 @@ public actionBanMenu(id, key)
 			if (equal("4294967295", authid2))
 			{
 				new ipa[32]
-				get_user_ip(player, ipa, 31, 1)
+				get_user_ip(player, ipa, charsmax(ipa), 1)
 				server_cmd("addip %d %s;writeip", g_menuSettings[id], ipa)
+				if( g_tempBans )
+				{
+					TrieSetString(g_tempBans, ipa, authid)
+				}
 			}
 			else
+			{
 				server_cmd("banid %d #%d kick;writeid", g_menuSettings[id], userid2)
+				if( g_tempBans )
+				{
+					TrieSetString(g_tempBans, authid2, authid)
+				}
+			}
 
 			server_exec()
 
@@ -179,13 +194,13 @@ displayBanMenu(id, pos)
 	new menuBody[512]
 	new b = 0
 	new i
-	new name[32]
+	new name[MAX_NAME_LENGTH]
 	new start = pos * 7
 
 	if (start >= g_menuPlayersNum[id])
 		start = pos = g_menuPosition[id] = 0
 
-	new len = format(menuBody, 511, g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "BAN_MENU", pos + 1, (g_menuPlayersNum[id] / 7 + ((g_menuPlayersNum[id] % 7) ? 1 : 0)))
+	new len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "BAN_MENU", pos + 1, (g_menuPlayersNum[id] / 7 + ((g_menuPlayersNum[id] % 7) ? 1 : 0)))
 	new end = start + 7
 	new keys = MENU_KEY_0|MENU_KEY_8
 
@@ -195,38 +210,38 @@ displayBanMenu(id, pos)
 	for (new a = start; a < end; ++a)
 	{
 		i = g_menuPlayers[id][a]
-		get_user_name(i, name, 31)
+		get_user_name(i, name, charsmax(name))
 
 		if (is_user_bot(i) || access(i, ADMIN_IMMUNITY))
 		{
 			++b
 			
 			if (g_coloredMenus)
-				len += format(menuBody[len], 511-len, "\d%d. %s^n\w", b, name)
+				len += format(menuBody[len], charsmax(menuBody)-len, "\d%d. %s^n\w", b, name)
 			else
-				len += format(menuBody[len], 511-len, "#. %s^n", name)
+				len += format(menuBody[len], charsmax(menuBody)-len, "#. %s^n", name)
 		} else {
 			keys |= (1<<b)
 				
 			if (is_user_admin(i))
-				len += format(menuBody[len], 511-len, g_coloredMenus ? "%d. %s \r*^n\w" : "%d. %s *^n", ++b, name)
+				len += format(menuBody[len], charsmax(menuBody)-len, g_coloredMenus ? "%d. %s \r*^n\w" : "%d. %s *^n", ++b, name)
 			else
-				len += format(menuBody[len], 511-len, "%d. %s^n", ++b, name)
+				len += format(menuBody[len], charsmax(menuBody)-len, "%d. %s^n", ++b, name)
 		}
 	}
 
 	if (g_menuSettings[id])
-		len += format(menuBody[len], 511-len, "^n8. %L^n", id, "BAN_FOR_MIN", g_menuSettings[id])
+		len += format(menuBody[len], charsmax(menuBody)-len, "^n8. %L^n", id, "BAN_FOR_MIN", g_menuSettings[id])
 	else
-		len += format(menuBody[len], 511-len, "^n8. %L^n", id, "BAN_PERM")
+		len += format(menuBody[len], charsmax(menuBody)-len, "^n8. %L^n", id, "BAN_PERM")
 
 	if (end != g_menuPlayersNum[id])
 	{
-		format(menuBody[len], 511-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
 		keys |= MENU_KEY_9
 	}
 	else
-		format(menuBody[len], 511-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
 
 	show_menu(id, keys, menuBody, -1, "Ban Menu")
 }
@@ -262,8 +277,8 @@ public actionSlapMenu(id,key) {
     default: {
       new player = g_menuPlayers[id][g_menuPosition[id] * 7 + key]
       
-      new name2[32]
-      get_user_name(player,name2,31)
+      new name2[MAX_NAME_LENGTH]
+      get_user_name(player,name2,charsmax(name2))
       
       if (!is_user_alive(player)) {
         client_print(id,print_chat,"%L",id,"CANT_PERF_DEAD",name2)
@@ -271,11 +286,11 @@ public actionSlapMenu(id,key) {
         return PLUGIN_HANDLED
       }
             
-      new authid[32],authid2[32], name[32]
+      new authid[32],authid2[32], name[MAX_NAME_LENGTH]
 
-      get_user_authid(id,authid,31)
-      get_user_authid(player,authid2,31)
-      get_user_name(id,name,31)
+      get_user_authid(id,authid,charsmax(authid))
+      get_user_authid(player,authid2,charsmax(authid2))
+      get_user_name(id,name,charsmax(name))
         
       if ( g_menuOption[id] ) {
         log_amx("Cmd: ^"%s<%d><%s><>^" slap with %d damage ^"%s<%d><%s><>^"", 
@@ -315,13 +330,13 @@ displaySlapMenu(id, pos)
 	new menuBody[512]
 	new b = 0
 	new i
-	new name[32]
+	new name[MAX_NAME_LENGTH]
 	new start = pos * 7
 
 	if (start >= g_menuPlayersNum[id])
 		start = pos = g_menuPosition[id] = 0
 
-	new len = format(menuBody, 511, g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "SLAP_SLAY_MENU", pos + 1, (g_menuPlayersNum[id] / 7 + ((g_menuPlayersNum[id] % 7) ? 1 : 0)))
+	new len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "SLAP_SLAY_MENU", pos + 1, (g_menuPlayersNum[id] / 7 + ((g_menuPlayersNum[id] % 7) ? 1 : 0)))
 	new end = start + 7
 	new keys = MENU_KEY_0|MENU_KEY_8
 
@@ -331,7 +346,7 @@ displaySlapMenu(id, pos)
 	for (new a = start; a < end; ++a)
 	{
 		i = g_menuPlayers[id][a]
-		get_user_name(i, name, 31)
+		get_user_name(i, name, charsmax(name))
 		new iteam = get_user_team(i)
 
 		if (!is_user_alive(i) || access(i, ADMIN_IMMUNITY))
@@ -339,31 +354,31 @@ displaySlapMenu(id, pos)
 			++b
 		
 			if (g_coloredMenus)
-				len += format(menuBody[len], 511-len, "\d%d. %s\R%s^n\w", b, name, g_teamNames[iteam])
+				len += format(menuBody[len], charsmax(menuBody)-len, "\d%d. %s\R%s^n\w", b, name, g_teamNames[iteam])
 			else
-				len += format(menuBody[len], 511-len, "#. %s   %s^n", name, g_teamNames[iteam])		
+				len += format(menuBody[len], charsmax(menuBody)-len, "#. %s   %s^n", name, g_teamNames[iteam])		
 		} else {
 			keys |= (1<<b)
 				
 			if (is_user_admin(i))
-				len += format(menuBody[len], 511-len, g_coloredMenus ? "%d. %s \r*\y\R%s^n\w" : "%d. %s *   %s^n", ++b, name, g_teamNames[iteam])
+				len += format(menuBody[len], charsmax(menuBody)-len, g_coloredMenus ? "%d. %s \r*\y\R%s^n\w" : "%d. %s *   %s^n", ++b, name, g_teamNames[iteam])
 			else
-				len += format(menuBody[len], 511-len, g_coloredMenus ? "%d. %s\y\R%s^n\w" : "%d. %s   %s^n", ++b, name, g_teamNames[iteam])
+				len += format(menuBody[len], charsmax(menuBody)-len, g_coloredMenus ? "%d. %s\y\R%s^n\w" : "%d. %s   %s^n", ++b, name, g_teamNames[iteam])
 		}
 	}
 
 	if (g_menuOption[id])
-		len += format(menuBody[len], 511-len, "^n8. %L^n", id, "SLAP_WITH_DMG", g_menuSettings[id])
+		len += format(menuBody[len], charsmax(menuBody)-len, "^n8. %L^n", id, "SLAP_WITH_DMG", g_menuSettings[id])
 	else
-		len += format(menuBody[len], 511-len, "^n8. %L^n", id, "SLAY")
+		len += format(menuBody[len], charsmax(menuBody)-len, "^n8. %L^n", id, "SLAY")
 
 	if (end != g_menuPlayersNum[id])
 	{
-		format(menuBody[len], 511-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
 		keys |= MENU_KEY_9
 	}
 	else
-		format(menuBody[len], 511-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
 
 	show_menu(id, keys, menuBody, -1, "Slap/Slay Menu")
 }
@@ -391,11 +406,11 @@ public actionKickMenu(id,key)
     default: {
       new player = g_menuPlayers[id][g_menuPosition[id] * 8 + key]
 
-      new authid[32],authid2[32], name[32], name2[32]
-      get_user_authid(id,authid,31)
-      get_user_authid(player,authid2,31)
-      get_user_name(id,name,31)
-      get_user_name(player,name2,31)      
+      new authid[32],authid2[32], name[MAX_NAME_LENGTH], name2[MAX_NAME_LENGTH]
+      get_user_authid(id,authid,charsmax(authid))
+      get_user_authid(player,authid2,charsmax(authid2))
+      get_user_name(id,name,charsmax(name))
+      get_user_name(player,name2,charsmax(name2))      
       new userid2 = get_user_userid(player)
 
       log_amx("Kick: ^"%s<%d><%s><>^" kick ^"%s<%d><%s><>^"", 
@@ -425,13 +440,13 @@ displayKickMenu(id, pos)
 	new menuBody[512]
 	new b = 0
 	new i
-	new name[32]
+	new name[MAX_NAME_LENGTH]
 	new start = pos * 8
 
 	if (start >= g_menuPlayersNum[id])
 		start = pos = g_menuPosition[id] = 0
 
-	new len = format(menuBody, 511, g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "KICK_MENU", pos + 1, (g_menuPlayersNum[id] / 8 + ((g_menuPlayersNum[id] % 8) ? 1 : 0)))
+	new len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "KICK_MENU", pos + 1, (g_menuPlayersNum[id] / 8 + ((g_menuPlayersNum[id] % 8) ? 1 : 0)))
 	new end = start + 8
 	new keys = MENU_KEY_0
 
@@ -441,33 +456,33 @@ displayKickMenu(id, pos)
 	for (new a = start; a < end; ++a)
 	{
 		i = g_menuPlayers[id][a]
-		get_user_name(i, name, 31)
+		get_user_name(i, name, charsmax(name))
 
 		if (access(i, ADMIN_IMMUNITY))
 		{
 			++b
 		
 			if (g_coloredMenus)
-				len += format(menuBody[len], 511-len, "\d%d. %s^n\w", b, name)
+				len += format(menuBody[len], charsmax(menuBody)-len, "\d%d. %s^n\w", b, name)
 			else
-				len += format(menuBody[len], 511-len, "#. %s^n", name)
+				len += format(menuBody[len], charsmax(menuBody)-len, "#. %s^n", name)
 		} else {
 			keys |= (1<<b)
 				
 			if (is_user_admin(i))
-				len += format(menuBody[len], 511-len, g_coloredMenus ? "%d. %s \r*^n\w" : "%d. %s *^n", ++b, name)
+				len += format(menuBody[len], charsmax(menuBody)-len, g_coloredMenus ? "%d. %s \r*^n\w" : "%d. %s *^n", ++b, name)
 			else
-				len += format(menuBody[len], 511-len, "%d. %s^n", ++b, name)
+				len += format(menuBody[len], charsmax(menuBody)-len, "%d. %s^n", ++b, name)
 		}
 	}
 
 	if (end != g_menuPlayersNum[id])
 	{
-		format(menuBody[len], 511-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
 		keys |= MENU_KEY_9
 	}
 	else
-		format(menuBody[len], 511-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
 
 	show_menu(id, keys, menuBody, -1, "Kick Menu")
 }
@@ -494,11 +509,11 @@ public actionTeamMenu(id,key) {
     case 9: displayTeamMenu(id,--g_menuPosition[id])
     default: {
       new player = g_menuPlayers[id][g_menuPosition[id] * 7 + key]
-      new authid[32],authid2[32], name[32], name2[32]
-      get_user_name(player,name2,31)
-      get_user_authid(id,authid,31)
-      get_user_authid(player,authid2,31)
-      get_user_name(id,name,31)
+      new authid[32],authid2[32], name[MAX_NAME_LENGTH], name2[MAX_NAME_LENGTH]
+      get_user_name(player,name2,charsmax(name2))
+      get_user_authid(id,authid,charsmax(authid))
+      get_user_authid(player,authid2,charsmax(authid2))
+      get_user_name(id,name,charsmax(name))
 
       log_amx("Cmd: ^"%s<%d><%s><>^" transfer ^"%s<%d><%s><>^" (team ^"%s^")", 
           name,get_user_userid(id),authid, name2,get_user_userid(player),authid2, g_teamNames[g_menuOption[id]] )
@@ -507,8 +522,8 @@ public actionTeamMenu(id,key) {
         case 1: client_print(0, print_chat, "%L", LANG_PLAYER, "ADMIN_TRANSF_1", name2, g_teamNames[g_menuOption[id]])
       }
 
-      new szCmd[2]
-      format(szCmd,2,"%d",g_menuOption[id])
+      new szCmd[3]
+      format(szCmd,charsmax(szCmd),"%d",g_menuOption[id])
       tfc_userkill(player)
       if (g_menuOption[id] == 5)
       {
@@ -534,13 +549,13 @@ displayTeamMenu(id, pos)
 	new menuBody[512]
 	new b = 0
 	new i, iteam
-	new name[32]
+	new name[MAX_NAME_LENGTH]
 	new start = pos * 7
 
 	if (start >= g_menuPlayersNum[id])
 		start = pos = g_menuPosition[id] = 0
 
-	new len = format(menuBody, 511, g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "TEAM_MENU", pos + 1, (g_menuPlayersNum[id] / 7 + ((g_menuPlayersNum[id] % 7) ? 1 : 0)))
+	new len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "TEAM_MENU", pos + 1, (g_menuPlayersNum[id] / 7 + ((g_menuPlayersNum[id] % 7) ? 1 : 0)))
 	new end = start + 7
 	new keys = MENU_KEY_0|MENU_KEY_8
 
@@ -550,7 +565,7 @@ displayTeamMenu(id, pos)
 	for (new a = start; a < end; ++a)
 	{
 		i = g_menuPlayers[id][a]
-		get_user_name(i, name, 31)
+		get_user_name(i, name, charsmax(name))
 		iteam = get_user_team(i)
 
 		if ((iteam == g_menuOption[id]) || access(i, ADMIN_IMMUNITY))
@@ -558,28 +573,28 @@ displayTeamMenu(id, pos)
 			++b
 			
 			if (g_coloredMenus)
-				len += format(menuBody[len], 511-len, "\d%d. %s\R%s^n\w", b, name, g_teamNames[iteam])
+				len += format(menuBody[len], charsmax(menuBody)-len, "\d%d. %s\R%s^n\w", b, name, g_teamNames[iteam])
 			else
-				len += format(menuBody[len], 511-len, "#. %s   %s^n", name, g_teamNames[iteam])		
+				len += format(menuBody[len], charsmax(menuBody)-len, "#. %s   %s^n", name, g_teamNames[iteam])		
 		} else {
 			keys |= (1<<b)
 				
 			if (is_user_admin(i))
-				len += format(menuBody[len], 511-len, g_coloredMenus ? "%d. %s \r*\y\R%s^n\w" : "%d. %s *   %s^n", ++b, name, g_teamNames[iteam])
+				len += format(menuBody[len], charsmax(menuBody)-len, g_coloredMenus ? "%d. %s \r*\y\R%s^n\w" : "%d. %s *   %s^n", ++b, name, g_teamNames[iteam])
 			else
-				len += format(menuBody[len], 511-len, g_coloredMenus ? "%d. %s\y\R%s^n\w" : "%d. %s   %s^n", ++b, name, g_teamNames[iteam])
+				len += format(menuBody[len], charsmax(menuBody)-len, g_coloredMenus ? "%d. %s\y\R%s^n\w" : "%d. %s   %s^n", ++b, name, g_teamNames[iteam])
 		}
 	}
 
-	len += format(menuBody[len], 511-len, "^n8. %L^n", id, "TRANSF_TO", g_teamNames[g_menuOption[id]])
+	len += format(menuBody[len], charsmax(menuBody)-len, "^n8. %L^n", id, "TRANSF_TO", g_teamNames[g_menuOption[id]])
 
 	if (end != g_menuPlayersNum[id])
 	{
-		format(menuBody[len], 511-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
 		keys |= MENU_KEY_9
 	}
 	else
-		format(menuBody[len], 511-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
 
 	show_menu(id, keys, menuBody, -1, "Team Menu")
 }
@@ -611,14 +626,12 @@ public actionClcmdMenu(id,key) {
       new player = g_menuPlayers[id][g_menuPosition[id] * 7 + key]
       new flags = g_clcmdMisc[g_menuSelect[id][g_menuOption[id]]][1]
       if (is_user_connected(player)) {
-        new command[64], authid[32], name[32], userid[32]
-        copy(command,63,g_clcmdCmd[g_menuSelect[id][g_menuOption[id]]])
-        get_user_authid(player,authid,31)
-        get_user_name(player,name,31)
-        num_to_str(get_user_userid(player),userid,31)
-        replace(command,63,"%userid%",userid)
-        replace(command,63,"%authid%",authid)
-        replace(command,63,"%name%",name)
+        new command[64], authid[32], userid[32]
+        copy(command,charsmax(command),g_clcmdCmd[g_menuSelect[id][g_menuOption[id]]])
+        get_user_authid(player,authid,charsmax(authid))
+        num_to_str(get_user_userid(player),userid,charsmax(userid))
+        replace(command,charsmax(command),"%userid%",userid)
+        replace(command,charsmax(command),"%authid%",authid)
         if (flags & 1) {
           server_cmd("%s", command)
           server_exec()
@@ -644,13 +657,13 @@ displayClcmdMenu(id, pos)
 	new menuBody[512]
 	new b = 0
 	new i
-	new name[32]
+	new name[MAX_NAME_LENGTH]
 	new start = pos * 7
 
 	if (start >= g_menuPlayersNum[id])
 		start = pos = g_menuPosition[id] = 0
 
-	new len = format(menuBody, 511, g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "CL_CMD_MENU", pos + 1, (g_menuPlayersNum[id] / 7 + ((g_menuPlayersNum[id] % 7) ? 1 : 0)))
+	new len = format(menuBody, charsmax(menuBody), g_coloredMenus ? "\y%L\R%d/%d^n\w^n" : "%L %d/%d^n^n", id, "CL_CMD_MENU", pos + 1, (g_menuPlayersNum[id] / 7 + ((g_menuPlayersNum[id] % 7) ? 1 : 0)))
 	new end = start + 7
 	new keys = MENU_KEY_0|MENU_KEY_8
 
@@ -660,38 +673,38 @@ displayClcmdMenu(id, pos)
 	for (new a = start; a < end; ++a)
 	{
 		i = g_menuPlayers[id][a]
-		get_user_name(i, name, 31)
+		get_user_name(i, name, charsmax(name))
 
 		if (!g_menuSelectNum[id] || access(i, ADMIN_IMMUNITY))
 		{
 			++b
 			
 			if (g_coloredMenus)
-				len += format(menuBody[len], 511-len, "\d%d. %s^n\w", b, name)
+				len += format(menuBody[len], charsmax(menuBody)-len, "\d%d. %s^n\w", b, name)
 			else
-				len += format(menuBody[len], 511-len, "#. %s^n", name)		
+				len += format(menuBody[len], charsmax(menuBody)-len, "#. %s^n", name)		
 		} else {
 			keys |= (1<<b)
 				
 			if (is_user_admin(i))
-				len += format(menuBody[len], 511-len, g_coloredMenus ? "%d. %s \r*^n\w" : "%d. %s *^n", ++b, name)
+				len += format(menuBody[len], charsmax(menuBody)-len, g_coloredMenus ? "%d. %s \r*^n\w" : "%d. %s *^n", ++b, name)
 			else
-				len += format(menuBody[len], 511-len, "%d. %s^n", ++b, name)
+				len += format(menuBody[len], charsmax(menuBody)-len, "%d. %s^n", ++b, name)
 		}
 	}
 
 	if (g_menuSelectNum[id])
-		len += format(menuBody[len], 511-len, "^n8. %s^n", g_clcmdName[g_menuSelect[id][g_menuOption[id]]])
+		len += format(menuBody[len], charsmax(menuBody)-len, "^n8. %s^n", g_clcmdName[g_menuSelect[id][g_menuOption[id]]])
 	else
-		len += format(menuBody[len], 511-len, "^n8. %L^n", id, "NO_CMDS")
+		len += format(menuBody[len], charsmax(menuBody)-len, "^n8. %L^n", id, "NO_CMDS")
 
 	if (end != g_menuPlayersNum[id])
 	{
-		format(menuBody[len], 511-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n9. %L...^n0. %L", id, "MORE", id, pos ? "BACK" : "EXIT")
 		keys |= MENU_KEY_9
 	}
 	else
-		format(menuBody[len], 511-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
+		format(menuBody[len], charsmax(menuBody)-len, "^n0. %L", id, pos ? "BACK" : "EXIT")
 
 	show_menu(id, keys, menuBody, -1, "Client Cmds Menu")
 }
@@ -724,13 +737,13 @@ load_settings(szFilename[])
 	new text[256], szFlags[32], szAccess[32]
 	new a, pos = 0
 
-	while (g_clcmdNum < MAX_CLCMDS && read_file(szFilename, pos++, text, 255, a))
+	while (g_clcmdNum < MAX_CLCMDS && read_file(szFilename, pos++, text, charsmax(text), a))
 	{
 		if (text[0] == ';') continue
 
-		if (parse(text, g_clcmdName[g_clcmdNum], 31, g_clcmdCmd[g_clcmdNum], 63, szFlags, 31, szAccess, 31) > 3)
+		if (parse(text, g_clcmdName[g_clcmdNum], charsmax(g_clcmdName[]), g_clcmdCmd[g_clcmdNum], charsmax(g_clcmdCmd[]), szFlags, charsmax(szFlags), szAccess, charsmax(szAccess)) > 3)
 		{
-			while (replace(g_clcmdCmd[g_clcmdNum], 63, "\'", "^""))
+			while (replace(g_clcmdCmd[g_clcmdNum], charsmax(g_clcmdCmd[]), "\'", "^""))
 			{
 				// do nothing
 			}

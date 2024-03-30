@@ -31,7 +31,7 @@ static cell AMX_NATIVE_CALL create_cvar(AMX *amx, cell *params)
 		plugin->AddToFailCounter(1);
 	}
 
-	CvarInfo* info = g_CvarManager.CreateCvar(name, value, plugin->getName(), plugin->getId(), flags, helpText);
+	CvarInfo* info = g_CvarManager.CreateCvar(name, CVAR_FLOAT, value, plugin->getName(), plugin->getId(), flags, helpText);
 
 	if (info)
 	{
@@ -80,7 +80,7 @@ static cell AMX_NATIVE_CALL register_cvar(AMX *amx, cell *params)
 		plugin->AddToFailCounter(1);
 	}
 
-	CvarInfo* info = g_CvarManager.CreateCvar(name, value, plugin->getName(), plugin->getId(), flags);
+	CvarInfo* info = g_CvarManager.CreateCvar(name, CVAR_FLOAT, value, plugin->getName(), plugin->getId(), flags);
 
 	if (info)
 	{
@@ -111,7 +111,7 @@ static cell AMX_NATIVE_CALL get_cvar_pointer(AMX *amx, cell *params)
 // hook_cvar_change(cvarHandle, const callback[])
 static cell AMX_NATIVE_CALL hook_cvar_change(AMX *amx, cell *params)
 {
-	cvar_t* var = reinterpret_cast<cvar_t*>(params[1]);
+	ConsoleVariable* var = reinterpret_cast<ConsoleVariable*>(params[1]);
 
 	if (!var)
 	{
@@ -171,7 +171,7 @@ static cell AMX_NATIVE_CALL get_cvar_flags(AMX *amx, cell *params)
 
 	CvarInfo* info = g_CvarManager.FindCvar(sCvar);
 
-	return info ? info->var->flags : 0;
+	return info ? info->var->getFlags() : 0;
 }
 
 // get_cvar_float(const cvarname[])
@@ -181,8 +181,11 @@ static cell AMX_NATIVE_CALL get_cvar_float(AMX *amx, cell *params)
 	const char* name = get_amxstring(amx, params[1], 0, length);
 
 	CvarInfo* info = g_CvarManager.FindCvar(name);
+	if (!info)
+		return 0;
 
-	return info ? amx_ftoc(info->var->value) : 0;
+	float value = info->var->getValueFloat();
+	return amx_ftoc(value);
 }
 
 // get_cvar_num(const cvarname[])
@@ -193,7 +196,7 @@ static cell AMX_NATIVE_CALL get_cvar_num(AMX *amx, cell *params)
 
 	CvarInfo* info = g_CvarManager.FindCvar(name);
 
-	return info ? (int)info->var->value : 0;
+	return info ? (int)info->var->getValueInt() : 0;
 }
 
 // get_cvar_string(const cvarname[], output[], iLen)
@@ -204,7 +207,7 @@ static cell AMX_NATIVE_CALL get_cvar_string(AMX *amx, cell *params)
 
 	CvarInfo* info = g_CvarManager.FindCvar(name);
 
-	const char *value = info ? info->var->string : "";
+	const char *value = info ? info->var->getValueString() : "";
 	length = info ? strlen(value) : 0;
 
 	return set_amxstring_utf8(amx, params[2], value, length, params[3]);
@@ -223,7 +226,7 @@ static cell AMX_NATIVE_CALL set_cvar_flags(AMX *amx, cell *params)
 
 	if (info)
 	{
-		info->var->flags |= (int)(params[2]);
+		info->var->setFlags(info->var->getFlags() | (int)(params[2]));
 		return 1;
 	}
 
@@ -241,7 +244,8 @@ static cell AMX_NATIVE_CALL set_cvar_float(AMX *amx, cell *params)
 	if (info)
 	{
 		ke::SafeSprintf(CVarTempBuffer, sizeof(CVarTempBuffer), "%f", amx_ctof(params[2]));
-		CVAR_DIRECTSET(info->var, &CVarTempBuffer[0]);
+		info->var->setFromString(CVarTempBuffer);
+		//CVAR_DIRECTSET(info->var, &CVarTempBuffer[0]);
 	}
 
 	return 1;
@@ -259,7 +263,8 @@ static cell AMX_NATIVE_CALL set_cvar_num(AMX *amx, cell *params)
 	if (info)
 	{
 		ke::SafeSprintf(CVarTempBuffer, sizeof(CVarTempBuffer), "%d", value);
-		CVAR_DIRECTSET(info->var, &CVarTempBuffer[0]);
+		info->var->setFromString(CVarTempBuffer);
+		//CVAR_DIRECTSET(info->var, &CVarTempBuffer[0]);
 	}
 
 	return 1;
@@ -275,7 +280,8 @@ static cell AMX_NATIVE_CALL set_cvar_string(AMX *amx, cell *params)
 
 	if (info)
 	{
-		CVAR_DIRECTSET(info->var, get_amxstring(amx, params[2], 1, length));
+		info->var->setFromString(get_amxstring(amx, params[2], 1, length));
+		//CVAR_DIRECTSET(info->var, get_amxstring(amx, params[2], 1, length));
 	}
 
 	return 1;
@@ -284,40 +290,40 @@ static cell AMX_NATIVE_CALL set_cvar_string(AMX *amx, cell *params)
 // get_pcvar_flags(pcvar)
 static cell AMX_NATIVE_CALL get_pcvar_flags(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable *ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	if (!ptr)
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
 	}
 
-	return ptr->flags;
+	return ptr->getFlags();
 }
 
 // Float:get_pcvar_float(pcvar)
 static cell AMX_NATIVE_CALL get_pcvar_float(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable *ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	if (!ptr)
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
 	}
-
-	return amx_ftoc(ptr->value);
+	float value = ptr->getValueFloat();
+	return amx_ftoc(value);
 }
 
 // get_pcvar_num(pcvar)
 static cell AMX_NATIVE_CALL get_pcvar_num(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	if (!ptr)
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
 	}
 
-	return (int)ptr->value;
+	return (int)ptr->getValueInt();
 }
 
 // bool:get_pcvar_bool(pcvar)
@@ -329,23 +335,23 @@ static cell AMX_NATIVE_CALL get_pcvar_bool(AMX *amx, cell *params)
 // get_pcvar_string(pcvar, string[], maxlen)
 static cell AMX_NATIVE_CALL get_pcvar_string(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable *ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	if (!ptr)
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
 	}
 
-	return set_amxstring_utf8(amx, params[2], ptr->string ? ptr->string : "", ptr->string ? strlen(ptr->string) : 0, params[3]);
+	return set_amxstring_utf8(amx, params[2], ptr->getValueString() ? ptr->getValueString() : "", ptr->getValueString() ? strlen(ptr->getValueString()) : 0, params[3]);
 }
 
 // get_pcvar_bounds(pcvar, CvarBounds:type, &Float:value)
 static cell AMX_NATIVE_CALL get_pcvar_bounds(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	CvarInfo* info = nullptr;
 
-	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->name)))
+	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->getName())))
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
@@ -377,10 +383,10 @@ static cell AMX_NATIVE_CALL get_pcvar_bounds(AMX *amx, cell *params)
 // bind_pcvar_float(pcvar, &Float:var)
 static cell AMX_NATIVE_CALL bind_pcvar_float(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	CvarInfo* info = nullptr;
 
-	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->name)))
+	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->getName())))
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
@@ -392,10 +398,10 @@ static cell AMX_NATIVE_CALL bind_pcvar_float(AMX *amx, cell *params)
 // bind_pcvar_num(pcvar, &any:var)
 static cell AMX_NATIVE_CALL bind_pcvar_num(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	CvarInfo* info = nullptr;
 
-	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->name)))
+	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->getName())))
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
@@ -407,10 +413,10 @@ static cell AMX_NATIVE_CALL bind_pcvar_num(AMX *amx, cell *params)
 // bind_pcvar_string(pcvar, any:var[], varlen)
 static cell AMX_NATIVE_CALL bind_pcvar_string(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	CvarInfo* info = nullptr;
 
-	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->name)))
+	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->getName())))
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
@@ -422,14 +428,14 @@ static cell AMX_NATIVE_CALL bind_pcvar_string(AMX *amx, cell *params)
 // set_pcvar_flags(pcvar, flags)
 static cell AMX_NATIVE_CALL set_pcvar_flags(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	if (!ptr)
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
 	}
 
-	ptr->flags = static_cast<int>(params[2]);
+	ptr->setFlags(static_cast<int>(params[2]));
 
 	return 1;
 }
@@ -437,7 +443,7 @@ static cell AMX_NATIVE_CALL set_pcvar_flags(AMX *amx, cell *params)
 // set_pcvar_float(pcvar, Float:num)
 static cell AMX_NATIVE_CALL set_pcvar_float(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	if (!ptr)
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
@@ -445,7 +451,8 @@ static cell AMX_NATIVE_CALL set_pcvar_float(AMX *amx, cell *params)
 	}
 
 	ke::SafeSprintf(CVarTempBuffer, sizeof(CVarTempBuffer), "%f", amx_ctof(params[2]));
-	CVAR_DIRECTSET(ptr, &CVarTempBuffer[0]);
+	ptr->setFromString(CVarTempBuffer);
+	//CVAR_DIRECTSET(ptr, &CVarTempBuffer[0]);
 
 	return 1;
 }
@@ -453,7 +460,7 @@ static cell AMX_NATIVE_CALL set_pcvar_float(AMX *amx, cell *params)
 // set_pcvar_num(pcvar, num)
 static cell AMX_NATIVE_CALL set_pcvar_num(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	if (!ptr)
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
@@ -461,7 +468,8 @@ static cell AMX_NATIVE_CALL set_pcvar_num(AMX *amx, cell *params)
 	}
 
 	ke::SafeSprintf(CVarTempBuffer, sizeof(CVarTempBuffer), "%d", params[2]);
-	CVAR_DIRECTSET(ptr, &CVarTempBuffer[0]);
+	ptr->setFromString(CVarTempBuffer);
+	//CVAR_DIRECTSET(ptr, &CVarTempBuffer[0]);
 
 	return 1;
 }
@@ -469,7 +477,7 @@ static cell AMX_NATIVE_CALL set_pcvar_num(AMX *amx, cell *params)
 // set_pcvar_string(pcvar, const string[])
 static cell AMX_NATIVE_CALL set_pcvar_string(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	if (!ptr)
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
@@ -477,8 +485,8 @@ static cell AMX_NATIVE_CALL set_pcvar_string(AMX *amx, cell *params)
 	}
 
 	int len;
-
-	CVAR_DIRECTSET(ptr, get_amxstring(amx, params[2], 0, len));
+	ptr->setFromString(get_amxstring(amx, params[2], 0, len));
+	//CVAR_DIRECTSET(ptr, get_amxstring(amx, params[2], 0, len));
 
 	return 1;
 }
@@ -486,10 +494,10 @@ static cell AMX_NATIVE_CALL set_pcvar_string(AMX *amx, cell *params)
 // set_pcvar_bounds(pcvar, CvarBounds:type, bool:set, Float:value = 0.0)
 static cell AMX_NATIVE_CALL set_pcvar_bounds(AMX *amx, cell *params)
 {
-	cvar_t *ptr = reinterpret_cast<cvar_t *>(params[1]);
+	ConsoleVariable*ptr = reinterpret_cast<ConsoleVariable*>(params[1]);
 	CvarInfo* info = nullptr;
 
-	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->name)))
+	if (!ptr || !(info = g_CvarManager.FindCvar(ptr->getName())))
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
@@ -546,7 +554,7 @@ static cell AMX_NATIVE_CALL remove_cvar_flags(AMX *amx, cell *params)
 
 	if (info)
 	{
-		info->var->flags &= ~((int)(params[2]));
+		info->var->setFlags(info->var->getFlags() & ~((int)(params[2])));
 		return 1;
 	}
 
@@ -561,7 +569,7 @@ static cell AMX_NATIVE_CALL get_plugins_cvar(AMX *amx, cell *params)
 	if (info)
 	{
 		set_amxstring(amx, params[2], info->name.chars(), params[3]);
-		*get_amxaddr(amx, params[4]) = info->var->flags;
+		*get_amxaddr(amx, params[4]) = info->var->getFlags();
 		*get_amxaddr(amx, params[5]) = info->pluginId;
 		*get_amxaddr(amx, params[6]) = reinterpret_cast<cell>(info->var);
 
@@ -588,6 +596,10 @@ static bool g_warned_ccqv = false;
 // query_client_cvar(id, const cvar[], const resultfunc[])
 static cell AMX_NATIVE_CALL query_client_cvar(AMX *amx, cell *params)
 {
+	return 0;
+	// nightfire doesn't suport this
+
+#if 0
 	int numParams = params[0] / sizeof(cell);
 
 	if (numParams != 3 && numParams != 5)
@@ -677,6 +689,7 @@ static cell AMX_NATIVE_CALL query_client_cvar(AMX *amx, cell *params)
 	QUERY_CLIENT_CVAR_VALUE2(pPlayer->pEdict, cvarname, queryObject->requestId);
 
 	return 1;
+#endif
 }
 
 AMX_NATIVE_INFO g_CvarNatives[] =

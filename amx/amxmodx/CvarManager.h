@@ -142,13 +142,16 @@ class CvarManager
 	public:
 
 		void      CreateCvarHook();
+		void      EnableHook();
+		void      DisableHook();
+		void      DestroyHook();
 
 		CvarInfo* CreateCvar(const char* name, int type, const char* value, const char* plugin, int pluginId, int flags = 0, const char* helpText = "");
 		CvarInfo* FindCvar(const char* name);
 		CvarInfo* FindCvar(size_t index);
 		bool      CacheLookup(const char* name, CvarInfo** info);
 
-		AutoForward*  HookCvarChange(cvar_t* var, AMX* amx, cell param, const char** callback);
+		AutoForward*  HookCvarChange(ConsoleVariable* var, AMX* amx, cell param, const char** callback);
 		bool          BindCvar(CvarInfo* info, CvarBind::CvarType type, AMX* amx, cell varofs, size_t varlen = 0);
 		void          SetCvarMin(CvarInfo* info, bool set, float value, int pluginId);
 		void          SetCvarMax(CvarInfo* info, bool set, float value, int pluginId);
@@ -156,7 +159,7 @@ class CvarManager
 		size_t    GetRegCvarsCount();
 		CvarsList* GetCvarsList();
 
-		void      OnConsoleCommand();
+		void      OnConsoleCommand(unsigned int numargs, const char** args);
 		void      OnPluginUnloaded();
 		void      OnAmxxShutdown();
 
@@ -166,6 +169,7 @@ class CvarManager
 		CvarsList  m_Cvars;
 		size_t     m_AmxmodxCvars;
 		CDetour*   m_HookDetour;
+		bool       m_ReHookEnabled;
 };
 
 extern CvarManager g_CvarManager;

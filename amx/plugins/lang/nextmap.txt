@@ -4,8 +4,8 @@ PLAYED_MAP = Played map
 FRIEND_FIRE = Friendly fire
 
 [de]
-NEXT_MAP = Naechste Map:
-PLAYED_MAP = Gespielte Maps
+NEXT_MAP = Nächste Map:
+PLAYED_MAP = Aktuelle Map
 FRIEND_FIRE = Friendly fire
 
 [sr]
@@ -14,8 +14,8 @@ PLAYED_MAP = Igrana mapa
 FRIEND_FIRE = Friendly fire
 
 [tr]
-NEXT_MAP = Diger Map:
-PLAYED_MAP = Oynanan map
+NEXT_MAP = Sonraki Harita:
+PLAYED_MAP = Oynanan harita
 FRIEND_FIRE = Dost atesi
 
 [fr]
@@ -34,9 +34,9 @@ PLAYED_MAP = Spillet bane
 FRIEND_FIRE = Venskablig ild
 
 [pl]
-NEXT_MAP = Nastepna Mapa:
-PLAYED_MAP = Mapy grane
-FRIEND_FIRE = Friendly fire
+NEXT_MAP = Nastepna mapa
+PLAYED_MAP = Obecna mapa
+FRIEND_FIRE = Przyjacielski ogien
 
 [nl]
 NEXT_MAP = Volgende Map:
@@ -63,25 +63,20 @@ NEXT_MAP = Seuraava mappi:
 PLAYED_MAP = Pelattu map
 FRIEND_FIRE = Friendly fire
 
-[ls]
-NEXT_MAP = N3xt M4p:
-PLAYED_MAP = P|4y3d m4p
-FRIEND_FIRE = |=r!3nd|y f!r3
-
 [bg]
-NEXT_MAP = Sledva6tata karta:
+NEXT_MAP = Sledvashta karta:
 PLAYED_MAP = Igrana karta
-FRIEND_FIRE = Friendly fire
+FRIEND_FIRE = Priqtelski ogun
 
 [ro]
-NEXT_MAP = Urmatoarea Harta:
-PLAYED_MAP = Harta Actuala
-FRIEND_FIRE = Friendly-Fire
+NEXT_MAP = Harta următoare:
+PLAYED_MAP = Harta actuală
+FRIEND_FIRE = Atac coechipieri
 
 [hu]
-NEXT_MAP = A kovetkezo palya:
-PLAYED_MAP = Jatszott Palya
-FRIEND_FIRE = Csapattars Sebzes
+NEXT_MAP = A következő pálya:
+PLAYED_MAP = Jelenlegi Pálya
+FRIEND_FIRE = Csapattárs Sebzés
 
 [lt]
 NEXT_MAP = Kitas zemelapis:
@@ -94,6 +89,36 @@ PLAYED_MAP = Aktualna mapa
 FRIEND_FIRE = Friendly fire
 
 [mk]
-NEXT_MAP = Slednata mapa ke bide:
-PLAYED_MAP = Mapata sto ja igras se vika
+NEXT_MAP = Sledna mapa:
+PLAYED_MAP = Momentalna mapa
+FRIEND_FIRE = Prijatelski ogan
+
+[hr]
+NEXT_MAP = Sljedeca mapa:
+PLAYED_MAP = Trenutna mapa
+FRIEND_FIRE = Prijateljska vatra
+
+[bs]
+NEXT_MAP = Slijedeca Mapa:
+PLAYED_MAP = Igrana mapa
 FRIEND_FIRE = Friendly fire
+
+[ru]
+NEXT_MAP = Следующая карта:
+PLAYED_MAP = Текущая карта
+FRIEND_FIRE = Огонь по своим
+
+[cn]
+NEXT_MAP = 下张地图:
+PLAYED_MAP = 已经玩过地图
+FRIEND_FIRE = 友军开火伤害
+
+[al]
+NEXT_MAP = Harta Ardhëshme:
+PLAYED_MAP = Harta që luajtëm
+FRIEND_FIRE = Sulmo shokët
+
+[pt]
+NEXT_MAP = Próximo Mapa:
+PLAYED_MAP = Mapa jogado
+FRIEND_FIRE = Fogo amigo

@@ -87,10 +87,16 @@ void Client_TeamInfo(void* mValue)
 		case 1:
 			if (index < 1 || index > gpGlobals->maxClients) break;
 			char* msg = (char*)mValue;
-			g_players[index].team = msg;
-			g_teamsIds.registerTeam(msg, -1);
-			g_players[index].teamId = g_teamsIds.findTeamId(msg);
+			if (!msg) break;
 
+			auto pPlayer = GET_PLAYER_POINTER_I(index);
+		
+			pPlayer->team = msg;
+			g_teamsIds.registerTeam(msg, -1);
+			pPlayer->teamId = g_teamsIds.findTeamId(msg);
+
+			if (pPlayer->teamId == -1)
+			{
 			/**
 			* CS fix for SPECTATOR team. 
 			* -
@@ -98,10 +104,28 @@ void Client_TeamInfo(void* mValue)
 			* This means for the first round of first spectator, SPECTATOR name is not associated with its index.
 			* The following fix manually sets the team index when we hit SPECTATOR team.
 			*/
-			if (g_players[index].teamId == -1 && g_bmod_cstrike && !strcmp(msg, "SPECTATOR"))
+				if (g_bmod_cstrike && !strcmp(msg, "SPECTATOR"))
 			{
-				g_players[index].teamId = 3;
+					pPlayer->teamId = 3;
 				g_teamsIds.registerTeam(msg, 3);
+				}
+
+				/**
+				 * Fixes in-between situation where the team name is not yet associated with a valid index
+				 * and ScoreInfo is executed later (used to retrieve the index). E.g. a player is dead,
+				 * then changes team. Index will return -1 until ScoreInfo is sent, usually at the next spawn.
+				 */
+				else if ((g_bmod_cstrike || g_bmod_dod || g_bmod_tfc || g_bmod_gearbox || g_bmod_valve) 
+					&&  pPlayer->pEdict->pvPrivateData 
+					&& !pPlayer->IsAlive())
+				{
+					GET_OFFSET_NO_ERROR("CBasePlayer", m_iTeam);
+
+					const auto teamId = get_pdata<int>(pPlayer->pEdict, m_iTeam);
+					
+					pPlayer->teamId = teamId;
+					g_teamsIds.registerTeam(msg, teamId);
+				}
 			}
 
 			break;

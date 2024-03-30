@@ -9,14 +9,17 @@
 
 #include "amxmodx.h"
 #include <amxmodx_version.h>
+#include <string>
 
-void amx_command()
+CAMX_Command amx_command("amxx", "", 0);
+
+void CAMX_Command::run(unsigned int numargs, const char** args)
 {
-	const char* cmd = CMD_ARGV(1);
+	const char* cmd = numargs > 1 ? args[1] : "";//CMD_ARGV(1);
 	const char* search = nullptr;
-	if (CMD_ARGC() > 2)
+	if (numargs > 2)//if (CMD_ARGC() > 2)
 	{
-		search = CMD_ARGV(2);
+		search = args[2];//CMD_ARGV(2);
 		// Ignore empty search criteria
 		if (!(*search))
 			search = nullptr;
@@ -25,7 +28,7 @@ void amx_command()
 	if (!strcmp(cmd, "plugins") || !strcmp(cmd, "list"))
 	{
 		print_srvconsole("Currently loaded plugins:\n");
-		print_srvconsole("       %-23.22s %-11.10s %-17.16s %-16.15s %-9.8s\n", "name", "version", "author", "file", "status");
+		print_srvconsole("       %-3.2s %-23.22s %-11.10s %-17.16s %-32.31s %-12.11s %-9.8s\n", "id", "name", "version", "author", "url", "file", "status");
 
 		int plugins = 0;
 		int	running = 0;
@@ -40,7 +43,7 @@ void amx_command()
 				if ((*a).isValid() && !(*a).isPaused())
 					++running;
 
-				print_srvconsole(" [%3d] %-23.22s %-11.10s %-17.16s %-16.15s %-9.8s\n", plugins, (*a).getTitle(), (*a).getVersion(), (*a).getAuthor(), (*a).getName(), (*a).getStatus());
+				print_srvconsole(" [%3d] %-3i %-23.22s %-11.10s %-17.16s %-32.31s %-12.11s %-9.8s\n", plugins, (*a).getId(), (*a).getTitle(), (*a).getVersion(), (*a).getAuthor(), (*a).getUrl(), (*a).getName(), (*a).getStatus());
 			}
 			++a;
 		}
@@ -63,11 +66,57 @@ void amx_command()
 
 		print_srvconsole("%d plugins, %d running\n", plugins, running);
 	}
-	else if (!strcmp(cmd, "pause") && CMD_ARGC() > 2)
+	else if (!strcmp(cmd, "plugin"))
 	{
-		const char* sPlugin = CMD_ARGV(2);
+		if (numargs < 3)//CMD_ARGC() < 3)
+		{
+			print_srvconsole("Usage: amxx plugin [ id ]\nFor a list of plugins, use the \"amxx plugins\" command\n");
+		}
+		else
+		{
+			char *pEnd;
+			auto id = strtol(args[2]/*CMD_ARGV(2)*/, &pEnd, 10);
 
-		CPluginMngr::CPlugin *plugin = g_plugins.findPlugin(sPlugin);
+			if (!pEnd)
+	{
+				print_srvconsole("Invalid plugin index %i.\n", id);
+				return;
+			}
+
+			auto plugin = g_plugins.findPlugin(id);
+
+			if (plugin && plugin->isValid())
+			{
+				print_srvconsole("   Name: %s\n", plugin->getTitle());
+				print_srvconsole("   Version: %s\n", plugin->getVersion());
+				print_srvconsole("   Author: %s\n", plugin->getAuthor());
+
+				auto url = plugin->getUrl();
+				if (url[0])
+				{
+					print_srvconsole("   URL: %s\n", url);
+				}
+
+				auto description = plugin->getDescription(); 
+				if (description[0])
+				{
+					print_srvconsole("   Description: %s\n", description);
+				}
+
+				print_srvconsole("   Filename: %s\n", plugin->getName());
+				print_srvconsole("   Status: %s\n", plugin->getStatus());
+			}
+			else
+			{
+				print_srvconsole("Plugin index %i not found.\n", id);
+			}
+		}
+	}
+	else if (!strcmp(cmd, "pause") && numargs > 2)//CMD_ARGC() > 2)
+	{
+		const char* sPlugin = args[2];//CMD_ARGV(2);
+
+		CPluginMngr::CPlugin* plugin = g_plugins.findPlugin(sPlugin);
 
 		if (plugin && plugin->isValid())
 		{
@@ -93,11 +142,11 @@ void amx_command()
 			print_srvconsole("Couldn't find plugin matching \"%s\"\n", sPlugin);
 		}
 	}
-	else if (!strcmp(cmd, "unpause") && CMD_ARGC() > 2)
+	else if (!strcmp(cmd, "unpause") && numargs > 2)//CMD_ARGC() > 2)
 	{
-		const char* sPlugin = CMD_ARGV(2);
+		const char* sPlugin = args[2];//CMD_ARGV(2);
 
-		CPluginMngr::CPlugin *plugin = g_plugins.findPlugin(sPlugin);
+		CPluginMngr::CPlugin* plugin = g_plugins.findPlugin(sPlugin);
 
 		if (plugin && plugin->isValid() && plugin->isPaused())
 		{
@@ -121,7 +170,7 @@ void amx_command()
 	}
 	else if (!strcmp(cmd, "cvars"))
 	{
-		g_CvarManager.OnConsoleCommand();
+		g_CvarManager.OnConsoleCommand(numargs, args);
 	}
 	else if (!strcmp(cmd, "cmds"))
 	{
@@ -133,9 +182,9 @@ void amx_command()
 
 		CmdMngr::iterator a = g_commands.begin(CMD_ConsoleCommand);
 
-		if (CMD_ARGC() > 2) // Searching for commands registered to a plugin
+		if (numargs > 2)//CMD_ARGC() > 2) // Searching for commands registered to a plugin
 		{
-			const char* targetname = CMD_ARGV(2);
+			const char* targetname = args[2];// CMD_ARGV(2);
 			size_t len = strlen(targetname);
 			while (a)
 			{
@@ -188,16 +237,13 @@ void amx_command()
 		int running = 0;
 		int modules = 0;
 
-		CList<CModule, const char *>::iterator a = g_modules.begin();
-
-		while (a)
+		for (auto module : g_modules)
 		{
-			if ((*a).getStatusValue() == MODULE_LOADED)
+			if (module->getStatusValue() == MODULE_LOADED)
 				++running;
 			++modules;
 
-			print_srvconsole(" [%2d] %-23.22s %-11.10s %-20.19s %-11.10s\n", modules, (*a).getName(), (*a).getVersion(), (*a).getAuthor(), (*a).getStatus());
-			++a;
+			print_srvconsole(" [%2d] %-23.22s %-11.10s %-20.19s %-11.10s\n", modules, module->getName(), module->getVersion(), module->getAuthor(), module->getStatus());
 		}
 
 		print_srvconsole("%d modules, %d correct\n", modules, running);
@@ -247,6 +293,7 @@ void amx_command()
 		print_srvconsole("   version                    - display amxx version info\n");
 		print_srvconsole("   gpl                        - print the license\n");
 		print_srvconsole("   plugins [ criteria ]       - list plugins currently loaded or ones matching given search criteria\n");
+		print_srvconsole("   plugin [ id ]              - information about a plugin\n");
 		print_srvconsole("   modules                    - list modules currently loaded\n");
 		print_srvconsole("   cvars [ plugin ] [ index ] - list cvars handled by amxx or show information about a cvar if index is provided\n");
 		print_srvconsole("   cmds [ plugin ]            - list commands registered by plugins\n");
@@ -255,9 +302,9 @@ void amx_command()
 	}
 }
 
-void plugin_srvcmd()
+void plugin_srvcmd(unsigned int numargs, const char** args)
 {
-	const char* cmd = CMD_ARGV(0);
+	const char* cmd = numargs > 0 ? args[0] : "";//CMD_ARGV(0);
 
 	CmdMngr::iterator a = g_commands.srvcmdbegin();
 

@@ -1,11 +1,11 @@
 // vim: set sts=8 ts=2 sw=2 tw=99 et:
 //
-// Copyright (C) 2013, David Anderson and AlliedModders LLC
+// Copyright (C) 2017, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -30,44 +30,21 @@
 #ifndef _include_amtl_atomics_h_
 #define _include_amtl_atomics_h_
 
-#include <amtl/am-platform.h>
-#include <stdint.h>
-
-namespace ke {
+#if defined(KE_ABSOLUTELY_NO_STL)
+# include <amtl/am-atomics-no-stl.h>
+#else
+# include <amtl/am-atomics-stl.h>
+#endif
 
 #if defined(KE_CXX_MSVC)
 extern "C" {
-  long __cdecl _InterlockedIncrement(long volatile *dest);
-  long __cdecl _InterlockedDecrement(long volatile *dest);
-  long long __cdecl _InterlockedIncrement64(long long volatile *dest);
-  long long __cdecl _InterlockedDecrement64(long long volatile *dest);
-  long __cdecl _InterlockedCompareExchange(long volatile *dest, long exchange, long comparand);
-# if _MSC_VER > 1600 || (_MSC_VER == 1600 && !defined(_M_IX86))
   void * __cdecl _InterlockedCompareExchangePointer(
-     void * volatile *Destination,
+     void * volatile* Destination,
      void * Exchange,
      void * Comparand
   );
-#else
-  static inline void * _InterlockedCompareExchangePointer(
-     void * volatile *Destination,
-     void * Exchange,
-     void * Comparand)
-  {
-    return (void *)_InterlockedCompareExchange((long volatile *)Destination, (long)Exchange, (long)Comparand);
-  }
-#endif
-}
-# pragma intrinsic(_InterlockedIncrement)
-# pragma intrinsic(_InterlockedDecrement)
-# pragma intrinsic(_InterlockedCompareExchange)
-# if _MSC_VER > 1600 || (_MSC_VER == 1600 && !defined(_M_IX86))
-#  pragma intrinsic(_InterlockedCompareExchangePointer)
-# endif
-# if defined(_WIN64)
-#  pragma intrinsic(_InterlockedIncrement64)
-#  pragma intrinsic(_InterlockedDecrement64)
-# endif
+} // extern "C"
+# pragma intrinsic(_InterlockedCompareExchangePointer)
 #endif
 
 #if defined(KE_CXX_LIKE_GCC)
@@ -90,101 +67,22 @@ extern "C" {
 # endif
 #endif
 
+namespace ke {
+
 #if defined(KE_CXX_MSVC)
-static inline void *
-CompareAndSwapPtr(void *volatile *Destination, void *Exchange, void *Comparand)
+static inline void*
+CompareAndSwapPtr(void* volatile* Destination, void* Exchange, void* Comparand)
 {
   return _InterlockedCompareExchangePointer(Destination, Exchange, Comparand);
 }
 #else
-static inline void *
-CompareAndSwapPtr(void *volatile *dest, void *newval, void *oldval)
+static inline void*
+CompareAndSwapPtr(void* volatile* dest, void* newval, void* oldval)
 {
   return __sync_val_compare_and_swap(dest, oldval, newval);
 }
 #endif
 
-template <size_t Width>
-struct AtomicOps;
-
-template <>
-struct AtomicOps<4>
-{
-#if defined(KE_CXX_MSVC)
-  typedef volatile long Type;
-
-  static Type Increment(Type *ptr) {
-    return _InterlockedIncrement(ptr);
-  }
-  static Type Decrement(Type *ptr) {
-    return _InterlockedDecrement(ptr);
-  };
-#elif defined(KE_CXX_LIKE_GCC)
-  typedef volatile int Type;
-
-  // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
-  // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
-  // variant.
-  static Type Increment(Type *ptr) {
-    return __sync_add_and_fetch(ptr, 1);
-  }
-  static Type Decrement(Type *ptr) {
-    return __sync_sub_and_fetch(ptr, 1);
-  }
-#endif
-};
-
-template <>
-struct AtomicOps<8>
-{
-#if defined(KE_CXX_MSVC)
-  typedef volatile long long Type;
-
-  static Type Increment(Type *ptr) {
-    return _InterlockedIncrement64(ptr);
-  }
-  static Type Decrement(Type *ptr) {
-    return _InterlockedDecrement64(ptr);
-  };
-#elif defined(KE_CXX_LIKE_GCC)
-  typedef volatile int64_t Type;
-
-  // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
-  // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
-  // variant.
-  static Type Increment(Type *ptr) {
-    return __sync_add_and_fetch(ptr, 1);
-  }
-  static Type Decrement(Type *ptr) {
-    return __sync_sub_and_fetch(ptr, 1);
-  }
-#endif
-};
-
-class AtomicRefcount
-{
-  typedef AtomicOps<sizeof(uintptr_t)> Ops;
-
- public:
-  AtomicRefcount(uintptr_t value)
-   : value_(value)
-  {
-  }
-
-  void increment() {
-    Ops::Increment(&value_);
-  }
-
-  // Return false if all references are gone.
-  bool decrement() {
-    return Ops::Decrement(&value_) != 0;
-  }
-
- private:
-  Ops::Type value_;
-};
-
-}
+} // namespace ke
 
 #endif // _include_amtl_atomics_h_
-

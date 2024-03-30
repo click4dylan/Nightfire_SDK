@@ -75,7 +75,7 @@ void MRegCmd::init(int idx)
 // meta_errno values:
 //  - ME_BADREQ		function disabled/invalid
 //  - ME_ARGUMENT	function pointer is null
-mBOOL MRegCmd::call(unsigned int numargs, const char** args) {
+mBOOL MRegCmd::call(void* ecx, unsigned int numargs, const char** args) {
 	mBOOL ret;
 
 	// can we expect to call this function?
@@ -85,7 +85,7 @@ mBOOL MRegCmd::call(unsigned int numargs, const char** args) {
 		RETURN_ERRNO(mFALSE, ME_ARGUMENT);
 
 	// try to call this function
-	ret=os_safe_call(pfnCmd, numargs, args);
+	ret=os_safe_call(pfnCmd, ecx, numargs, args);
 	if(!ret) {
 		META_DEBUG(4, ("Plugin reg_cmd '%s' called after unloaded; removed from list", function->getName()));
 		status=RG_INVALID;

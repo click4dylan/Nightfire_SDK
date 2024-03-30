@@ -122,8 +122,8 @@ cell CForward::execute(cell *params, ForwardPreparedArray *preparedArrays)
 #if defined BINLOG_ENABLED
 			g_BinLog.WriteOp(BinLog_CallPubFunc, iter->pPlugin->getId(), iter->func);
 #endif
-			int err = amx_Exec(amx, &retVal, iter->func);
 			
+			int err = amx_ExecPerf(amx, &retVal, iter->func);
 			// log runtime error, if any
 			if (err != AMX_ERR_NONE)
 			{
@@ -323,12 +323,11 @@ cell CSPForward::execute(cell *params, ForwardPreparedArray *preparedArrays)
 		amx_Push(m_Amx, realParams[i]);
 	
 	// exec
-	cell retVal;
+	cell retVal = 0;
 #if defined BINLOG_ENABLED
 	g_BinLog.WriteOp(BinLog_CallPubFunc, pPlugin->getId(), m_Func);
 #endif
-	int err = amx_Exec(m_Amx, &retVal, m_Func);
-	
+	int err = amx_ExecPerf(m_Amx, &retVal, m_Func);
 	if (err != AMX_ERR_NONE)
 	{
 		//Did something else set an error?
@@ -441,8 +440,8 @@ int CForwardMngr::registerSPForward(int func, AMX *amx, int numParams, const For
 		
 		if (pForward->getFuncsNum() == 0)
 		{
-			return -1;
 			delete pForward;
+			return -1;
 		}
 					 
 		m_SPForwards.append(pForward);

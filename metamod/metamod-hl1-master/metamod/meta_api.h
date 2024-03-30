@@ -184,7 +184,7 @@ C_DLLEXPORT int GetEngineFunctions_Post(enginefuncs_t *pengfuncsFromEngine,
 #define MDLL_Save						MDLL_FUNC->pfnSave
 #define MDLL_Restore					MDLL_FUNC->pfnRestore
 #define MDLL_ObjectCollsionBox			MDLL_FUNC->pfnAbsBox
-#define MDLL_UNKNOWN_GAMEDLL1			MDLL_FUNC->pfnBlockedTest
+#define MDLL_BlockedTest			MDLL_FUNC->pfnBlockedTest
 #define MDLL_SaveWriteFields			MDLL_FUNC->pfnSaveWriteFields
 #define MDLL_SaveReadFields				MDLL_FUNC->pfnSaveReadFields
 #define MDLL_SaveGlobalState			MDLL_FUNC->pfnSaveGlobalState
@@ -205,15 +205,15 @@ C_DLLEXPORT int GetEngineFunctions_Post(enginefuncs_t *pengfuncsFromEngine,
 #define MDLL_ParmsChangeLevel			MDLL_FUNC->pfnParmsChangeLevel
 #define MDLL_GetGameDescription			MDLL_FUNC->pfnGetGameDescription
 //#define MDLL_PlayerCustomization		MDLL_FUNC->pfnPlayerCustomization
-#define MDLL_GetPlayerSpawnSpot MDLL_FUNC->pfnGetPlayerSpawnSpot
+//#define MDLL_GetPlayerSpawnSpot			MDLL_FUNC->pfnGetPlayerSpawnSpot
 #define MDLL_SpectatorConnect			MDLL_FUNC->pfnSpectatorConnect
 #define MDLL_SpectatorDisconnect		MDLL_FUNC->pfnSpectatorDisconnect
 #define MDLL_SpectatorThink				MDLL_FUNC->pfnSpectatorThink
 #define MDLL_Sys_Error					MDLL_FUNC->pfnSys_Error
 #define MDLL_PM_Move					MDLL_FUNC->pfnPM_Move
 #define MDLL_PM_Init					MDLL_FUNC->pfnPM_Init
-#define MDLL_SetupVisibility			MDLL_FUNC->pfnSetupVisibility
 #define MDLL_PM_FindTextureType			MDLL_FUNC->pfnPM_FindTextureType
+#define MDLL_SetupVisibility			MDLL_FUNC->pfnSetupVisibility
 #define MDLL_UpdateClientData			MDLL_FUNC->pfnUpdateClientData
 #define MDLL_AddToFullPack				MDLL_FUNC->pfnAddToFullPack
 #define MDLL_CreateBaseline				MDLL_FUNC->pfnCreateBaseline
@@ -226,16 +226,17 @@ C_DLLEXPORT int GetEngineFunctions_Post(enginefuncs_t *pengfuncsFromEngine,
 #define MDLL_CreateInstancedBaselines	MDLL_FUNC->pfnCreateInstancedBaselines
 #define MDLL_InconsistentFile			MDLL_FUNC->pfnInconsistentFile
 #define MDLL_AllowLagCompensation		MDLL_FUNC->pfnAllowLagCompensation
+#define MDLL_SpawnPlayerAfterLevelLoad	MDLL_FUNC->pfnSpawnPlayerAfterLevelLoad
 
 // NEW API functions:
 #define MNEW_FUNC	gpGamedllFuncs->newapi_table
-#define MNEW_OnFreeEntPrivateData		MNEW_FUNC->pfnOnFreeEntPrivateData
-#define MNEW_GameShutdown				MNEW_FUNC->pfnGameShutdown
+//#define MNEW_OnFreeEntPrivateData		MNEW_FUNC->pfnOnFreeEntPrivateData
+//#define MNEW_GameShutdown				MNEW_FUNC->pfnGameShutdown
 #define MNEW_ShouldCollide				MNEW_FUNC->pfnShouldCollide
-#define MNEW_IsInThirdPerson			MNEW_FUNC->pfnOnSaveGame
-#define MNEW_AlreadyLoadingGame			MNEW_FUNC->pfnOnLoadGame
-#define MNEW_BotList					MNEW_FUNC->pfnBot_GetParams
-#define MNEW_Host_Addbot				MNEW_FUNC->pfnAddbot
+#define MNEW_OnSaveGame			MNEW_FUNC->pfnOnSaveGame
+#define MNEW_OnLoadGame			MNEW_FUNC->pfnOnLoadGame
+#define MNEW_BotGetParams					MNEW_FUNC->pfnBot_GetParams
+#define MNEW_AddBot				MNEW_FUNC->pfnAddbot
 /*
 #define MNEW_OnFreeEntPrivateData		MNEW_FUNC->pfnOnFreeEntPrivateData
 #define MNEW_GameShutdown				MNEW_FUNC->pfnGameShutdown

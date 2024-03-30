@@ -1,42 +1,48 @@
-/* AMX Mod script. (Feb 4th, 2003)
- *
- * Stats Logging
- * by JustinHoMi
- * TS changes by SidLuke
- *
- */
+// vim: set ts=4 sw=4 tw=99 noet:
+//
+// AMX Mod X, based on AMX Mod by Aleksander Naszko ("OLO").
+// Copyright (C) The AMX Mod X Development Team.
+// Copyright (C) 2003 JustinHoMi.
+//
+// This software is licensed under the GNU General Public License, version 3 or higher.
+// Additional exceptions apply. For full license details, see LICENSE.txt or visit:
+//     https://alliedmods.net/amxmodx-license
+
+//
+// TS Stats Logging Plugin
+//
 
 #include <amxmodx>
 #include <tsx>
 #include <tsfun>
 
-new g_pingSum[33]
-new g_pingCount[33]
+new g_pingSum[MAX_PLAYERS + 1]
+new g_pingCount[MAX_PLAYERS + 1]
 
 public plugin_init()
   register_plugin("Stats Logging",AMXX_VERSION_STR,"AMXX Dev Team")
 
-public client_disconnect(id) {
+public client_disconnected(id) {
   if ( is_user_bot( id ) ) return PLUGIN_CONTINUE
   remove_task( id )
-  new szTeam[16],szName[32],szAuthid[32], iStats[8], iHits[8], szWeapon[16]
+  new szTeam[16],szName[MAX_NAME_LENGTH],szAuthid[32], iStats[STATSX_MAX_STATS], iHits[MAX_BODYHITS], szWeapon[16]
   new iUserid = get_user_userid( id )
 
   // team 
-  get_user_info(id,"team", szTeam, 15 )
+  get_user_info(id,"team", szTeam, charsmax(szTeam) )
 
-  get_user_name(id, szName ,31 )
-  get_user_authid(id, szAuthid , 31 )
+  get_user_name(id, szName , charsmax(szName) )
+  get_user_authid(id, szAuthid , charsmax(szAuthid) )
   for(new i = 1 ; i < TSMAX_WEAPONS ; ++i ) {
     if( get_user_wstats( id , i ,iStats , iHits ) )   {
-      xmod_get_wpnlogname( i , szWeapon , 15 )
+      xmod_get_wpnlogname( i , szWeapon , charsmax(szWeapon) )
       log_message("^"%s<%d><%s><%s>^" triggered ^"weaponstats^" (weapon ^"%s^") (shots ^"%d^") (hits ^"%d^") (kills ^"%d^") (headshots ^"%d^") (tks ^"%d^") (damage ^"%d^") (deaths ^"%d^")",
-        szName,iUserid,szAuthid,szTeam,szWeapon,iStats[4],iStats[5],iStats[0], 
-	  iStats[2],iStats[3],iStats[6],iStats[1])
+        szName,iUserid,szAuthid,szTeam,szWeapon,iStats[STATSX_SHOTS],iStats[STATSX_HITS],iStats[STATSX_KILLS], 
+	  iStats[STATSX_HEADSHOTS],iStats[STATSX_TEAMKILLS],iStats[STATSX_DAMAGE],iStats[STATSX_DEATHS])
 
       log_message("^"%s<%d><%s><%s>^" triggered ^"weaponstats2^" (weapon ^"%s^") (head ^"%d^") (chest ^"%d^") (stomach ^"%d^") (leftarm ^"%d^") (rightarm ^"%d^") (leftleg ^"%d^") (rightleg ^"%d^")",
-        szName,iUserid,szAuthid,szTeam,szWeapon,iHits[1],iHits[2],iHits[3],
-	  iHits[4],iHits[5],iHits[6],iHits[7])
+        szName,iUserid,szAuthid,szTeam,szWeapon,iHits[HIT_HEAD],iHits[HIT_CHEST],iHits[HIT_STOMACH],
+	  iHits[HIT_LEFTARM],iHits[HIT_RIGHTARM],iHits[HIT_LEFTLEG],iHits[HIT_RIGHTLEG])
     }
   }
   new iTime = get_user_time( id , 1 )

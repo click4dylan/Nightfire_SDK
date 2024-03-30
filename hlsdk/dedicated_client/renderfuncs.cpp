@@ -94,9 +94,9 @@ __declspec(naked) void Hooked_SCR_ConnectMsg()
 void(*g_oCL_PrecacheResources)();
 void CL_PrecacheResources()
 {
-	ConsoleVariable* egon_amplitude = (ConsoleVariable*)0x4310F998;
-	float val = egon_amplitude->getValue();
-	egon_amplitude->setValueFloat(1.0f);
+	//ConsoleVariable* egon_amplitude = (ConsoleVariable*)0x4310F998;
+	//float val = egon_amplitude->getValue();
+	//egon_amplitude->setValueFloat(1.0f);
 	//g_pEngineFuncs->pfnCreateConsoleVariableGame(IConsoleVariable(CVAR_FLOAT, "egon_amplitude", "", "1.0", FCVAR_EXTDLL));
 	g_oCL_PrecacheResources();
 	beam_sprite = g_pEngineFuncs->pfnPrecacheModel("sprites/laser_beam.spz");

@@ -1,0 +1,34 @@
+# vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
+import os.path
+
+binary = AMXX.Program(builder, 'amxxpc')
+
+binary.compiler.defines += [
+  'AMX_ANSIONLY',
+]
+
+if builder.compiler.like('gcc'):
+  binary.compiler.cxxflags.remove('-fno-exceptions')
+
+if builder.target_platform == 'linux':
+  binary.compiler.postlink += [
+    '-ldl',
+    binary.Dep(AMXX.stdcxx_path),
+  ]
+elif builder.target_platform == 'windows':
+  binary.compiler.defines += ['_MBCS']
+  binary.compiler.linkflags.remove('/SUBSYSTEM:WINDOWS')
+  binary.compiler.linkflags.append('/SUBSYSTEM:CONSOLE')
+
+binary.compiler.linkflags += [AMXX.zlib.binary]
+  
+binary.sources = [
+  'amx.cpp',
+  'amxxpc.cpp',
+  'Binary.cpp',
+]
+
+if builder.target_platform == 'windows':
+  binary.sources += ['amxxpc1.rc']
+
+AMXX.amxxpc = builder.Add(binary)

@@ -55,13 +55,15 @@ int meta_new_dll_functions_t::sm_version = 0;
 
 
 meta_new_dll_functions_t::meta_new_dll_functions_t(
+	void(*_pfnNullFunc0)(),
+	void(*_pfnNullFunc1)(),
 	/*void  (*_pfnOnFreeEntPrivateData) (edict_t*),
 	void  (*_pfnGameShutdown)         (void),*/
 		int				(*_pfnShouldCollide)( edict_t *, edict_t *),
 		BOOLEAN(*_pfnIsInThirdPerson) (void),
 		BOOLEAN(*_pfnAlreadyLoadingGame) (qboolean),
 		BOOLEAN(*_pfnBot_GetParams) (int blah1, char const** blah2, char const** returnplayername, char const** blah4),
-		void			(*_pfnHost_Addbot) (const char *, const char *, const char *)
+		void			(*_pfnAddbot) (const char *, const char *, const char *)
         /*void  (*_pfnOnFreeEntPrivateData) (edict_t*),
         void  (*_pfnGameShutdown)         (void),
         int   (*_pfnShouldCollide)        (edict_t*, edict_t*),
@@ -70,13 +72,15 @@ meta_new_dll_functions_t::meta_new_dll_functions_t(
 		*/
     )
 {
+	pfnNullFunc0 = _pfnNullFunc0;
+	pfnNullFunc1 = _pfnNullFunc1;
 	//pfnOnFreeEntPrivateData = _pfnOnFreeEntPrivateData;
 	//pfnGameShutdown = _pfnGameShutdown;
 	pfnShouldCollide = _pfnShouldCollide;
 	pfnOnSaveGame = _pfnIsInThirdPerson;
 	pfnOnLoadGame = _pfnAlreadyLoadingGame;
 	pfnBot_GetParams = _pfnBot_GetParams;
-	pfnAddbot = _pfnHost_Addbot;
+	pfnAddbot = _pfnAddbot;
 	/*
     pfnOnFreeEntPrivateData = _pfnOnFreeEntPrivateData;
     pfnGameShutdown = _pfnGameShutdown;
@@ -84,7 +88,7 @@ meta_new_dll_functions_t::meta_new_dll_functions_t(
     pfnCvarValue = _pfnCvarValue;
     pfnCvarValue2 = _pfnCvarValue2;
 	*/
-    memset( dummies, 0, sizeof(pdummyfunc) * 2 );
+    //memset( dummies, 0, sizeof(pdummyfunc) * 2 );
 }
 
 

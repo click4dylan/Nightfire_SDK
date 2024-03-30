@@ -41,7 +41,7 @@
 
 namespace ke {
 
-static const size_t kMallocAlignment = sizeof(void *) * 2;
+static const size_t kMallocAlignment = sizeof(void*) * 2;
 
 static const size_t kKB = 1024;
 static const size_t kMB = 1024 * kKB;
@@ -136,48 +136,64 @@ Align(size_t count, size_t alignment)
     return count + (alignment - (count % alignment)) % alignment;
 }
 
+template <typename T>
+static inline bool
+IsUintAddSafe(const T& a, const T& b)
+{
+  if (!a || !b)
+      return true;
+  size_t log2_a = Log2(a);
+  size_t log2_b = Log2(b);
+  return (log2_a < sizeof(T) * 8) &&
+         (log2_b < sizeof(T) * 8);
+}
+
 static inline bool
 IsUint32AddSafe(unsigned a, unsigned b)
 {
-    if (!a || !b)
-        return true;
-    size_t log2_a = Log2(a);
-    size_t log2_b = Log2(b);
-    return (log2_a < sizeof(unsigned) * 8) &&
-           (log2_b < sizeof(unsigned) * 8);
+  return IsUintAddSafe<uint32_t>(a, b);
+}
+
+static inline bool
+IsUint64AddSafe(uint64_t a, uint64_t b)
+{
+  return IsUintAddSafe<uint64_t>(a, b);
 }
 
 static inline bool
 IsUintPtrAddSafe(size_t a, size_t b)
 {
-    if (!a || !b)
-        return true;
-    size_t log2_a = Log2(a);
-    size_t log2_b = Log2(b);
-    return (log2_a < sizeof(size_t) * 8) &&
-           (log2_b < sizeof(size_t) * 8);
+  return IsUintAddSafe<size_t>(a, b);
+}
+
+template <typename T>
+static inline bool
+IsUintMultiplySafe(const T& a, const T& b)
+{
+  if (a <= 1 || b <= 1)
+      return true;
+
+  size_t log2_a = Log2(a);
+  size_t log2_b = Log2(b);
+  return log2_a + log2_b <= sizeof(T) * 8;
 }
 
 static inline bool
 IsUint32MultiplySafe(unsigned a, unsigned b)
 {
-    if (a <= 1 || b <= 1)
-        return true;
+  return IsUintMultiplySafe<uint32_t>(a, b);
+}
 
-    size_t log2_a = Log2(a);
-    size_t log2_b = Log2(b);
-    return log2_a + log2_b <= sizeof(unsigned) * 8;
+static inline bool
+IsUint64MultiplySafe(uint64_t a, uint64_t b)
+{
+  return IsUintMultiplySafe<uint64_t>(a, b);
 }
 
 static inline bool
 IsUintPtrMultiplySafe(size_t a, size_t b)
 {
-    if (a <= 1 || b <= 1)
-        return true;
-
-    size_t log2_a = Log2(a);
-    size_t log2_b = Log2(b);
-    return log2_a + log2_b <= sizeof(size_t) * 8;
+  return IsUintMultiplySafe<size_t>(a, b);
 }
 
 template <typename T>
@@ -188,11 +204,11 @@ IsAligned(T addr, size_t alignment)
     return !(uintptr_t(addr) & (alignment - 1));
 }
 
-static inline void *
-AlignedBase(void *addr, size_t alignment)
+static inline void*
+AlignedBase(void* addr, size_t alignment)
 {
     assert(IsPowerOfTwo(alignment));
-    return reinterpret_cast<void *>(uintptr_t(addr) & ~(alignment - 1));
+    return reinterpret_cast<void*>(uintptr_t(addr) & ~(alignment - 1));
 }
 
 } // namespace ke

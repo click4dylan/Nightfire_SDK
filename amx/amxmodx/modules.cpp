@@ -31,9 +31,10 @@
 #include "trie_natives.h"
 #include "CDataPack.h"
 #include "CGameConfigs.h"
+#include <amtl/os/am-path.h>
 
-CList<CModule, const char*> g_modules;
-CList<CScript, AMX*> g_loadedscripts;
+ke::InlineList<CModule> g_modules;
+ke::InlineList<CScript> g_loadedscripts;
 
 CModule *g_CurrentlyCalledModule = NULL;	// The module we are in at the moment; NULL otherwise
 
@@ -41,9 +42,6 @@ CModule *g_CurrentlyCalledModule = NULL;	// The module we are in at the moment; 
 // This is needed so we know which module called a function
 ModuleCallReason g_ModuleCallReason;
 
-#define ALLOC(type) (type*)VirtualAlloc(0, sizeof(type), MEM_COMMIT, PAGE_READWRITE) //NOEL
-#define ALLOCSIZE(size) (void*)VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE)
-#define FREE(pointer) VirtualFree((void*)pointer, 0, MEM_RELEASE)
 extern const char* no_function;				// stupid work around
 
 void report_error(int code, const char* fmt, ...)
@@ -78,18 +76,6 @@ void print_srvconsole(const char *fmt, ...)
 	SERVER_PRINT(string);
 }
 
-void* alloc_amxmemory(void** p, int size)
-{
-	*p = new unsigned char[size];
-	return *p;
-}
-
-void free_amxmemory(void **ptr)
-{
-	delete[] (unsigned char *)(*ptr);
-	*ptr = 0;
-}
-
 #if defined BINLOG_ENABLED
 void BinLog_LogNative(AMX *amx, int native, int params)
 {
@@ -122,7 +108,7 @@ static binlogfuncs_t logfuncs =
 };
 #endif
 
-int load_amxscript(AMX *amx, void **program, const char *filename, char error[64], int debug)
+int load_amxscript_internal(AMX *amx, void **program, const char *filename, char *error, size_t maxLength, int debug)
 {
 	*error = 0;
 	size_t bufSize;
@@ -137,12 +123,11 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 			
 			if (bufSize != 0)
 			{
-				*program = ALLOCSIZE(bufSize);
-				//*program = (void*) (new char[bufSize]); //DYLAN/NOEL
+				*program = (void*) (new char[bufSize]);
 				
 				if (!*program)
 				{
-					strcpy(error, "Failed to allocate memory");
+					ke::SafeStrcpy(error, maxLength, "Failed to allocate memory");
 					return (amx->error = AMX_ERR_MEMORY);
 				}
 				
@@ -155,31 +140,31 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 			case CAmxxReader::Err_None:
 				break;
 			case CAmxxReader::Err_FileOpen:
-				strcpy(error, "Plugin file open error");
+				ke::SafeStrcpy(error, maxLength, "Plugin file open error");
 				return (amx->error = AMX_ERR_NOTFOUND);
 			case CAmxxReader::Err_FileRead:
-				strcpy(error, "Plugin file read error");
+				ke::SafeStrcpy(error, maxLength, "Plugin file read error");
 				return (amx->error = AMX_ERR_NOTFOUND);
 			case CAmxxReader::Err_InvalidParam:
-				strcpy(error, "Internal error: Invalid parameter");
+				ke::SafeStrcpy(error, maxLength, "Internal error: Invalid parameter");
 				return (amx->error = AMX_ERR_NOTFOUND);
 			case CAmxxReader::Err_FileInvalid:
-				strcpy(error, "Invalid Plugin");
+				ke::SafeStrcpy(error, maxLength, "Invalid Plugin");
 				return (amx->error = AMX_ERR_FORMAT);
 			case CAmxxReader::Err_SectionNotFound:
-				strcpy(error, "Searched section not found (.amxx)");
+				ke::SafeStrcpy(error, maxLength, "Searched section not found (.amxx)");
 				return (amx->error = AMX_ERR_NOTFOUND);
 			case CAmxxReader::Err_DecompressorInit:
-				strcpy(error, "Decompressor initialization failed");
+				ke::SafeStrcpy(error, maxLength, "Decompressor initialization failed");
 				return (amx->error = AMX_ERR_INIT);
 			case CAmxxReader::Err_Decompress:
-				strcpy(error, "Internal error: Decompress");
+				ke::SafeStrcpy(error, maxLength, "Internal error: Decompress");
 				return (amx->error = AMX_ERR_NOTFOUND);
 			case CAmxxReader::Err_OldFile:
-				strcpy(error, "Plugin uses deprecated format. Update compiler");
+				ke::SafeStrcpy(error, maxLength, "Plugin uses deprecated format. Update compiler");
 				return (amx->error = AMX_ERR_FORMAT);
 			default:
-				strcpy(error, "Unknown error");
+				ke::SafeStrcpy(error, maxLength, "Unknown error");
 				return (amx->error = AMX_ERR_NOTFOUND);
 		}
 	} else {
@@ -193,7 +178,7 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 	
 	if (magic != AMX_MAGIC)
 	{
-		strcpy(error, "Invalid Plugin");
+		ke::SafeStrcpy(error, maxLength, "Invalid Plugin");
 		return (amx->error = AMX_ERR_FORMAT);
 	}
 
@@ -202,11 +187,11 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 	bool will_be_debugged = false;
 	tagAMX_DBG *pDbg = NULL;
 
-	if ((int)CVAR_GET_FLOAT("amx_debug") >= 2 || debug)
+	if (amxmodx_debug->getValueInt() == 2 || debug)
 	{
 		if ((hdr->file_version < CUR_FILE_VERSION))
 		{
-			sprintf(error, "Plugin needs newer debug version info");
+			ke::SafeStrcpy(error, maxLength, "Plugin needs newer debug version info");
 			return (amx->error = AMX_ERR_VERSION);
 		}
 		else if ((hdr->flags & AMX_FLAG_DEBUG) != 0)
@@ -225,13 +210,13 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 			{
 				dbg_FreeInfo(pDbg);
 				delete pDbg;
-				sprintf(error, "Debug loading error %d", err);
+				ke::SafeSprintf(error, maxLength, "Debug loading error %d", err);
 				return (amx->error = AMX_ERR_INIT);
 			}
 
 			amx->flags |= AMX_FLAG_DEBUG;
 		} else {
-			sprintf(error, "Plugin not compiled with debug option");
+			ke::SafeStrcpy(error, maxLength, "Plugin not compiled with debug option");
 			return (amx->error = AMX_ERR_INIT);
 		}
 	} else {
@@ -254,7 +239,7 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 			delete pDbg;
 		}
 		
-		sprintf(error, "Load error %d (invalid file format or version)", err);
+		ke::SafeSprintf(error, maxLength, "Load error %d (invalid file format or version)", err);
 		return (amx->error = AMX_ERR_INIT);
 	}
 
@@ -292,7 +277,7 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 		{
 			delete[] np;
 			delete[] rt;
-			strcpy(error, "Failed to initialize JIT'd plugin");
+			ke::SafeStrcpy(error, maxLength, "Failed to initialize JIT'd plugin");
 			
 			return (amx->error = AMX_ERR_INIT);
 		}
@@ -323,23 +308,29 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 			
 			if (*program == 0)
 			{
-				strcpy(error, "Failed to allocate memory");
+				ke::SafeStrcpy(error, maxLength, "Failed to allocate memory");
 				return (amx->error = AMX_ERR_MEMORY);
 			}
 		} else {
 			delete[] np;
 			delete[] rt;
 			
-			sprintf(error, "Failed to initialize plugin (%d)", err);
+			ke::SafeSprintf(error, maxLength, "Failed to initialize plugin (%d)", err);
 			
 			return (amx->error = AMX_ERR_INIT_JIT);
 		}
 	}
 #endif
 
-	CScript* aa = new CScript(amx, *program, filename);
+	auto script = new CScript(amx, *program, filename);
 
-	g_loadedscripts.put(aa);
+	if (!script)
+	{
+		ke::SafeStrcpy(error, maxLength, "Failed to allocate memory for script");
+		return (amx->error = AMX_ERR_MEMORY);
+	}
+
+	g_loadedscripts.append(script);
 
 	set_amxnatives(amx, error);
 
@@ -351,7 +342,7 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 		{
 			if (amx_Register(amx, core_Natives, -1) != AMX_ERR_NONE)
 			{
-				sprintf(error, "Plugin uses an unknown function (name \"%s\") - check your modules.ini.", no_function);
+				ke::SafeSprintf(error, maxLength, "Plugin uses an unknown function (name \"%s\") - check your modules.ini.", no_function);
 				return (amx->error = AMX_ERR_NOTFOUND);
 			}
 		} else {
@@ -360,6 +351,17 @@ int load_amxscript(AMX *amx, void **program, const char *filename, char error[64
 	}
 
 	return (amx->error = AMX_ERR_NONE);
+}
+
+int load_amxscript_ex(AMX *amx, void **program, const char *filename, char *error, size_t maxLength, int debug)
+{
+	return load_amxscript_internal(amx, program, filename, error, maxLength, debug);
+}
+
+// Deprecated. Use load_amxscript_ex() or MF_LoadAmxScriptEx() for modules. This function is kept to maintain backward compatibility.
+int load_amxscript(AMX *amx, void **program, const char *filename, char error[64], int debug)
+{
+	return load_amxscript_internal(amx, program, filename, error, 64 /* error max length */, debug);
 }
 
 const char *StrCaseStr(const char *as, const char *bs)
@@ -424,23 +426,19 @@ int CheckModules(AMX *amx, char error[128])
 		/* for binary compat */
 		if (!found)
 		{
-			CList<CModule, const char *>::iterator a = g_modules.begin();
-			while (a)
+			for (auto module : g_modules)
 			{
-				CModule &cm = (*a);
-				if (cm.getStatusValue() != MODULE_LOADED)
+				if (module->getStatusValue() != MODULE_LOADED)
 				{
-					++a;
 					continue;
 				}
-				if (cm.getInfoNew() && 
-					cm.getInfoNew()->logtag && 
-					!strcasecmp(cm.getInfoNew()->logtag, buffer))
+				if (module->getInfoNew() &&
+					module->getInfoNew()->logtag &&
+					!strcasecmp(module->getInfoNew()->logtag, buffer))
 				{
 					found = true;
 					break;
 				}
-				++a;
 			}
 		}
 			
@@ -502,18 +500,16 @@ int CheckModules(AMX *amx, char error[128])
 
 int set_amxnatives(AMX* amx, char error[128])
 {
-	CModule *cm;
-	for (CList<CModule, const char *>::iterator a = g_modules.begin(); a ; ++a)
+	for (auto module : g_modules)
 	{
-		cm = &(*a);
-		for (size_t i=0; i<cm->m_Natives.length(); i++)
+		for (size_t i = 0; i < module->m_Natives.length(); i++)
 		{
-			amx_Register(amx, cm->m_Natives[i], -1);
+			amx_Register(amx, module->m_Natives[i], -1);
 		}
 
-		for (size_t i = 0; i < cm->m_NewNatives.length(); i++)
+		for (size_t i = 0; i < module->m_NewNatives.length(); i++)
 		{
-			amx_Register(amx, cm->m_NewNatives[i], -1);
+			amx_Register(amx, module->m_NewNatives[i], -1);
 		}
 	}
 
@@ -549,7 +545,7 @@ int set_amxnatives(AMX* amx, char error[128])
 	
 	if (amx_FindPublic(amx, "plugin_natives", &idx) == AMX_ERR_NONE)
 	{
-		if ((err = amx_Exec(amx, &retval, idx)) != AMX_ERR_NONE)
+		if ((err = amx_ExecPerf(amx, &retval, idx)) != AMX_ERR_NONE)
 		{
 			Debugger::GenericMessage(amx, err);
 			AMXXLOG_Log("An error occurred in plugin_natives. This is dangerous!");
@@ -582,10 +578,16 @@ int unload_amxscript(AMX* amx, void** program)
 	if (opt)
 		delete opt;
 	
-	CList<CScript, AMX*>::iterator a = g_loadedscripts.find(amx);
+	for (auto script : g_loadedscripts)
+	{
+		if (script->getAMX() == amx)
+		{
+			g_loadedscripts.remove(script);
+			delete script;
 	
-	if (a)
-		a.remove();
+			break;
+		}
+	}
 	
 	char *prg = (char *)*program;
 	
@@ -632,20 +634,20 @@ int unload_amxscript(AMX* amx, void** program)
 
 AMX* get_amxscript(int id, void** code, const char** filename)
 {
-	CList<CScript, AMX*>::iterator a = g_loadedscripts.begin();
-	
-	while (a && id--)
-		++a;
-	
-	if (a)
+	for (auto script : g_loadedscripts)
 	{
-		*filename = (*a).getName();
-		*code = (*a).getCode();
+		if (id--)
+		{
+			continue;
+		}
+	
+		*filename = script->getName();
+		*code = script->getCode();
 		
-		return (*a).getAMX();
+		return script->getAMX();
 	}
 	
-	return 0;
+	return nullptr;
 }
 
 const char* GetFileName(AMX *amx)
@@ -656,10 +658,17 @@ const char* GetFileName(AMX *amx)
 	if (pl)
 	{
 		filename = pl->getName();
-	} else {
-		CList<CScript,AMX*>::iterator a = g_loadedscripts.find(amx);
-		if (a)
-			filename = (*a).getName();
+	}
+	else
+	{
+		for (auto script : g_loadedscripts)
+		{
+			if (script->getAMX() == amx)
+			{
+				filename = script->getName();
+				break;
+			}
+		}
 	}
 
 	return filename;
@@ -667,8 +676,14 @@ const char* GetFileName(AMX *amx)
 
 const char* get_amxscriptname(AMX* amx)
 {
-	CList<CScript, AMX*>::iterator a = g_loadedscripts.find(amx);
-	return a ? (*a).getName() : "";
+	for (auto script : g_loadedscripts)
+	{
+		if (script->getAMX() == amx)
+		{
+			return script->getName();
+		}
+	}
+	return "";
 }
 
 void get_modname(char* buffer)
@@ -678,50 +693,25 @@ void get_modname(char* buffer)
 
 char* build_pathname(const char *fmt, ...)
 {
-	static char string[256];
-	int b;
-	int a = b = ke::SafeSprintf(string, sizeof(string), "%s%c", g_mod_name.chars(), PATH_SEP_CHAR);
+	static char string[PLATFORM_MAX_PATH];
+	auto len = ke::path::Format(string, sizeof(string), "%s/", g_mod_name.chars());
 
 	va_list argptr;
 	va_start(argptr, fmt);
-	a += vsnprintf (&string[a], 255 - a, fmt, argptr);
-	string[a] = 0;
+	ke::path::FormatVa(&string[len], sizeof(string) - len, fmt, argptr);
 	va_end(argptr);
-
-	char* path = &string[b];
-
-	while (*path) 
-	{
-		if (*path == ALT_SEP_CHAR)
-		{
-			*path = PATH_SEP_CHAR;
-		}
-		++path;
-	}
 
 	return string;
 }
 
 char *build_pathname_r(char *buffer, size_t maxlen, const char *fmt, ...)
 {
-	ke::SafeSprintf(buffer, maxlen, "%s%c", g_mod_name.chars(), PATH_SEP_CHAR);
-
-	size_t len = strlen(buffer);
-	char *ptr = buffer + len;
+	auto len = ke::path::Format(buffer, maxlen, "%s/", g_mod_name.chars());
 
 	va_list argptr;
 	va_start(argptr, fmt);
-	vsnprintf (ptr, maxlen-len, fmt, argptr);
+	ke::path::FormatVa(&buffer[len], maxlen - len, fmt, argptr);
 	va_end (argptr);
-
-	while (*ptr) 
-	{
-		if (*ptr == ALT_SEP_CHAR)
-		{
-			*ptr = PATH_SEP_CHAR;
-		}
-		++ptr;
-	}
 
 	return buffer;
 }
@@ -729,23 +719,12 @@ char *build_pathname_r(char *buffer, size_t maxlen, const char *fmt, ...)
 // build pathname based on addons dir
 char* build_pathname_addons(const char *fmt, ...)
 {
-	static char string[256];
+	static char string[PLATFORM_MAX_PATH];
 
 	va_list argptr;
 	va_start(argptr, fmt);
-	vsnprintf (string, 255, fmt, argptr);
+	ke::path::FormatVa(string, sizeof(string), fmt, argptr);
 	va_end(argptr);
-
-	char* path = string;
-
-	while (*path) 
-	{
-		if (*path == ALT_SEP_CHAR)
-		{
-			*path = PATH_SEP_CHAR;
-		}
-		++path;
-	}
 
 	return string;
 }
@@ -767,7 +746,7 @@ bool ConvertModuleName(const char *pathString, char *path)
 	/* run to filename instead of dir */
 	char *ptr = tmpname;
 	ptr = tmpname + len - 1;
-	while (ptr >= tmpname && *ptr != PATH_SEP_CHAR)
+	while (ptr >= tmpname && *ptr != PLATFORM_SEP_CHAR)
 		ptr--;
 	if (ptr >= tmpname)
 	{
@@ -827,7 +806,7 @@ bool ConvertModuleName(const char *pathString, char *path)
 		*ptr = '\0';
 	}
 
-	size_t length = ke::SafeSprintf(path, PLATFORM_MAX_PATH, "%s%c%s_amxx", orig_path, PATH_SEP_CHAR, tmpname);
+	auto length = ke::path::Format(path, PLATFORM_MAX_PATH, "%s/%s_amxx", orig_path, tmpname);
 
 #if defined PLATFORM_LINUX
 # if defined AMD64 || PAWN_CELL_SIZE == 64
@@ -848,7 +827,7 @@ bool LoadModule(const char *shortname, PLUG_LOADTIME now, bool simplify, bool no
 
 	build_pathname_r(
 		pathString, 
-		sizeof(pathString)-1, 
+		sizeof(pathString),
 		"%s/%s",
 		get_localinfo("amxx_modulesdir", "addons/amxmodx/modules"),
 		shortname);
@@ -869,18 +848,26 @@ bool LoadModule(const char *shortname, PLUG_LOADTIME now, bool simplify, bool no
 		fclose(fp);
 	}
 
-	CList<CModule, const char *>::iterator a = g_modules.find(path);
+	for (auto module : g_modules)
+	{
+		if (!strcmp(module->getFilename(), path))
+		{
+			return false;
+		}
+	}
 
-	if (a)
+	auto module = new CModule(path);
+
+	if (!module)
+	{
 		return false;
+	}
 
-	CModule* cc = new CModule(path);
-
-	cc->queryModule();
+	module->queryModule();
 
 	bool error = true;
 
-	switch (cc->getStatusValue())
+	switch (module->getStatusValue())
 	{
 	case MODULE_BADLOAD:
 		report_error(1, "[AMXX] Module is not a valid library (file \"%s\")", path);
@@ -889,10 +876,10 @@ bool LoadModule(const char *shortname, PLUG_LOADTIME now, bool simplify, bool no
 		report_error(1, "[AMXX] Couldn't find info about module (file \"%s\")", path);
 		break;
 	case MODULE_NOQUERY:
-		report_error(1, "[AMXX] Couldn't find \"AMX_Query\" or \"AMXX_Query\" (file \"%s\")", path);
+		report_error(1, "[AMXX] Couldn't find \"AMXX_Query\" (file \"%s\")", path);
 		break;
 	case MODULE_NOATTACH:
-		report_error(1, "[AMXX] Couldn't find \"%s\" (file \"%s\")", cc->isAmxx() ? "AMXX_Attach" : "AMX_Attach", path);
+		report_error(1, "[AMXX] Couldn't find \"AMXX_Attach\" (file \"%s\")", path);
 		break;
 	case MODULE_OLD:
 		report_error(1, "[AMXX] Module has a different interface version (file \"%s\")", path);
@@ -914,38 +901,38 @@ bool LoadModule(const char *shortname, PLUG_LOADTIME now, bool simplify, bool no
 		break;
 	}
 
-	g_modules.put(cc);
+	g_modules.append(module);
 
 	if (error)
 	{
 		return false;
 	}
 
-	if (cc->IsMetamod())
+	if (module->IsMetamod())
 	{
 		char *mmpathname = build_pathname_addons(
 							"%s/%s", 
 							get_localinfo("amxx_modulesdir", "addons/amxmodx/modules"), 
 							shortname);
 		ConvertModuleName(mmpathname, path);
-		cc->attachMetamod(path, now);
+		module->attachMetamod(path, now);
 	}
 
-	bool retVal = cc->attachModule();
+	bool retVal = module->attachModule();
 
-	if (cc->isAmxx() && !retVal)
+	if (!retVal)
 	{
-		switch (cc->getStatusValue())
+		switch (module->getStatusValue())
 		{
 		case MODULE_FUNCNOTPRESENT:
-			report_error(1, "[AMXX] Module requested a not existing function (file \"%s\")%s%s%s", cc->getFilename(), cc->getMissingFunc() ? " (func \"" : "", 
-				cc->getMissingFunc() ? cc->getMissingFunc() : "", cc->getMissingFunc() ? "\")" : "");
+			report_error(1, "[AMXX] Module requested a not existing function (file \"%s\")%s%s%s", module->getFilename(), module->getMissingFunc() ? " (func \"" : "",
+				module->getMissingFunc() ? module->getMissingFunc() : "", module->getMissingFunc() ? "\")" : "");
 			break;
 		case MODULE_INTERROR:
-			report_error(1, "[AMXX] Internal error during module load (file \"%s\")", cc->getFilename());
+			report_error(1, "[AMXX] Internal error during module load (file \"%s\")", module->getFilename());
 			break;
 		case MODULE_BADLOAD:
-			report_error(1, "[AMXX] Module is not a valid library (file \"%s\")", cc->getFilename());
+			report_error(1, "[AMXX] Module is not a valid library (file \"%s\")", module->getFilename());
 			break;
 		}
 
@@ -1009,80 +996,62 @@ int loadModules(const char* filename, PLUG_LOADTIME now)
 
 void detachModules()
 {
-	CList<CModule, const char *>::iterator a = g_modules.begin();
-
-	while (a)
+	auto moduleIter = g_modules.begin(), end = g_modules.end();
+	while (moduleIter != end)
 	{
-		(*a).detachModule();
-		a.remove();
+		auto module = *moduleIter;
+
+		module->detachModule();
+		moduleIter = g_modules.erase(moduleIter);
+		delete module;
 	}
 }
 
 void detachReloadModules()
 {
-	CList<CModule, const char *>::iterator a = g_modules.begin();
-
-	while (a)
+	auto moduleIter = g_modules.begin(), end = g_modules.end();
+	while (moduleIter != end)
 	{
-		if ((*a).isReloadable() && !(*a).IsMetamod())
+		auto module = *moduleIter;
+		if (module->isReloadable() && !module->IsMetamod())
 		{
-			(*a).detachModule();
-			a.remove();
+			module->detachModule();
 			
+			moduleIter = g_modules.erase(moduleIter);
+			delete module;
+	
 			continue;
 		}
-		++a;
+		moduleIter++;
 	}
-}
-
-const char* strip_name(const char* a)
-{
-	const char* ret = a;
-	
-	while (*a)
-	{
-		if (*a == '/' || *a == '\\')
-		{
-			ret = ++a;
-			continue;
-		}
-		++a;
-	}
-	
-	return ret;
 }
 
 // Get the number of running modules
 int countModules(CountModulesMode mode)
 {
-	CList<CModule, const char *>::iterator iter;
-	int num;
+	auto num = 0;
 	
 	switch (mode)
 	{
 		case CountModules_All:
-			return g_modules.size();
-		case CountModules_Running:
-			iter = g_modules.begin();
-			num = 0;
-			
-			while (iter)
+			for (auto module : g_modules)
 			{
-				if ((*iter).getStatusValue() == MODULE_LOADED)
+				num++;
+			}
+			return num;
+		case CountModules_Running:
+			for (auto module : g_modules)
+			{
+				if (module->getStatusValue() == MODULE_LOADED)
 					++num;
-				++iter;
 			}
 			
 			return num;
 		case CountModules_Stopped:
-			iter = g_modules.begin();
-			num	= 0;
-			
-			while (iter)
+			for (auto module : g_modules)
 			{
-				if ((*iter).getStatusValue() != MODULE_LOADED)
+				if (module->getStatusValue() != MODULE_LOADED)
 					++num;
-				++iter;
 			}
 			
 			return num;
@@ -1094,35 +1063,26 @@ int countModules(CountModulesMode mode)
 // Call all modules' AMXX_PluginsLoaded functions
 void modules_callPluginsLoaded()
 {
-	CList<CModule, const char *>::iterator iter = g_modules.begin();
-	
-	while (iter)
+	for (auto module : g_modules)
 	{
-		(*iter).CallPluginsLoaded();
-		++iter;
+		module->CallPluginsLoaded();
 	}
 }
 
 //same for unloaded
 void modules_callPluginsUnloaded()
 {
-	CList<CModule, const char *>::iterator iter = g_modules.begin();
-
-	while (iter)
+	for (auto module : g_modules)
 	{
-		(*iter).CallPluginsUnloaded();
-		++iter;
+		module->CallPluginsUnloaded();
 	}
 }
 
 void modules_callPluginsUnloading()
 {
-	CList<CModule, const char *>::iterator iter = g_modules.begin();
-
-	while (iter)
+	for (auto module : g_modules)
 	{
-		(*iter).CallPluginsUnloading();
-		++iter;
+		module->CallPluginsUnloading();
 	}
 }
 
@@ -1154,44 +1114,42 @@ const char *MNF_GetModname(void)
 
 AMX *MNF_GetAmxScript(int id)
 {
-	CList<CScript, AMX*>::iterator iter = g_loadedscripts.begin();
-	
-	while (iter && id--)
-		++iter;
-
-	if (iter == 0)
-		return NULL;
-	
-	return (*iter).getAMX();
+	for (auto script : g_loadedscripts)
+	{
+		if (id--)
+		{
+			continue;
+		}
+		return script->getAMX();
+	}
+	return nullptr;
 }
 
 const char *MNF_GetAmxScriptName(int id)
 {
-	CList<CScript, AMX*>::iterator iter = g_loadedscripts.begin();
-	
-	while (iter && id--)
-		++iter;
-
-	if (iter == 0)
-		return NULL;
-	
-	return (*iter).getName();
+	for (auto script : g_loadedscripts)
+	{
+		if (id--)
+		{
+			continue;
+		}
+		return script->getName();
+	}
+	return nullptr;
 }
 
 int MNF_FindAmxScriptByName(const char *name)
 {
-	CList<CScript, AMX*>::iterator iter = g_loadedscripts.begin();
 	bool found = false;
 	int i = 0;
 	
-	while (iter)
+	for (auto script : g_loadedscripts)
 	{
-		if (stricmp((*iter).getName(), name) == 0)
+		if (!stricmp(script->getName(), name))
 		{
 			found = true;
 			break;
 		}
-		++iter;
 		++i;
 	}
 	
@@ -1203,19 +1161,16 @@ int MNF_FindAmxScriptByName(const char *name)
 
 int MNF_FindAmxScriptByAmx(const AMX *amx)
 {
-	CList<CScript, AMX*>::iterator iter = g_loadedscripts.begin();
 	bool found = false;
 	int i = 0;
 	
-	while (iter)
-	
+	for (auto script : g_loadedscripts)
 	{
-		if (amx == (*iter).getAMX())
+		if (script->getAMX() == amx)
 		{
 			found = true;
 			break;
 		}
-		++iter;
 		++i;
 	}
 	
@@ -1316,17 +1271,16 @@ void MNF_OverrideNatives(AMX_NATIVE_INFO *natives, const char *name)
 {
 	//HACKHACK - we should never have had to do this
 	//find a better solution for SourceMod!!!
-	for (CList<CModule, const char *>::iterator a = g_modules.begin(); a ; ++a)
+	for (auto module : g_modules)
 	{
-		CModule &cm = (*a);
-		if (cm.getStatusValue() != MODULE_LOADED)
+		if (module->getStatusValue() != MODULE_LOADED)
 			continue;
-		const amxx_module_info_s *p = cm.getInfoNew();
+		const amxx_module_info_s *p = module->getInfoNew();
 		if (!p || !p->name)
 			continue;
 		if (strcmp(p->name, name)==0)
 			continue;
-		cm.rewriteNativeLists(natives);
+		module->rewriteNativeLists(natives);
 	}
 }
 
@@ -1640,52 +1594,38 @@ cell MNF_PrepareCharArray(char *ptr, unsigned int size)
 	return prepareCharArray(ptr, size, false);
 }
 
-inline bool operator ==(func_s &arg1, const char *desc)
-{
-	if (strcmp(arg1.desc, desc) == 0)
-		return true;
-	
-	return false;
-}
-
-CList<func_s, const char *> g_functions;
+ke::Vector<ke::AutoPtr<func_s>> g_functions;
 
 // Fnptr Request function for the new interface
 const char *g_LastRequestedFunc = NULL;
 #define REGISTER_FUNC(name, func) \
 	{ \
-		pFunc = new func_s; \
+		auto pFunc = ke::AutoPtr<func_s>(new func_s); \
 		pFunc->pfn = (void *)func; \
 		pFunc->desc = name; \
-		g_functions.put(pFunc); \
+		g_functions.append(ke::Move(pFunc)); \
 	}
 
 void MNF_RegisterFunction(void *pfn, const char *description)
 {
-	func_s *pFunc;
-
 	REGISTER_FUNC(description, pfn);
 }
 
 void *MNF_RegisterFunctionEx(void *pfn, const char *description)
 {
-	func_s *pFunc;
-	CList<func_s, const char *>::iterator iter;
-
-	for (iter = g_functions.begin(); iter; ++iter)
+	for (auto &func : g_functions)
 	{
-		pFunc = &(*iter);
-		if (strcmp(description, pFunc->desc) == 0)
+		if (!strcmp(description, func->desc))
 		{
-			void *pOld = pFunc->pfn;
-			pFunc->pfn = pfn;
+			void *pOld = func->pfn;
+			func->pfn = pfn;
 			return pOld;
 		}
 	}
 
 	MNF_RegisterFunction(pfn, description);
 
-	return NULL;
+	return nullptr;
 }
 
 void Module_UncacheFunctions()
@@ -1814,8 +1754,6 @@ IGameConfigManager *MNF_GetConfigManager()
 
 void Module_CacheFunctions()
 {
-	func_s *pFunc;
-
 	REGISTER_FUNC("BuildPathname", build_pathname)
 	REGISTER_FUNC("BuildPathnameR", build_pathname_r)
 	REGISTER_FUNC("PrintSrvConsole", print_srvconsole)
@@ -1833,7 +1771,8 @@ void Module_CacheFunctions()
 	REGISTER_FUNC("GetAmxScriptName", MNF_GetAmxScriptName)
 	REGISTER_FUNC("FindAmxScriptByName", MNF_FindAmxScriptByName)
 	REGISTER_FUNC("FindAmxScriptByAmx", MNF_FindAmxScriptByAmx)
-	REGISTER_FUNC("LoadAmxScript", load_amxscript)
+	REGISTER_FUNC("LoadAmxScript", load_amxscript) // Deprecated. Please use LoadAmxScriptEx instead.
+	REGISTER_FUNC("LoadAmxScriptEx", load_amxscript_ex)
 	REGISTER_FUNC("UnloadAmxScript", unload_amxscript)
 
 	// String / mem in amx scripts support
@@ -1923,20 +1862,15 @@ void Module_CacheFunctions()
 
 void *Module_ReqFnptr(const char *funcName)
 {
-	// code
-	// ^---- really? wow!
-	
 	g_LastRequestedFunc = funcName;
 
-	CList<func_s, const char *>::iterator iter;
-	
-	for (iter = g_functions.begin(); iter; ++iter)
+	for (auto &func : g_functions)
 	{
-		if (strcmp(funcName, iter->desc) == 0)
-			return iter->pfn;
+		if (!strcmp(funcName, func->desc))
+			return func->pfn;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 Debugger *DisableDebugHandler(AMX *amx)

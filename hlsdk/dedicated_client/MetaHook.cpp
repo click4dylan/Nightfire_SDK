@@ -55,6 +55,13 @@ int CLIENT_Initialize(cl_enginefuncs_s* enginefuncs)
 				if (g_oStartMetaAudio && g_oShutdownMetaAudio && g_oPauseMetaAudioPlayback && g_oResumeMetaAudioPlayback)
 					g_oStartMetaAudio(g_engineDllHinst, g_pNightfirePlatformFuncs, g_pNightfireFileSystem, &g_oExportFuncs, g_Pointers.g_pCL_EngineFuncs);
 			}
+			else
+			{
+				DWORD error = GetLastError();
+				char tmp[128];
+				sprintf_s(tmp, "Error: Failed to load MetaAudio.dll, GetLastError() = %u\n", error);
+				enginefuncs->ConsolePrint(tmp);
+			}
 		}
 	}
 
@@ -125,7 +132,7 @@ void RunMetaHook()
 	g_Pointers.g_pCL_EngineFuncs = *(cl_enginefuncs_s**)((DWORD)g_pClientDLL_Init + 0xC2);
 	//g_clmove = ((DWORD)g_pClientDLL_Init + 0xCD);
 
-	MessageBoxA(NULL, "Hooking ClientDLL_Init", "", MB_OK);
+	//MessageBoxA(NULL, "Hooking ClientDLL_Init", "", MB_OK);
 
 	if (!HookFunctionWithMinHook(g_pClientDLL_Init, ClientDLL_Init, (void**)&g_oClientDLL_Init, "ClientDLL_Init"))
 		return;

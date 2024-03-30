@@ -8,7 +8,7 @@ SAVE_LOC = Save Location
 [de]
 ADMIN_TELEPORT_1 = ADMIN: teleportiert %s
 ADMIN_TELEPORT_2 = ADMIN %s: teleportiert %s
-TELE_MENU = Menu > Teleport
+TELE_MENU = Menü > Teleport
 CUR_LOC = Momentane Position
 SAVE_LOC = Position speichern
 
@@ -20,11 +20,11 @@ CUR_LOC = Sadasnja Lokacija
 SAVE_LOC = Sacuvaj Lokaciju
 
 [tr]
-ADMIN_TELEPORT_1 = ADMIN: teleportladi %s
-ADMIN_TELEPORT_2 = ADMIN %s: teleportladi %s
-TELE_MENU = Teleport Menusu
-CUR_LOC = Oldugu su anki yer
-SAVE_LOC = Oldugu yeri saklayin
+ADMIN_TELEPORT_1 = ADMIN, %s kisisini teleportladi
+ADMIN_TELEPORT_2 = ADMIN %s, %s kisisini teleportladi
+TELE_MENU = Teleport Menu
+CUR_LOC = Suanki Konum
+SAVE_LOC = Konumu Kaydet
 
 [fr]
 ADMIN_TELEPORT_1 = ADMIN: teleporte %s
@@ -89,13 +89,6 @@ TELE_MENU = Teleportvalikko
 CUR_LOC = Nykyinen sijainti
 SAVE_LOC = Tallenna sijainti
 
-[ls]
-ADMIN_TELEPORT_1 = l33t s3rv3r 0P: h4x3d %s t0 n3w ISP
-ADMIN_TELEPORT_2 = l33t s3rv3r 0P %s: h4x3d %s t0 n3w ISP
-TELE_MENU = l33t T3l3p0rt M3nu
-CUR_LOC = Cu|2|2en7 ISP
-SAVE_LOC = S4v3 ISP
-
 [bg]
 ADMIN_TELEPORT_1 = ADMININISTRATOR: teleportira %s
 ADMIN_TELEPORT_2 = ADMINISTRATOR %s: teleportira %s
@@ -106,16 +99,16 @@ SAVE_LOC = Zapazi mestopolojenieto
 [ro]
 ADMIN_TELEPORT_1 = ADMIN: teleportare %s
 ADMIN_TELEPORT_2 = ADMIN %s: teleportare %s
-TELE_MENU = Menu Teleportare
-CUR_LOC = Locatia Actuala
-SAVE_LOC = Salveaza Locatie
+TELE_MENU = Meniu teleportare
+CUR_LOC = Locația actuală
+SAVE_LOC = Salvează locație
 
 [hu]
-ADMIN_TELEPORT_1 = ADMIN: %s teleport
-ADMIN_TELEPORT_2 = ADMIN %s: %s teleport
-TELE_MENU = Teleport Menu
-CUR_LOC = Mostani hely
-SAVE_LOC = Hely mentese
+ADMIN_TELEPORT_1 = ADMIN: %s teleportálva
+ADMIN_TELEPORT_2 = ADMIN %s: %s teleportálva
+TELE_MENU = Teleport Menü
+CUR_LOC = Jelenlegi hely
+SAVE_LOC = Hely mentése
 
 [lt]
 ADMIN_TELEPORT_1 = ADMINAS: teleportavo %s
@@ -135,5 +128,47 @@ SAVE_LOC = Ulozit miesto
 ADMIN_TELEPORT_1 = ADMIN: go teleportira %s
 ADMIN_TELEPORT_2 = ADMIN %s: go teleportira %s
 TELE_MENU = Meni za teleportiranje
-CUR_LOC = Vidi ja zacuvanata lokacija
-SAVE_LOC = Zacuvaj ja segasnata lokacija
+CUR_LOC = Vidi ja zachuvanata lokacija
+SAVE_LOC = Zachuvaj ja segashnata lokacija
+
+[hr]
+ADMIN_TELEPORT_1 = ADMIN: teleportirao %s
+ADMIN_TELEPORT_2 = ADMIN %s: teleportirao %s
+TELE_MENU = Izbornik teleportacije
+CUR_LOC = Trenutna lokacija
+SAVE_LOC = Sacuvaj lokaciju
+
+[bs]
+ADMIN_TELEPORT_1 = ADMIN: teleportuj %s
+ADMIN_TELEPORT_2 = ADMIN %s: teleportuj %s
+TELE_MENU = Teleport Meni
+CUR_LOC = Sadasnja Lokacija
+SAVE_LOC = Sacuvaj Lokacij
+
+[ru]
+ADMIN_TELEPORT_1 = АДМИНИСТРАТОР: телепортировал %s
+ADMIN_TELEPORT_2 = АДМИНИСТРАТОР %s: телепортировал %s
+TELE_MENU = Телепорт меню
+CUR_LOC = Текущее положение
+SAVE_LOC = Сохранить положение
+
+[cn]
+ADMIN_TELEPORT_1 = 管理员: 传送 %s
+ADMIN_TELEPORT_2 = 管理员 %s: 传送 %s
+TELE_MENU = 传送菜单
+CUR_LOC = 当前位置
+SAVE_LOC = 存储位置
+
+[al]
+ADMIN_TELEPORT_1 = ADMIN: transferoj %s
+ADMIN_TELEPORT_2 = ADMIN %s: transferoj %s
+TELE_MENU = Lista Transferimit
+CUR_LOC = Vendi Tanishëm
+SAVE_LOC = Ruaj Vendin
+
+[pt]
+ADMIN_TELEPORT_1 = ADMIN: teleportou %s
+ADMIN_TELEPORT_2 = ADMIN %s: teleportou %s
+TELE_MENU = Menu de Teleporte
+CUR_LOC = Localização Atual
+SAVE_LOC = Guardar Localização

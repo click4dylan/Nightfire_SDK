@@ -53,7 +53,7 @@ void CoreConfig::ExecuteMainConfig()
 	char path[PLATFORM_MAX_PATH];
 	char command[PLATFORM_MAX_PATH + sizeof(CommandFormat)];
 
-	ke::SafeSprintf(path, sizeof(path), "%s/%s/%s", g_mod_name.chars(), get_localinfo("amx_configdir", "addons/amxmodx/configs"), MainConfigFile);
+	ke::SafeSprintf(path, sizeof(path), "%s/%s/%s", g_mod_name.chars(), get_localinfo("amxx_configsdir", "addons/amxmodx/configs"), MainConfigFile);
 	ke::SafeSprintf(command, sizeof(command), CommandFormat, path);
 
 	SERVER_COMMAND(command);
@@ -80,7 +80,7 @@ bool CoreConfig::ExecuteAutoConfig(CPluginMngr::CPlugin *plugin, AutoConfig *con
 {
 	bool will_create = false;
 
-	const char *configsDir = get_localinfo("amx_configdir", "addons/amxmodx/configs");
+	const char *configsDir = get_localinfo("amxx_configsdir", "addons/amxmodx/configs");
 
 	if (can_create && config->create)
 	{
@@ -254,7 +254,7 @@ bool CoreConfig::ExecuteAutoConfig(CPluginMngr::CPlugin *plugin, AutoConfig *con
 
 void CoreConfig::ExecuteMapConfig()
 {
-	const char *configsDir = get_localinfo("amx_configdir", "addons/amxmodx/configs");
+	const char *configsDir = get_localinfo("amxx_configsdir", "addons/amxmodx/configs");
 
 	char cfgPath[PLATFORM_MAX_PATH];
 	char mapName[PLATFORM_MAX_PATH];
@@ -296,6 +296,8 @@ void CoreConfig::OnMapConfigTimer()
 		return;
 	}
 
+	if (m_legacyMapConfigNextTime <= gpGlobals->time)
+	{
 	if (m_PendingForwardPush)
 	{
 		m_PendingForwardPush = false;
@@ -303,10 +305,11 @@ void CoreConfig::OnMapConfigTimer()
 
 		executeForwards(m_ConfigsExecutedForward);
 	}
-	else if (!m_LegacyMapConfigsExecuted && m_legacyMapConfigNextTime <= gpGlobals->time)
+		else if (!m_LegacyMapConfigsExecuted)
 	{
 		ExecuteMapConfig();
 	}
+}
 }
 
 void CoreConfig::CheckLegacyBufferedCommand(char *command)
@@ -324,6 +327,9 @@ void CoreConfig::CheckLegacyBufferedCommand(char *command)
 	if (!m_LegacyMapConfigsExecuted && strstr(command, MapConfigDir))
 	{
 		m_LegacyMapConfigsExecuted = true;
+		
+		// Consider all configs be executed to m_legacyMapConfigNextTime time.
+		m_PendingForwardPush = true;
 	}
 }
 

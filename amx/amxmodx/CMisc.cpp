@@ -110,13 +110,16 @@ bool CPlayer::Connect(const char* connectname, const char* ipaddress)
 		delete (*iter);
 	}
 	queries.clear();
+	
+	return true;
 	/*
 	const char* authid = GETPLAYERAUTHID(pEdict); //DYLAN TOFIX
 
 	if ((authid == 0) || (*authid == 0) || (strcmp(authid, "STEAM_ID_PENDING") == 0))
 		return true;
-	*/
+		
 	return false;
+	*/
 }
 
 // *****************************************************

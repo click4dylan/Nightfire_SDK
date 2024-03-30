@@ -50,7 +50,7 @@ dllapi_info_t dllapi_info = {
 	{ mFALSE,  9,	"DispatchSave" },		// pfnSave
 	{ mFALSE,  9,	"DispatchRestore" },	// pfnRestore
 	{ mFALSE,  20,	"DispatchObjectCollsionBox" },	// pfnSetAbsBox
-	{ mFALSE,  9,   "UNKNOWN_GAMEDLL1" },	// pfnBlocked
+	{ mFALSE,  9,   "DispatchBlockedTest" },	// pfnBlockedTest
 	{ mFALSE,  9,	"SaveWriteFields" },	// pfnSaveWriteFields
 	{ mFALSE,  9,	"SaveReadFields" },		// pfnSaveReadFields
 	{ mFALSE,  9,	"SaveGlobalState" },	// pfnSaveGlobalState
@@ -71,17 +71,17 @@ dllapi_info_t dllapi_info = {
 	{ mFALSE,  9,	"ParmsChangeLevel" },	// pfnParmsChangeLevel
 	{ mFALSE,  9,	"GetGameDescription" },	// pfnGetGameDescription
 	//{ mFALSE,  9,	"PlayerCustomization" },	// pfnPlayerCustomization
-	{ mFALSE, 9, "GetPlayerSpawnSpot" }, //pfnGetPlayerSpawnSpot
+	//{ mFALSE, 9, "GetPlayerSpawnSpot" }, //pfnGetPlayerSpawnSpot
 	{ mFALSE,  9,	"SpectatorConnect" },	// pfnSpectatorConnect
 	{ mFALSE,  9,	"SpectatorDisconnect" },	// pfnSpectatorDisconnect
 	{ mFALSE,  9,	"SpectatorThink" },		// pfnSpectatorThink
 	{ mFALSE,  3,	"Sys_Error" },			// pfnSys_Error
 	{ mFALSE,  13,	"PM_Move" },			// pfnPM_Move
 	{ mFALSE,  9,	"PM_Init" },			// pfnPM_Init
-	{ mFALSE,  12,	"SetupVisibility" },	// pfnSetupVisibility
-	{ mFALSE,  16,	"AddToFullPack" },		// pfnAddToFullPack
-	{ mFALSE,  12,	"UpdateClientData" },	// pfnUpdateClientData
 	{ mFALSE,  9,	"PM_FindTextureType" },	// pfnPM_FindTextureType
+	{ mFALSE,  12,	"SetupVisibility" },	// pfnSetupVisibility
+	{ mFALSE,  12,	"UpdateClientData" },	// pfnUpdateClientData
+	{ mFALSE,  16,	"AddToFullPack" },		// pfnAddToFullPack
 	{ mFALSE,  9,	"CreateBaseline" },		// pfnCreateBaseline
 	{ mFALSE,  9,	"RegisterEncoders" },	// pfnRegisterEncoders
 	{ mFALSE,  9,	"GetWeaponData" },		// pfnGetWeaponData
@@ -92,17 +92,18 @@ dllapi_info_t dllapi_info = {
 	{ mFALSE,  9,	"CreateInstancedBaselines" },	// pfnCreateInstancedBaselines
 	{ mFALSE,  3,	"InconsistentFile" },	// pfnInconsistentFile
 	{ mFALSE,  20,	"AllowLagCompensation" },	// pfnAllowLagCompensation
+	{ mFALSE, 9, "SpawnPlayerAfterLevelLoad" }, //pfnSpawnPlayerAfterLevelLoad
 	{ mFALSE,  0,	NULL },
 };
 
 newapi_info_t newapi_info = {
-	{ mFALSE, 16, "OnFreeEntPrivateData" },	// pfnOnFreeEntPrivateData
-	{ mFALSE, 3, "GameShutdown" },			// pfnGameShutdown
-	{ mFALSE, 14, "ShouldCollide" }, // pfnShouldCollide
-	{ mFALSE, 14, "IsInThirdPerson" }, // pfnOnSaveGame
-	{ mFALSE, 14, "AlreadyLoadingGame" }, // pfnOnLoadGame
-	{ mFALSE, 14, "BotList" }, // pfnBot_GetParams
-	{ mFALSE, 14, "Host_Addbot" }, // pfnAddbot
+	{ mFALSE, 3, "NullFunc0" },	// pfnNullFuncs[0]
+	{ mFALSE, 3, "NullFunc1" },			// pfnNullFuncs[1]
+	{ mFALSE, 3, "ShouldCollide" }, // pfnShouldCollide
+	{ mFALSE, 3, "OnSaveGame" }, // pfnOnSaveGame
+	{ mFALSE, 3, "OnLoadGame" }, // pfnOnLoadGame
+	{ mFALSE, 3, "BotGetParams" }, // pfnBot_GetParams
+	{ mFALSE, 3, "AddBot" }, // pfnAddbot
 	/*
 	{ mFALSE,  16,	"OnFreeEntPrivateData" },	// pfnOnFreeEntPrivateData
 	{ mFALSE,  3,	"GameShutdown" },			// pfnGameShutdown
@@ -112,7 +113,7 @@ newapi_info_t newapi_info = {
 	// Added 2005-11-22 (no SDK update)
 	{ mFALSE,  3,   "CvarValue2" },				// pfnCvarValue2
 	*/
-	{ mFALSE,  0,	NULL },
+	{ mFALSE,  0,	NULL }
 };
 
 engine_info_t engine_info = {

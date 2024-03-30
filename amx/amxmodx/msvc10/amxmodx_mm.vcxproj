@@ -44,6 +44,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -94,11 +95,11 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(METAMOD)\metamod;$(HLSDK)\common;$(HLSDK)\engine;$(HLSDK)\dlls;$(HLSDK)\pm_shared;$(HLSDK)\public;..\..\public;..\..\public\memtools;..\..\third_party;..\..\public\sdk;..\..\public\amtl;..\..\third_party\hashing;..\..\third_party\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;amxmodx_EXPORTS;PAWN_CELL_SIZE=32;ASM32;JIT;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\;..\..\public;..\..\public\memtools;..\..\third_party;..\..\third_party\zlib;..\..\third_party\hashing;..\..\third_party\utf8rewind;..\..\public\sdk;..\..\public\amtl;$(METAMOD)\metamod;$(HLSDK)\common;$(HLSDK)\engine;$(HLSDK)\dlls;$(HLSDK)\pm_shared;$(HLSDK)\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;amxmodx_EXPORTS;PAWN_CELL_SIZE=32;ASM32;JIT;_CRT_SECURE_NO_DEPRECATE;HAVE_STDINT_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <StructMemberAlignment>4Bytes</StructMemberAlignment>
+      <StructMemberAlignment>Default</StructMemberAlignment>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -113,6 +114,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -130,6 +132,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\jitdebug/amxmodx_mm.pdb</ProgramDatabaseFile>
       <ImportLibrary>.\jitdebug/amxmodx_mm.lib</ImportLibrary>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='JITRelease|Win32'">
@@ -170,6 +173,8 @@
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <WholeProgramOptimization>false</WholeProgramOptimization>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -188,6 +193,7 @@
       <GenerateMapFile>true</GenerateMapFile>
       <ImportLibrary>.\jitrelease/amxmodx_mm.lib</ImportLibrary>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='JITDebugBinLog|Win32'">
@@ -303,7 +309,7 @@
     <ClCompile Include="..\..\third_party\hashing\hashing.cpp" />
     <ClCompile Include="..\..\third_party\zlib\adler32.c" />
     <ClCompile Include="..\..\third_party\zlib\compress.c" />
-    <ClCompile Include="..\..\third_party\zlib\crc32.c" />
+    <ClCompile Include="..\..\third_party\zlib\zcrc32.c" />
     <ClCompile Include="..\..\third_party\zlib\deflate.c" />
     <ClCompile Include="..\..\third_party\zlib\gzclose.c" />
     <ClCompile Include="..\..\third_party\zlib\gzlib.c" />
@@ -395,7 +401,7 @@
     <ClInclude Include="..\..\third_party\hashing\hashers\sha256.h" />
     <ClInclude Include="..\..\third_party\hashing\hashers\sha3.h" />
     <ClInclude Include="..\..\third_party\hashing\hashing.h" />
-    <ClInclude Include="..\..\third_party\zlib\crc32.h" />
+    <ClInclude Include="..\..\third_party\zlib\zcrc32.h" />
     <ClInclude Include="..\..\third_party\zlib\deflate.h" />
     <ClInclude Include="..\..\third_party\zlib\gzguts.h" />
     <ClInclude Include="..\..\third_party\zlib\inffast.h" />
@@ -418,6 +424,7 @@
     <ClInclude Include="..\CFileSystem.h" />
     <ClInclude Include="..\CFlagManager.h" />
     <ClInclude Include="..\CForward.h" />
+    <ClInclude Include="..\CFrameAction.h" />
     <ClInclude Include="..\CGameConfigs.h" />
     <ClInclude Include="..\CLang.h" />
     <ClInclude Include="..\CLibrarySys.h" />

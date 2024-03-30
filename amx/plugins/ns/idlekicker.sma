@@ -1,35 +1,15 @@
-/* AMX Mod X
-*   Idle Player Remover
-*
-* by the AMX Mod X Development Team
-*
-* This file is part of AMX Mod X.
-*
-*
-*  This program is free software; you can redistribute it and/or modify it
-*  under the terms of the GNU General Public License as published by the
-*  Free Software Foundation; either version 2 of the License, or (at
-*  your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful, but
-*  WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-*  General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with this program; if not, write to the Free Software Foundation,
-*  Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*
-*  In addition, as a special exception, the author gives permission to
-*  link the code of this program with the Half-Life Game Engine ("HL
-*  Engine") and Modified Game Libraries ("MODs") developed by Valve,
-*  L.L.C ("Valve"). You must obey the GNU General Public License in all
-*  respects for all of the code used other than the HL Engine and MODs
-*  from Valve. If you modify this file, you may extend this exception
-*  to your version of the file, but you are not obligated to do so. If
-*  you do not wish to do so, delete this exception statement from your
-*  version.
-*/
+// vim: set ts=4 sw=4 tw=99 noet:
+//
+// AMX Mod X, based on AMX Mod by Aleksander Naszko ("OLO").
+// Copyright (C) The AMX Mod X Development Team.
+//
+// This software is licensed under the GNU General Public License, version 3 or higher.
+// Additional exceptions apply. For full license details, see LICENSE.txt or visit:
+//     https://alliedmods.net/amxmodx-license
+
+//
+// Idle Player Remover Plugin
+//
 
 #include <amxmodx>
 #include <amxmisc>
@@ -39,17 +19,15 @@
 #define CHECK_FREQ		5			// This is also the warning message frequency.
 #define CLASS_GESTATE	9
 
-new g_oldangles[33][3]
-new g_idletime[33]
-new bool:g_spawned[33] = {true, ...}
-new g_class[33]	// stored info from the "ScoreInfo" message
+new g_oldangles[MAX_PLAYERS + 1][3]
+new g_idletime[MAX_PLAYERS + 1]
+new bool:g_spawned[MAX_PLAYERS + 1] = {true, ...}
+new g_class[MAX_PLAYERS + 1]	// stored info from the "ScoreInfo" message
 
 new mp_tournamentmode;
 new amx_idle_time;
 new amx_idle_min_players;
 new amx_idle_ignore_immunity;
-
-new maxplayers;
 
 public plugin_init() {
 	register_plugin("Idle Player Remover",AMXX_VERSION_STR,"AMXX Dev Team") 
@@ -71,15 +49,12 @@ public plugin_init() {
 	{
 		register_event("ScoreInfo","msgScoreInfo","a")
 	}
-	
-	
-	maxplayers=get_maxplayers();
 }
 
 public checkPlayers() {
 	if (get_pcvar_num(mp_tournamentmode)) return PLUGIN_HANDLED
 
-	for (new i = 1; i <= maxplayers; i++) {
+	for (new i = 1; i <= MaxClients; i++) {
 		if (is_user_alive(i) && g_class[i]!=CLASS_GESTATE && is_user_connected(i) && !is_user_bot(i) && !is_user_hltv(i) && g_spawned[i]) {
 			if ( !get_pcvar_num(amx_idle_ignore_immunity) ) {
 				if ( access(i, ADMIN_IMMUNITY) ) continue
@@ -116,8 +91,8 @@ check_idletime(id) {
 			new timeleft = maxidletime - g_idletime[id]
 			client_print(id, print_chat, "[AMXX] You have %d seconds to move or you will be kicked for being idle", timeleft)
 		} else if (g_idletime[id] > maxidletime) {
-			new name[32]
-			get_user_name(id, name, 31)
+			new name[MAX_NAME_LENGTH]
+			get_user_name(id, name, charsmax(name))
 			client_print(0, print_chat, "[AMXX] %s was kicked for being idle longer than %d seconds", name, maxidletime)
 			log_amx("%s was kicked for being idle longer than %d seconds", name, maxidletime)
 			server_cmd("kick #%d ^"You were kicked for being idle longer than %d seconds^"", get_user_userid(id), maxidletime)
@@ -139,7 +114,7 @@ public playerSpawned(id) {
 	g_spawned[id] = false
 	new sid[1]
 	sid[0] = id
-	set_task(0.75, "delayedSpawn",_, sid, 1)	// Give the player time to drop to the floor when spawning
+	set_task(0.75, "delayedSpawn",_, sid, sizeof(sid))	// Give the player time to drop to the floor when spawning
 	return PLUGIN_HANDLED
 }
 
@@ -154,17 +129,9 @@ public delayedSpawn(sid[]) {
 
 public msgScoreInfo() {
   new id=read_data(1);
-  if (id>32||id<1) {
-    // just incase..
-    return;
-  }
   g_class[id]=read_data(5);
 }
 public msgScoreInfo32() {
   new id=read_data(1);
-  if (id>32||id<1) {
-    // just incase..
-    return;
-  }
   g_class[id]=read_data(6);
 }

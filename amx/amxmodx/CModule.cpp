@@ -56,7 +56,6 @@ void CModule::clear(bool clearFilename)
 	}
 
 	// new
-	m_Amxx = false;
 	m_InfoNew.author = "unknown";
 	m_InfoNew.name = "unknown";
 	m_InfoNew.version = "unknown";
@@ -146,9 +145,6 @@ bool CModule::attachModule()
 	if (m_Status != MODULE_QUERY || !m_Handle)
 		return false;
 
-	if (m_Amxx)
-	{
-		// new
 		ATTACHMOD_NEW AttachFunc_New = (ATTACHMOD_NEW)DLPROC(m_Handle, "AMXX_Attach");
 
 		if (!AttachFunc_New)
@@ -178,9 +174,6 @@ bool CModule::attachModule()
 				m_Status = MODULE_BADLOAD;
 				return false;
 		}
-	} else {
-		m_Status = MODULE_BADLOAD;
-	}
 
 	if (m_Status == MODULE_LOADED)
 	{
@@ -216,7 +209,6 @@ bool CModule::queryModule()
 	
 	if (queryFunc_New)
 	{
-		m_Amxx = true;
 		int ifVers = AMXX_INTERFACE_VERSION;
 		g_ModuleCallReason = ModuleCall_Query;
 		g_CurrentlyCalledModule = this;
@@ -308,7 +300,6 @@ bool CModule::queryModule()
 		return true;
 	} else {
 		m_Status = MODULE_NOQUERY;
-		m_Amxx = false;
 		return false;
 	}
 }
@@ -320,8 +311,6 @@ bool CModule::detachModule()
 
 	RemoveLibraries(this);
 
-	if (m_Amxx)
-	{
 		DETACHMOD_NEW detachFunc_New = (DETACHMOD_NEW)DLPROC(m_Handle, "AMXX_Detach");
 		
 		if (detachFunc_New)
@@ -332,14 +321,11 @@ bool CModule::detachModule()
 			g_CurrentlyCalledModule = NULL;
 			g_ModuleCallReason = ModuleCall_NotCalled;
 		}
-	}
 
-#ifndef FAKEMETA
 	if (IsMetamod())
 	{
 		UnloadMetamodPlugin(m_Handle);
 	}
-#endif
 	
 	DLFREE(m_Handle);
 	clear();

@@ -9,6 +9,7 @@
 
 #include <time.h>
 #include "amxmodx.h"
+#include <utf8rewind.h>
 
 int UTIL_ReadFlags(const char* c) 
 {
@@ -97,7 +98,7 @@ void UTIL_ShowMOTD(edict_t *client, char *motd, int mlen, const char *name)
 	if (gmsgServerName)
 	{
 		MESSAGE_BEGIN(MSG_ONE, gmsgServerName, NULL, client);
-		WRITE_STRING(hostname->string);
+		WRITE_STRING(hostname->getValueString());
 		MESSAGE_END();
 	}
 }
@@ -220,11 +221,11 @@ void UTIL_HudMessage(edict_t *pEntity, const hudtextparms_t &textparms, const ch
 	WRITE_BYTE(textparms.r1);
 	WRITE_BYTE(textparms.g1);
 	WRITE_BYTE(textparms.b1);
-	WRITE_BYTE(0);
-	WRITE_BYTE(255);
-	WRITE_BYTE(255);
-	WRITE_BYTE(250);
-	WRITE_BYTE(0);
+	WRITE_BYTE(textparms.a1);
+	WRITE_BYTE(textparms.r2);
+	WRITE_BYTE(textparms.g2);
+	WRITE_BYTE(textparms.b2);
+	WRITE_BYTE(textparms.a2);
 	WRITE_SHORT(FixedUnsigned16(textparms.fadeinTime, (1<<8)));
 	WRITE_SHORT(FixedUnsigned16(textparms.fadeoutTime, (1<<8)));
 	WRITE_SHORT(FixedUnsigned16(textparms.holdTime, (1<<8)));
@@ -259,40 +260,54 @@ void UTIL_DHudMessage(edict_t *pEntity, const hudtextparms_t &textparms, const c
 	MESSAGE_END();
 }
 
-/* warning - buffer of msg must be longer than 190 chars!
-(here in AMX it is always longer) */
+/**
+ * User message size limit: 192 bytes
+ * Actual available size: 188 bytes (with EOS)
+ */
 void UTIL_ClientPrint(edict_t *pEntity, int msg_dest, char *msg)
 {
 	if (!gmsgTextMsg)
 		return;				// :TODO: Maybe output a warning log?
 
-	char c = msg[190];
-	msg[190] = 0;			// truncate without checking with strlen()
+	const auto canUseFormatString = g_official_mod && !g_bmod_dod; // Temporary exclusion for DoD until officially supported
+	const auto index = canUseFormatString ? 187 : 190;
+	char c = msg[index];
+	msg[index] = 0;			// truncate without checking with strlen()
 	
 	if (pEntity)
 		MESSAGE_BEGIN(MSG_ONE, gmsgTextMsg, NULL, pEntity);
 	else
 		MESSAGE_BEGIN(MSG_BROADCAST, gmsgTextMsg);
 	
-	WRITE_BYTE(msg_dest);
-	WRITE_STRING(msg);
-	MESSAGE_END();
-	msg[190] = c;
+	WRITE_BYTE(msg_dest);	// 1 byte
+	if (canUseFormatString) 
+		WRITE_STRING("%s");	// 3 bytes (2 + EOS)
+	WRITE_STRING(msg);		// max 188 bytes (187 + EOS)
+	MESSAGE_END();			// max 192 bytes
+	msg[index] = c;
 }
 
+/**
+ * User message size limit: 192 bytes
+ * Actual available size: 188 bytes (with EOS)
+ */
 void UTIL_ClientSayText(edict_t *pEntity, int sender, char *msg)
 {
 	if (!gmsgSayText)
 		return;				// :TODO: Maybe output a warning log?
 
-	char c = msg[190];
-	msg[190] = 0;			// truncate without checking with strlen()
+	const auto canUseFormatString = g_official_mod && !g_bmod_dod; // Temporary exclusion for DoD until officially supported
+	const auto index = canUseFormatString ? 187 : 190;
+	char c = msg[index];
+	msg[index] = 0;			// truncate without checking with strlen()
 
 	MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, pEntity);
-	WRITE_BYTE(sender);
-	WRITE_STRING(msg);
-	MESSAGE_END();
-	msg[190] = c;
+	WRITE_BYTE(sender);		// 1 byte
+	if (canUseFormatString) 
+		WRITE_STRING("%s");	// 3 bytes (2 + EOS)
+	WRITE_STRING(msg);		// max 188 bytes (187 + EOS)
+	MESSAGE_END();			// max 192 bytes
+	msg[index] = c;
 }
 
 void UTIL_TeamInfo(edict_t *pEntity, int playerIndex, const char *pszTeamName)
@@ -372,8 +387,8 @@ void UTIL_FakeClientCommand(edict_t *pEdict, const char *cmd, const char *arg1, 
 		{
 			if ((*aa).matchCommandLine(cmd, arg1) && (*aa).getPlugin()->isExecutable((*aa).getFunction()))
 			{
-				if (executeForwards((*aa).getFunction(), static_cast<cell>(GET_PLAYER_POINTER(pEdict)->index)),
-					static_cast<cell>((*aa).getFlags()), static_cast<cell>((*aa).getId()) > 0)
+				if (executeForwards((*aa).getFunction(), static_cast<cell>(GET_PLAYER_POINTER(pEdict)->index),
+					static_cast<cell>((*aa).getFlags()), static_cast<cell>((*aa).getId())) > 0)
 				{
 					g_fakecmd.notify = false;
 					return;
@@ -389,7 +404,7 @@ void UTIL_FakeClientCommand(edict_t *pEdict, const char *cmd, const char *arg1, 
 	// set the global "fake" flag so the Cmd_Arg* functions will be superceded
 	g_fakecmd.fake = true;
 	// tell the GameDLL that the client sent a command
-	MDLL_ClientCommand(pEdict, 1, cmd);//DYLAN FIXME, is this correct
+	MDLL_ClientCommand(pEdict, g_fakecmd.argc, g_fakecmd.argv);//DYLAN FIXME, is this correct
 	// unset the global "fake" flag
 	g_fakecmd.fake = false;
 }
@@ -454,11 +469,38 @@ int UTIL_CheckValidChar(D *c)
 	return 0;
 }
 
-unsigned int UTIL_ReplaceAll(char *subject, size_t maxlength, const char *search, const char *replace, bool caseSensitive)
-{
-	size_t searchLen = strlen(search);
-	size_t replaceLen = strlen(replace);
+static char OutputBuffer1[MAX_BUFFER_LENGTH];
+static char OutputBuffer2[MAX_BUFFER_LENGTH];
 
+char* utf8stristr(const char *string1, const char *string2)
+{
+	auto string1Length = utf8casefold(string1, strlen(string1), OutputBuffer1, MAX_BUFFER_LENGTH - 1, UTF8_LOCALE_DEFAULT, nullptr, TRUE);
+	auto string2Length = utf8casefold(string2, strlen(string2), OutputBuffer2, MAX_BUFFER_LENGTH - 1, UTF8_LOCALE_DEFAULT, nullptr, TRUE);
+
+	OutputBuffer1[string1Length] = '\0';
+	OutputBuffer2[string2Length] = '\0';
+
+	return strstr(OutputBuffer1, OutputBuffer2);
+}
+
+int utf8strncasecmp(const char *string1, const char *string2, size_t n)
+{
+	auto string1Length = utf8casefold(string1, strlen(string1), OutputBuffer1, MAX_BUFFER_LENGTH - 1, UTF8_LOCALE_DEFAULT, nullptr, TRUE);
+	auto string2Length = utf8casefold(string2, strlen(string2), OutputBuffer2, MAX_BUFFER_LENGTH - 1, UTF8_LOCALE_DEFAULT, nullptr, TRUE);
+
+	OutputBuffer1[string1Length] = '\0';
+	OutputBuffer2[string2Length] = '\0';
+
+	return n != 0 ? strncmp(OutputBuffer1, OutputBuffer2, n) : strcmp(OutputBuffer1, OutputBuffer2);
+}
+
+int utf8strcasecmp(const char *string1, const char *string2)
+{
+	return utf8strncasecmp(string1, string2, 0);
+}
+
+size_t UTIL_ReplaceAll(char *subject, size_t maxlength, const char *search, size_t searchLen, const char *replace, size_t replaceLen, bool caseSensitive)
+{
 	char *newptr, *ptr = subject;
 	unsigned int total = 0;
 	while ((newptr = UTIL_ReplaceEx(ptr, maxlength, search, searchLen, replace, replaceLen, caseSensitive)) != NULL)
@@ -476,9 +518,15 @@ unsigned int UTIL_ReplaceAll(char *subject, size_t maxlength, const char *search
 	return total;
 }
 
-template unsigned int strncopy<char, char>(char *, const char *src, size_t count);
-template unsigned int strncopy<cell, char>(cell *, const char *src, size_t count);
-template unsigned int strncopy<cell, cell>(cell *, const cell *src, size_t count);
+size_t UTIL_ReplaceAll(char *subject, size_t maxlength, const char *search, const char *replace, bool caseSensitive)
+{
+	return UTIL_ReplaceAll(subject, maxlength, search, strlen(search), replace, strlen(replace), caseSensitive);
+}
+
+template unsigned int strncopy<char, char>(char *, const char *, size_t);
+template unsigned int strncopy<char, cell>(char *, const cell *, size_t);
+template unsigned int strncopy<cell, char>(cell *, const char *, size_t);
+template unsigned int strncopy<cell, cell>(cell *, const cell *, size_t);
 
 template <typename D, typename S>
 unsigned int strncopy(D *dest, const S *src, size_t count)
@@ -533,7 +581,7 @@ char *UTIL_ReplaceEx(char *subject, size_t maxLen, const char *search, size_t se
 		/* If the search matches and the replace length is 0,
 		* we can just terminate the string and be done.
 		*/
-		if ((caseSensitive ? strcmp(subject, search) : strcasecmp(subject, search)) == 0 && replaceLen == 0)
+		if ((caseSensitive ? strcmp(subject, search) : utf8strcasecmp(subject, search)) == 0 && replaceLen == 0)
 		{
 			*subject = '\0';
 			return subject;
@@ -550,7 +598,7 @@ char *UTIL_ReplaceEx(char *subject, size_t maxLen, const char *search, size_t se
 	while (*ptr != '\0' && (browsed <= textLen - searchLen))
 	{
 		/* See if we get a comparison */
-		if ((caseSensitive ? strncmp(ptr, search, searchLen) : strncasecmp(ptr, search, searchLen)) == 0)
+		if ((caseSensitive ? strncmp(ptr, search, searchLen) : utf8strncasecmp(ptr, search, searchLen)) == 0)
 		{
 			if (replaceLen > searchLen)
 			{

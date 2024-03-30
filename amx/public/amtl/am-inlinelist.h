@@ -52,7 +52,7 @@ class InlineListNode
   {
   }
 
-  InlineListNode(InlineListNode *next, InlineListNode *prev)
+  InlineListNode(InlineListNode* next, InlineListNode* prev)
    : next_(next),
      prev_(prev)
   {
@@ -71,8 +71,8 @@ class InlineListNode
   }
 
  protected:
-  InlineListNode *next_;
-  InlineListNode *prev_;
+  InlineListNode* next_;
+  InlineListNode* prev_;
 };
 
 // An InlineList is a linked list that threads link pointers through objects,
@@ -89,15 +89,17 @@ class InlineList
   typedef InlineListNode<T> Node;
 
   Node head_;
+  size_t length_;
 
   // Work around a clang bug where we can't initialize with &head_ in the ctor.
-  inline Node *head() {
+  inline Node* head() {
     return &head_;
   }
 
  public:
   InlineList()
-    : head_(head(), head())
+   : head_(head(), head()),
+     length_(0)
   {
   }
 
@@ -114,16 +116,16 @@ class InlineList
   class iterator
   {
     friend class InlineList;
-    Node *iter_;
+    Node* iter_;
 
    public:
-    iterator(Node *iter)
+    iterator(Node* iter)
       : iter_(iter)
     {
     }
 
     iterator & operator ++() {
-      iter_ = iter_->next;
+      iter_ = iter_->next_;
       return *this;
     }
     iterator operator ++(int) {
@@ -131,16 +133,49 @@ class InlineList
       iter_ = iter_->next_;
       return old;
     }
-    T * operator *() {
-      return static_cast<T *>(iter_);
+    T * operator*() {
+      return static_cast<T*>(iter_);
     }
     T * operator ->() {
-      return static_cast<T *>(iter_);
+      return static_cast<T*>(iter_);
     }
-    bool operator !=(const iterator &where) const {
+    bool operator !=(const iterator& where) const {
       return iter_ != where.iter_;
     }
-    bool operator ==(const iterator &where) const {
+    bool operator ==(const iterator& where) const {
+      return iter_ == where.iter_;
+    }
+  };
+
+  class reverse_iterator {
+    friend class InlineList;
+    Node* iter_;
+
+   public:
+    reverse_iterator(Node* iter)
+      : iter_(iter)
+    {
+    }
+
+    reverse_iterator& operator ++() {
+      iter_ = iter_->prev_;
+      return *this;
+    }
+    reverse_iterator operator ++(int) {
+      reverse_iterator old(*this);
+      iter_ = iter_->prev_;
+      return old;
+    }
+    T * operator*() {
+      return static_cast<T*>(iter_);
+    }
+    T * operator ->() {
+      return static_cast<T*>(iter_);
+    }
+    bool operator !=(const reverse_iterator& where) const {
+      return iter_ != where.iter_;
+    }
+    bool operator ==(const reverse_iterator& where) const {
       return iter_ == where.iter_;
     }
   };
@@ -148,13 +183,20 @@ class InlineList
   iterator begin() {
     return iterator(head_.next_);
   }
+  reverse_iterator rbegin() {
+    return reverse_iterator(head_.prev_);
+  }
 
   iterator end() {
     return iterator(&head_);
   }
+  reverse_iterator rend() {
+    return reverse_iterator(&head_);
+  }
 
-  iterator erase(iterator &at) {
-    iterator next = at;
+  template <typename IteratorType>
+  IteratorType erase(IteratorType& at) {
+    IteratorType next = at;
     next++;
 
     remove(at.iter_);
@@ -169,9 +211,10 @@ class InlineList
     return head_.next_ == &head_;
   }
 
-  void remove(Node *t) {
+  void remove(Node* t) {
     t->prev_->next_ = t->next_;
     t->next_->prev_ = t->prev_;
+    length_--;
 
 #if !defined(NDEBUG)
     t->next_ = nullptr;
@@ -179,7 +222,7 @@ class InlineList
 #endif
   }
 
-  void append(Node *t) {
+  void append(Node* t) {
     assert(!t->next_);
     assert(!t->prev_);
 
@@ -187,10 +230,14 @@ class InlineList
     t->next_ = &head_;
     head_.prev_->next_ = t;
     head_.prev_ = t;
+    length_++;
+  }
+
+  size_t length() const {
+    return length_;
   }
 };
 
 }
 
 #endif // _include_amtl_inline_list_h_
-

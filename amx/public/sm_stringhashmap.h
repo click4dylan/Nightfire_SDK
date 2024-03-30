@@ -109,8 +109,8 @@ public:
 		: internal_(ke::SystemAllocatorPolicy()),
 		  memory_used_(0)
 	{
-		//if (!internal_.init())
-			//internal_.reportOutOfMemory();
+		if (!internal_.init())
+			internal_.allocPolicy().reportOutOfMemory();
 	}
 
 	typedef typename Internal::Result Result;

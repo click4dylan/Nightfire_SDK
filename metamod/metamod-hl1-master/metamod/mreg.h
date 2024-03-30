@@ -63,7 +63,7 @@ typedef enum {
 } REG_STATUS;
 
 // Pointer to function registered by AddServerCommand.
-typedef void (*REG_CMD_FN) (unsigned int, const char**);
+typedef void (__thiscall *REG_CMD_FN) (void*, unsigned int, const char**);
 
 
 // An individual registered function/command.
@@ -80,7 +80,7 @@ class MRegCmd {
 		REG_STATUS status;		// whether corresponding plugin is loaded
 	// functions:
 		void init(int idx);		// init values, as not using constructors
-		mBOOL call(unsigned int numargs, const char** args);		// try to call the function
+		mBOOL call(void* ecx, unsigned int numargs, const char** args);		// try to call the function
 };
 
 

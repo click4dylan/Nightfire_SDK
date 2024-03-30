@@ -1,0 +1,292 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\msvc\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|e:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mreg.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\dllapi.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\osdep.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mreg.h||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\osdep.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\reg_support.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\meta_eiface.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\meta_api.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\api_info.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mplugin.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\dllapi.h||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\api_info.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mplugin.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\NIGHTFIRE_SDK\\HLSDK\\ENGINE\\EIFACE.H||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\commands_meta.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DFCBF9C-35B5-4617-B380-D73DBD022105}|metamod.vcxproj|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\meta_eiface.h||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MetaHook.cpp",
+              "DocumentMoniker": "e:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.cpp",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\hlsdk\\dedicated_client\\MetaHook.cpp",
+              "ToolTip": "e:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.cpp",
+              "RelativeToolTip": "..\\..\\..\\..\\hlsdk\\dedicated_client\\MetaHook.cpp",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAB8AAAAmAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T22:34:22.718Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "osdep.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\osdep.h",
+              "RelativeDocumentMoniker": "..\\osdep.h",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\osdep.h",
+              "RelativeToolTip": "..\\osdep.h",
+              "ViewState": "AQIAAKsAAAAAAAAAAAApwLcAAAAuAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T22:26:02.095Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "osdep.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\osdep.cpp",
+              "RelativeDocumentMoniker": "..\\osdep.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\osdep.cpp",
+              "RelativeToolTip": "..\\osdep.cpp",
+              "ViewState": "AQIAAMsAAAAAAAAAAAAIwNkAAAAbAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T22:17:16.491Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "mreg.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mreg.h",
+              "RelativeDocumentMoniker": "..\\mreg.h",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mreg.h",
+              "RelativeToolTip": "..\\mreg.h",
+              "ViewState": "AQIAAEMAAAAAAAAAAAAQwEUAAAANAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T22:20:53.946Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "mreg.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mreg.cpp",
+              "RelativeDocumentMoniker": "..\\mreg.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mreg.cpp",
+              "RelativeToolTip": "..\\mreg.cpp",
+              "ViewState": "AQIAAHEAAAAAAAAAAAAnwIUAAAA/AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T22:18:25.715Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "reg_support.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\reg_support.cpp",
+              "RelativeDocumentMoniker": "..\\reg_support.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\reg_support.cpp",
+              "RelativeToolTip": "..\\reg_support.cpp",
+              "ViewState": "AQIAAHIAAAAAAAAAAAAQwIAAAAANAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T22:13:46.638Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "meta_eiface.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\meta_eiface.cpp",
+              "RelativeDocumentMoniker": "..\\meta_eiface.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\meta_eiface.cpp",
+              "RelativeToolTip": "..\\meta_eiface.cpp",
+              "ViewState": "AQIAADYAAAAAAAAAAADwv08AAAAOAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T22:11:07.314Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "dllapi.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\dllapi.cpp",
+              "RelativeDocumentMoniker": "..\\dllapi.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\dllapi.cpp",
+              "RelativeToolTip": "..\\dllapi.cpp",
+              "ViewState": "AQIAAEcBAAAAAAAAAAAQwFIBAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T21:29:27.53Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "meta_eiface.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\meta_eiface.h",
+              "RelativeDocumentMoniker": "..\\meta_eiface.h",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\meta_eiface.h",
+              "RelativeToolTip": "..\\meta_eiface.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T22:09:06.303Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "mplugin.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mplugin.cpp",
+              "RelativeDocumentMoniker": "..\\mplugin.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mplugin.cpp",
+              "RelativeToolTip": "..\\mplugin.cpp",
+              "ViewState": "AQIAAB4FAAAAAAAAAADwvxYFAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T22:01:02.115Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "mplugin.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mplugin.h",
+              "RelativeDocumentMoniker": "..\\mplugin.h",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\mplugin.h",
+              "RelativeToolTip": "..\\mplugin.h",
+              "ViewState": "AQIAAO0AAAAAAAAAAAAnwAEBAAAwAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T21:53:59.578Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "meta_api.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\meta_api.h",
+              "RelativeDocumentMoniker": "..\\meta_api.h",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\meta_api.h",
+              "RelativeToolTip": "..\\meta_api.h",
+              "ViewState": "AQIAANwAAAAAAAAAAAAnwOsAAAAyAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T21:51:50.613Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "api_info.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\api_info.h",
+              "RelativeDocumentMoniker": "..\\api_info.h",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\api_info.h",
+              "RelativeToolTip": "..\\api_info.h",
+              "ViewState": "AQIAAF4AAAAAAAAAAAAnwHQAAAAlAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T21:51:45.217Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "api_info.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\api_info.cpp",
+              "RelativeDocumentMoniker": "..\\api_info.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\api_info.cpp",
+              "RelativeToolTip": "..\\api_info.cpp",
+              "ViewState": "AQIAAE8AAAAAAAAAAAAnwGYAAAAZAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T21:42:12.922Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "eiface.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\engine\\eiface.h",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\hlsdk\\engine\\eiface.h",
+              "ToolTip": "E:\\nightfire_sdk\\hlsdk\\engine\\eiface.h",
+              "RelativeToolTip": "..\\..\\..\\..\\hlsdk\\engine\\eiface.h",
+              "ViewState": "AQIAAJQBAAAAAAAAAAAnwLEBAAAoAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T21:34:53.106Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "dllapi.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\dllapi.h",
+              "RelativeDocumentMoniker": "..\\dllapi.h",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\dllapi.h",
+              "RelativeToolTip": "..\\dllapi.h",
+              "ViewState": "AQIAAGgAAAAAAAAAAAAIwIQAAAAjAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T21:29:52.758Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "commands_meta.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\commands_meta.h",
+              "RelativeDocumentMoniker": "..\\commands_meta.h",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\commands_meta.h",
+              "RelativeToolTip": "..\\commands_meta.h",
+              "ViewState": "AQIAABcAAAAAAAAAAAAIwFQAAAACAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T21:28:22.378Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

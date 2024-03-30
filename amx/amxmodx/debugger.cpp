@@ -570,17 +570,22 @@ const char *Debugger::_GetFilename()
 {
 	if (m_FileName.length() < 1)
 	{
-		const char *filename = "";
 		CPluginMngr::CPlugin *pl = g_plugins.findPluginFast(m_pAmx);
 		if (pl)
 		{
-			filename = pl->getName();
-		} else {
-			CList<CScript,AMX*>::iterator a = g_loadedscripts.find(m_pAmx);
-			if (a)
-				filename = (*a).getName();
+            m_FileName = pl->getName();
+        }
+        else
+        {
+            for (auto script : g_loadedscripts)
+            {
+                if (script->getAMX() == m_pAmx)
+                {
+                    m_FileName = script->getName();
+                    break;
+                }
+            }
 		}
-		m_FileName = filename;
 	}
 
 	return m_FileName.chars();
@@ -607,10 +612,14 @@ void Debugger::FmtGenericMsg(AMX *amx, int error, char buffer[], size_t maxLengt
 {
 	const char *filename = "";
 	char native[sNAMEMAX+1];
-
-	CList<CScript,AMX*>::iterator a = g_loadedscripts.find(amx);
-	if (a)
-		filename = (*a).getName();
+    for (auto script : g_loadedscripts)
+    {
+        if (script->getAMX() == amx)
+        {
+            filename = script->getName();
+            break;
+        }
+    }
 	size_t len = strlen(filename);
 	for (size_t i=len-1; i<len; i--)
 	{
@@ -720,7 +729,7 @@ int Handler::HandleModule(const char *module, bool isClass)
 	m_pAmx->flags |= AMX_FLAG_PRENIT;
 	amx_Push(m_pAmx, isClass ? 1 : 0);
 	amx_PushString(m_pAmx, &hea_addr, &phys_addr, module, 0, 0);
-	int err = amx_Exec(m_pAmx, &retval, m_iModFunc);
+	int err = amx_ExecPerf(m_pAmx, &retval, m_iModFunc);
 	amx_Release(m_pAmx, hea_addr);
 	m_pAmx->flags &= ~AMX_FLAG_PRENIT;
 
@@ -760,7 +769,7 @@ int Handler::HandleNative(const char *native, int index, int trap)
 	amx_Push(m_pAmx, trap);
 	amx_Push(m_pAmx, index);
 	amx_PushString(m_pAmx, &hea_addr, &phys_addr, native, 0, 0);
-	int err = amx_Exec(m_pAmx, &retval, m_iNatFunc);
+	int err = amx_ExecPerf(m_pAmx, &retval, m_iNatFunc);
 	if (err != AMX_ERR_NONE)
 	{
 		//LogError() took care of something for us.
@@ -833,7 +842,7 @@ int Handler::HandleError(const char *msg)
 	amx_PushString(m_pAmx, &hea_addr, &phys_addr, msg, 0, 0);
 	amx_Push(m_pAmx, pDebugger ? 1 : 0);
 	amx_Push(m_pAmx, error);
-	int err = amx_Exec(m_pAmx, &result, m_iErrFunc);
+	int err = amx_ExecPerf(m_pAmx, &result, m_iErrFunc);
 	if (err != AMX_ERR_NONE)
 	{
 		//handle this manually.

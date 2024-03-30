@@ -50,17 +50,13 @@ LANG_NAME_NATIVE = Cestina
 LANG_NAME = Finnish
 LANG_NAME_NATIVE = Suomi
 
-[ls]
-LANG_NAME = l33t
-LANG_NAME_NATIVE = l33t
-
 [bg]
 LANG_NAME = Bulgarian
 LANG_NAME_NATIVE = Bulgarski
 
 [ro]
 LANG_NAME = Romanian
-LANG_NAME_NATIVE = Romana
+LANG_NAME_NATIVE = Română
 
 [hu]
 LANG_NAME = Hungarian
@@ -77,3 +73,27 @@ LANG_NAME_NATIVE = Slovencina
 [mk]
 LANG_NAME = Macedonian
 LANG_NAME_NATIVE = Makedonski
+
+[hr]
+LANG_NAME = Croatian
+LANG_NAME_NATIVE = Hrvatski
+
+[bs]
+LANG_NAME = Bosnian
+LANG_NAME_NATIVE = Bosanski
+
+[ru]
+LANG_NAME = Russian
+LANG_NAME_NATIVE = Русский
+
+[cn]
+LANG_NAME = Simplified Chinese
+LANG_NAME_NATIVE = 简体中文
+
+[al]
+LANG_NAME = Albanian
+LANG_NAME_NATIVE = Shqipë
+
+[pt]
+LANG_NAME = European Portuguese
+LANG_NAME_NATIVE = Português de Portugal

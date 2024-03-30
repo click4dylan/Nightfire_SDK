@@ -150,6 +150,18 @@ inline void *GET_PRIVATE( edict_t *pent )
 		return pent->pvPrivateData; //dylan changed from pent->pvPrivateData
 	return NULL;
 }
+inline void CVAR_SET_STRING(const char* name, const char* value)
+{
+	ConsoleVariable* pVar = CVAR_GET_POINTER(name);
+	if (pVar)
+		return pVar->setFromString(value);
+}
+inline void CVAR_SET_FLOAT(const char* name, float value)
+{
+	ConsoleVariable* pVar = CVAR_GET_POINTER(name);
+	if (pVar)
+		return pVar->setValueFloat(value);
+}
 
 #define FREE_PRIVATE	(*g_engfuncs.pfnFreeEntPrivateData)
 //#define STRING			(*g_engfuncs.pfnSzFromIndex)

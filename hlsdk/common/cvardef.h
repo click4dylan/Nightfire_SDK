@@ -78,6 +78,7 @@ public:
 class ConsoleFunction : public IConsoleFunction
 {
 public:
+
 	virtual void run(unsigned int numargs, const char** args) = 0;
 	virtual const char* getName() { return name; };
 	virtual const char* getDescription() { return description; };
@@ -85,24 +86,44 @@ public:
 	virtual void setFlags(unsigned int _flags) { flags = _flags; }
 	virtual void Delete() { delete this; };
 	virtual ~ConsoleFunction() {};
-};
 
-#if 0
-class TestFunction : public ConsoleFunction
-{
-public:
-	virtual void run(unsigned int numargs, const char** args)
-	{
-
-	}
-	TestFunction(const char* _name, const char* _description = "", unsigned int _flags = 0)
+	ConsoleFunction(const char* _name, const char* _description, unsigned int _flags)
 	{
 		name = _name;
 		description = _description;
 		flags = _flags;
 	}
 };
+
+#if 0
+class TestFunction : public ConsoleFunction
+{
+public:
+	using ConsoleFunction::ConsoleFunction; // Inherit constructors from base class, C++11 requirement
+
+	void run(unsigned int numargs, const char** args)
+	{
+
+	}
+};
 #endif
+
+//allow allocating dynamic console functions, such as from amx plugins
+class DynamicConsoleFunction : public ConsoleFunction
+{
+public:
+	DynamicConsoleFunction(const char* _name, void (*_custom_run_func)(unsigned int, const char**), const char* _description = "", unsigned int _flags = 0)
+		:ConsoleFunction(_name, _description, _flags), custom_run_func(_custom_run_func)
+	{
+	}
+
+	void run(unsigned int numargs, const char** args)
+	{
+		custom_run_func(numargs, args);
+	}
+
+	void (*custom_run_func)(unsigned int numargs, const char** args);
+};
 
 enum VariableTypes : int 
 {
@@ -116,7 +137,7 @@ class IConsoleVariable
 {
 public:
 
-	int type; //bool, int, float, string
+	VariableTypes type; //bool, int, float, string
 	const char* name;
 	const char* description;
 	const char* value;

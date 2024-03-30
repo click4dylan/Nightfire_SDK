@@ -439,7 +439,7 @@ typedef struct
 	void			(*pfnSpectatorThink)		( edict_t *pEntity );
 
 	// Notify game .dll that engine is going to shut down.  Allows mod authors to set a breakpoint.
-	void(*pfnSys_Error)			(void);//( const char *error_string );
+	void(*pfnSys_Error)			(); //nightfire PC compiler optimized out the argument! //( const char *error_string );
 
 	void			(*pfnPM_Move) ( struct playermove_s *ppmove, qboolean server );
 	void			(*pfnPM_Init) ( struct playermove_s *ppmove );
@@ -466,14 +466,15 @@ typedef struct
 
 	// One of the pfnForceUnmodified files failed the consistency check for the specified player
 	// Return 0 to allow the client to continue, 1 to force immediate disconnection ( with an optional disconnect message of up to 256 characters )
-	int				(*pfnInconsistentFile)( const struct edict_s *player, const char *filename, char *disconnect_message );
+	int				(*pfnInconsistentFile)( const struct edict_s *player, const char *filename, char *disconnect_message, unsigned int buffersize );
 
 	// The game .dll should return 1 if lag compensation should be allowed ( could also just set
 	//  the sv_unlag cvar.
 	// Most games right now should return 0, until client-side weapon prediction code is written
 	//  and tested for them.
 	int				(*pfnAllowLagCompensation)( void );
-	edict_t*        (*pfnGetPlayerSpawnSpot) (int* pPlayer);
+	void			(*pfnSpawnPlayerAfterLevelLoad)(edict_t* player);
+	//edict_t*        (*pfnGetPlayerSpawnSpot) (int* pPlayer);
 	// Notify dll about a player customization.
 	//void            (*pfnPlayerCustomization) ( edict_t *pEntity, customization_t *pCustom );
 } DLL_FUNCTIONS;
@@ -487,14 +488,13 @@ typedef struct _NEW_DLL_FUNCTIONS
 {
 	// Called right before the object's memory is freed. 
 	// Calls its destructor.
-	//int dummies[2];
-	void(*pfnOnFreeEntPrivateData)(edict_t *pEnt);
-	void(*pfnGameShutdown)(void);
-	int				(*pfnShouldCollide)( edict_t *pentTouched, edict_t *pentOther );
+	void (*pfnNullFunc0)();
+	void (*pfnNullFunc1)();
+	int(*pfnShouldCollide)( edict_t *pentTouched, edict_t *pentOther );
 	BOOLEAN(*pfnOnSaveGame) (void);
 	BOOLEAN(*pfnOnLoadGame) (qboolean loading);
 	BOOLEAN(*pfnBot_GetParams) (int blah1, char const** blah2, char const** returnplayername, char const** blah4);
-	void			(*pfnAddbot) (const char *difficulty, const char *botname, const char *team); //actually it's difficulty, name, team
+	void			(*pfnAddbot) (const char *difficulty, const char *botname, const char *team);
 	/*
 	void			(*pfnOnFreeEntPrivateData)(edict_t *pEnt);
 	void			(*pfnGameShutdown)(void);

@@ -1,129 +1,198 @@
-/* AMX Mod X
-*   Admin Help Plugin
-*
-* by the AMX Mod X Development Team
-*  originally developed by tcquest78
-*
-* This file is part of AMX Mod X.
-*
-*
-*  This program is free software; you can redistribute it and/or modify it
-*  under the terms of the GNU General Public License as published by the
-*  Free Software Foundation; either version 2 of the License, or (at
-*  your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful, but
-*  WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-*  General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with this program; if not, write to the Free Software Foundation, 
-*  Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*
-*  In addition, as a special exception, the author gives permission to
-*  link the code of this program with the Half-Life Game Engine ("HL
-*  Engine") and Modified Game Libraries ("MODs") developed by Valve, 
-*  L.L.C ("Valve"). You must obey the GNU General Public License in all
-*  respects for all of the code used other than the HL Engine and MODs
-*  from Valve. If you modify this file, you may extend this exception
-*  to your version of the file, but you are not obligated to do so. If
-*  you do not wish to do so, delete this exception statement from your
-*  version.
-*/
+// vim: set ts=4 sw=4 tw=99 noet:
+//
+// AMX Mod X, based on AMX Mod by Aleksander Naszko ("OLO").
+// Copyright (C) The AMX Mod X Development Team.
+//
+// This software is licensed under the GNU General Public License, version 3 or higher.
+// Additional exceptions apply. For full license details, see LICENSE.txt or visit:
+//     https://alliedmods.net/amxmodx-license
+
+//
+// Admin Help Plugin
+//
 
 #include <amxmodx>
 
-#define DISPLAY_MSG		// Comment to disable message on join
-#define HELPAMOUNT 10	// Number of commands per page
+const MaxMapLength         = 32;
+const MaxDefaultEntries    = 10;
+const MaxCommandLength     = 32;
+const MaxCommandInfoLength = 128;
+const DefaultMsgTime       = 15;
+
+new const HelpCommand[]   = "amx_help";
+new const SearchCommand[] = "amx_searchcmd";
+
+new CvarDisplayClientMessage;
+new CvarDisplayMessageTime;
+new CvarHelpAmount;
+
+new CvarNextmap[MaxMapLength];
+new Float:CvarTimeLimit;
+
+new bool:DisplayClientMessage[MAX_PLAYERS + 1 char];
 
 public plugin_init()
 {
-	register_plugin("Admin Help", AMXX_VERSION_STR, "AMXX Dev Team")
-	register_dictionary("adminhelp.txt")
-	register_concmd("amx_help", "cmdHelp", 0, "<page> [nr of cmds (only for server)] - displays this help")
+	register_plugin("Admin Help", AMXX_VERSION_STR, "AMXX Dev Team");
+	register_dictionary("adminhelp.txt");
+
+	register_concmd(HelpCommand  , "@ConsoleCommand_Help"  , ADMIN_ALL, "HELP_CMD_INFO"  , .info_ml = true);
+	register_concmd(SearchCommand, "@ConsoleCommand_Search", ADMIN_ALL, "SEARCH_CMD_INFO", .info_ml = true);
+
+	bind_pcvar_num(create_cvar("amx_help_display_msg"     , "1" , .has_min = true, .min_val = 0.0, .has_max = true, .max_val = 1.0), CvarDisplayClientMessage);
+	bind_pcvar_num(create_cvar("amx_help_display_msg_time", "15", .has_min = true, .min_val = 0.0), CvarDisplayMessageTime);
+	bind_pcvar_num(create_cvar("amx_help_amount_per_page" , "10", .has_min = true, .min_val = 0.0), CvarHelpAmount);
 }
 
-#if defined DISPLAY_MSG
+public OnConfigsExecuted()
+{
+	new const pointer = get_cvar_pointer("amx_nextmap");
+
+	if (pointer)
+	{
+		bind_pcvar_string(pointer, CvarNextmap, charsmax(CvarNextmap));
+	}
+
+	bind_pcvar_float(get_cvar_pointer("mp_timelimit"), CvarTimeLimit);
+}
+
 public client_putinserver(id)
 {
-	if (is_user_bot(id))
-		return
-	
-	set_task(15.0, "dispInfo", id)
+	if (CvarDisplayClientMessage > 0 && !is_user_bot(id))
+	{
+		DisplayClientMessage{id} = true;
+
+		new Float:messageTime = float(CvarDisplayMessageTime <= 0 ? DefaultMsgTime : CvarDisplayMessageTime);
+		set_task(messageTime, "@Task_DisplayMessage", id);
+	}
 }
 
-public client_disconnect(id)
+public client_disconnected(id)
 {
-	remove_task(id)
+	if (DisplayClientMessage{id})
+	{
+		DisplayClientMessage{id} = false;
+		remove_task(id);
+	}
 }
-#endif
 
-public cmdHelp(id, level, cid)
+@ConsoleCommand_Search(id, level, cid)
 {
-	new arg1[8], flags = get_user_flags(id)
-	new start = read_argv(1, arg1, 7) ? str_to_num(arg1) : 1
-	new lHelpAmount = HELPAMOUNT
-	
+	new entry[MaxCommandLength];
+	read_argv(1, entry, charsmax(entry));
+
+	return ProcessHelp(id, .start_argindex = 2, .do_search = true, .main_command = SearchCommand, .search = entry);
+}
+
+@ConsoleCommand_Help(id, level, cid)
+{
+	return ProcessHelp(id, .start_argindex = 1, .do_search = false, .main_command = HelpCommand);
+}
+
+ProcessHelp(id, start_argindex, bool:do_search, const main_command[], const search[] = "")
+{
+	new user_flags = get_user_flags(id);
+
 	// HACK: ADMIN_ADMIN is never set as a user's actual flags, so those types of commands never show
-	if (flags > 0 && !(flags & ADMIN_USER))
+	if (user_flags > 0 && !(user_flags & ADMIN_USER))
 	{
-		flags |= ADMIN_ADMIN;
+		user_flags |= ADMIN_ADMIN;
 	}
-	
-	if (id == 0 && read_argc() == 3)
-		lHelpAmount = read_argv(2, arg1, 7) ? str_to_num(arg1) : HELPAMOUNT
 
-	if (--start < 0)
-		start = 0
+	new clcmdsnum = get_concmdsnum(user_flags, id);
 
-	new clcmdsnum = get_concmdsnum(flags, id)
-
-	if (start >= clcmdsnum)
-		start = clcmdsnum - 1
-
-	console_print(id, "^n----- %L -----", id, "HELP_COMS")
-	
-	new info[128], cmd[32], eflags
-	new end = start + lHelpAmount // HELPAMOUNT
-
-	if (end > clcmdsnum)
-		end = clcmdsnum
-
-	for (new i = start; i < end; i++)
+	if (CvarHelpAmount <= 0)
 	{
-		get_concmd(i, cmd, 31, eflags, info, 127, flags, id)
-		console_print(id, "%3d: %s %s", i + 1, cmd, info)
+		CvarHelpAmount = MaxDefaultEntries;
 	}
-	
-	console_print(id, "----- %L -----", id, "HELP_ENTRIES", start + 1, end, clcmdsnum)
+
+	new start  = clamp(read_argv_int(start_argindex), .min = 1, .max = clcmdsnum) - 1; // Zero-based list;
+	new amount = !id ? read_argv_int(start_argindex + 1) : CvarHelpAmount;
+	new end    = min(start + (amount > 0 ? amount : CvarHelpAmount), clcmdsnum);
+
+	console_print(id, "^n----- %l -----", "HELP_COMS");
+
+	new info[MaxCommandInfoLength];
+	new command[MaxCommandLength];
+	new command_flags;
+	new bool:is_info_ml;
+	new entries_found;
+	new total_entries;
+	new index;
+
+	if (do_search)
+	{
+		for (index = 0; index < clcmdsnum; ++index)
+		{
+			get_concmd(index, command, charsmax(command), command_flags, info, charsmax(info), user_flags, id, is_info_ml);
+
+			if (containi(command, search) != -1 && ++entries_found > start && (total_entries = entries_found) <= end)
+			{
+				if (is_info_ml)
+				{
+					LookupLangKey(info, charsmax(info), info, id);
+				}
+
+				console_print(id, "%3d: %s %s", entries_found, command, info);
+			}
+		}
+
+		if (!entries_found || entries_found > total_entries)
+		{
+			console_print(id, "%l", "NO_MATCHING_RESULTS");
+			return PLUGIN_HANDLED;
+		}
+
+		index = entries_found;
+		clcmdsnum = total_entries;
+		end = min(end, clcmdsnum);
+	}
+	else
+	{
+		for (index = start; index < end; ++index)
+		{
+			get_concmd(index, command, charsmax(command), command_flags, info, charsmax(info), user_flags, id, is_info_ml);
+
+			if (is_info_ml)
+			{
+				LookupLangKey(info, charsmax(info), info, id);
+			}
+
+			console_print(id, "%3d: %s %s", index + 1, command, info);
+		}
+	}
+
+	console_print(id, "----- %l -----", "HELP_ENTRIES", start + 1, end, clcmdsnum);
+
+	formatex(command, charsmax(command), "%s%c%s", main_command, do_search ? " " : "", search);
 
 	if (end < clcmdsnum)
-		console_print(id, "----- %L -----", id, "HELP_USE_MORE", end + 1)
-	else
-		console_print(id, "----- %L -----", id, "HELP_USE_BEGIN")
+	{
+		console_print(id, "----- %l -----", "HELP_USE_MORE", command, end + 1);
+	}
+	else if (start || index != clcmdsnum)
+	{
+		console_print(id, "----- %l -----", "HELP_USE_BEGIN", command);
+	}
 
-	return PLUGIN_HANDLED
+	return PLUGIN_HANDLED;
 }
 
-#if defined DISPLAY_MSG
-public dispInfo(id)
+@Task_DisplayMessage(id)
 {
-	client_print(id, print_chat, "%L", id, "TYPE_HELP")
-	
-	new nextmap[32]
-	get_cvar_string("amx_nextmap", nextmap, 31)
-	
-	if (get_cvar_float("mp_timelimit"))
+	client_print(id, print_chat, "%l", "TYPE_HELP", HelpCommand, SearchCommand);
+
+	if (CvarTimeLimit > 0.0)
 	{
-		new timeleft = get_timeleft()
-		
+		new timeleft = get_timeleft();
+
 		if (timeleft > 0)
 		{
-			client_print(id, print_chat, "%L", id, "TIME_INFO_1", timeleft / 60, timeleft % 60, nextmap)
-		} else {
-			client_print(id, print_chat, "%L", id, "TIME_INFO_2", nextmap)
+			client_print(id, print_chat, "%l", "TIME_INFO_1", timeleft / 60, timeleft % 60, CvarNextmap);
+		}
+		else if (CvarNextmap[0] != EOS)
+		{
+			client_print(id, print_chat, "%l", "TIME_INFO_2", CvarNextmap);
 		}
 	}
 }
-#endif

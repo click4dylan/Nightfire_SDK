@@ -10,6 +10,7 @@
 #include "amxmodx.h"
 #include "CMenu.h"
 #include "newmenus.h"
+#include "format.h"
 
 ke::Vector<Menu *> g_NewMenus;
 CStack<int> g_MenuFreeStack;
@@ -90,9 +91,9 @@ bool CloseNewMenus(CPlayer *pPlayer)
 	return true;
 }
 
-Menu::Menu(const char *title, AMX *amx, int fid) : m_Title(title), m_ItemColor("\\r"), 
-m_NeverExit(false), m_AutoColors(g_coloredmenus), thisId(0), func(fid), 
-isDestroying(false), items_per_page(7)
+Menu::Menu(const char *title, AMX *amx, int fid, bool use_ml) : m_Title(title), m_ItemColor("\\r"), 
+m_NeverExit(false), m_ForceExit(false), m_AutoColors(g_coloredmenus), thisId(0), func(fid), 
+isDestroying(false), pageCallback(-1), showPageNumber(true), useMultilingual(use_ml), amx(amx), items_per_page(7)
 {
 	CPluginMngr::CPlugin *pPlugin = g_plugins.findPluginFast(amx);
 	menuId = g_menucmds.registerMenuId(title, amx);
@@ -125,6 +126,7 @@ Menu::~Menu()
 	}
 
 	unregisterSPForward(this->func);
+	unregisterSPForward(this->pageCallback);
 	
 	m_Items.clear();
 }
@@ -315,11 +317,6 @@ bool Menu::Display(int player, page_t page)
 
 	CPlayer *pPlayer = GET_PLAYER_POINTER_I(player);
 
-	pPlayer->keys = 0;
-	pPlayer->menu = 0;
-
-	UTIL_FakeClientCommand(pPlayer->pEdict, "menuselect", "10", 0);
-
 	pPlayer->keys = keys;
 	pPlayer->menu = menuId;
 	pPlayer->newmenu = thisId;
@@ -360,18 +357,32 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 
 	m_Text = nullptr;
 
+
+	auto title = m_Title.chars();
+
+	if (this->useMultilingual)
+	{
+		const auto language = playerlang(player);
+		const auto definition = translate(this->amx, language, title);
+
+		if (definition)
+		{
+			title = definition;
+		}
+	}
+
 	char buffer[255];
-	if (items_per_page && (pages != 1))
+	if (showPageNumber && items_per_page && (pages != 1))
 	{
 		if (m_AutoColors)
-			ke::SafeSprintf(buffer, sizeof(buffer), "\\y%s %d/%d\n\\w\n", m_Title.chars(), page + 1, pages);
+			ke::SafeSprintf(buffer, sizeof(buffer), "\\y%s %d/%d\n\\w\n", title, page + 1, pages);
 		else
-			ke::SafeSprintf(buffer, sizeof(buffer), "%s %d/%d\n\n", m_Title.chars(), page + 1, pages);
+			ke::SafeSprintf(buffer, sizeof(buffer), "%s %d/%d\n\n", title, page + 1, pages);
 	} else {
 		if (m_AutoColors)
-			ke::SafeSprintf(buffer, sizeof(buffer), "\\y%s\n\\w\n", m_Title.chars());
+			ke::SafeSprintf(buffer, sizeof(buffer), "\\y%s\n\\w\n", title);
 		else
-			ke::SafeSprintf(buffer, sizeof(buffer), "%s\n\n", m_Title.chars());
+			ke::SafeSprintf(buffer, sizeof(buffer), "%s\n\n", title);
 	}
 	
 	m_Text = m_Text + buffer;
@@ -466,24 +477,37 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 			option_display = 0;
 		}
 
+		auto itemName = pItem->name.chars();
+
+		if (this->useMultilingual)
+		{
+			const auto language = playerlang(player);
+			const auto definition = translate(this->amx, language, itemName);
+
+			if (definition)
+			{
+				itemName = definition;
+			}
+		}
+
 		if (pItem->isBlank)
 		{
-			ke::SafeSprintf(buffer, sizeof(buffer), "%s\n", pItem->name.chars());
+			ke::SafeSprintf(buffer, sizeof(buffer), "%s\n", itemName);
 		}
 		else if (enabled)
 		{
 			if (m_AutoColors) 
 			{
-				ke::SafeSprintf(buffer, sizeof(buffer), "%s%d.\\w %s\n", m_ItemColor.chars(),option_display, pItem->name.chars());
+				ke::SafeSprintf(buffer, sizeof(buffer), "%s%d.\\w %s\n", m_ItemColor.chars(),option_display, itemName);
 			} else {
-				ke::SafeSprintf(buffer, sizeof(buffer), "%d. %s\n", option_display, pItem->name.chars());
+				ke::SafeSprintf(buffer, sizeof(buffer), "%d. %s\n", option_display, itemName);
 			}
 		} else {
 			if (m_AutoColors)
 			{
-				ke::SafeSprintf(buffer, sizeof(buffer), "\\d%d. %s\n\\w", option_display, pItem->name.chars());
+				ke::SafeSprintf(buffer, sizeof(buffer), "\\d%d. %s\n\\w", option_display, itemName);
 			} else {
-				ke::SafeSprintf(buffer, sizeof(buffer), "#. %s\n", pItem->name.chars());
+				ke::SafeSprintf(buffer, sizeof(buffer), "#. %s\n", itemName);
 			}
 		}
 		slots++;
@@ -520,6 +544,20 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 		/* Don't bother if there is only one page */
 		if (pages > 1)
 		{
+
+			auto tempItemName = m_OptNames[abs(MENU_BACK)].chars();
+
+			if (this->useMultilingual)
+			{
+				const auto language = playerlang(player);
+				const auto definition = translate(this->amx, language, tempItemName);
+
+				if (definition)
+				{
+					tempItemName = definition;
+				}
+			}
+
 			if (flags & Display_Back)
 			{
 				keys |= (1<<option++);
@@ -530,13 +568,13 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 						"%s%d. \\w%s\n", 
 						m_ItemColor.chars(), 
 						option == 10 ? 0 : option, 
-						m_OptNames[abs(MENU_BACK)].chars());
+						tempItemName);
 				} else {
 					ke::SafeSprintf(buffer,
 						sizeof(buffer), 
 						"%d. %s\n", 
 						option == 10 ? 0 : option, 
-						m_OptNames[abs(MENU_BACK)].chars());
+						tempItemName);
 				}
 			} else {
 				option++;
@@ -546,13 +584,26 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 						sizeof(buffer),
 						"\\d%d. %s\n\\w",
 						option == 10 ? 0 : option,
-						m_OptNames[abs(MENU_BACK)].chars());
+						tempItemName);
 				} else {
-					ke::SafeSprintf(buffer, sizeof(buffer), "#. %s\n", m_OptNames[abs(MENU_BACK)].chars());
+					ke::SafeSprintf(buffer, sizeof(buffer), "#. %s\n", tempItemName);
 				}
 			}
 			m_Text = m_Text + buffer;
 	
+			tempItemName = m_OptNames[abs(MENU_MORE)].chars();
+
+			if (this->useMultilingual)
+			{
+				const auto language = playerlang(player);
+				const auto definition = translate(this->amx, language, tempItemName);
+
+				if (definition)
+				{
+					tempItemName = definition;
+				}
+			}
+
 			if (flags & Display_Next)
 			{
 				keys |= (1<<option++);
@@ -563,13 +614,13 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 						"%s%d. \\w%s\n", 
 						m_ItemColor.chars(), 
 						option == 10 ? 0 : option, 
-						m_OptNames[abs(MENU_MORE)].chars());
+						tempItemName);
 				} else {
 					ke::SafeSprintf(buffer,
 						sizeof(buffer), 
 						"%d. %s\n", 
 						option == 10 ? 0 : option, 
-						m_OptNames[abs(MENU_MORE)].chars());
+						tempItemName);
 				}
 			} else {
 				option++;
@@ -579,9 +630,9 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 						sizeof(buffer),
 						"\\d%d. %s\n\\w",
 						option == 10 ? 0 : option,
-						m_OptNames[abs(MENU_MORE)].chars());
+						tempItemName);
 				} else {
-					ke::SafeSprintf(buffer, sizeof(buffer), "#. %s\n", m_OptNames[abs(MENU_MORE)].chars());
+					ke::SafeSprintf(buffer, sizeof(buffer), "#. %s\n", tempItemName);
 				}
 			}
 			m_Text = m_Text + buffer;
@@ -593,6 +644,19 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 	
 	if ((items_per_page && !m_NeverExit) || (m_ForceExit && numItems < 10))
 	{
+		auto exitName = m_OptNames[abs(MENU_EXIT)].chars();
+
+		if (this->useMultilingual)
+		{
+			const auto language = playerlang(player);
+			const auto definition = translate(this->amx, language, exitName);
+
+			if (definition)
+			{
+				exitName = definition;
+			}
+		}
+
 		/* Visual pad has not been added yet */
 		if (!items_per_page)
 			m_Text = m_Text + "\n";
@@ -605,13 +669,13 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 				"%s%d. \\w%s\n", 
 				m_ItemColor.chars(), 
 				option == 10 ? 0 : option, 
-				m_OptNames[abs(MENU_EXIT)].chars());
+				exitName);
 		} else {
 			ke::SafeSprintf(buffer,
 				sizeof(buffer), 
 				"%d. %s\n", 
 				option == 10 ? 0 : option, 
-				m_OptNames[abs(MENU_EXIT)].chars());
+				exitName);
 		}
 		m_Text = m_Text + buffer;
 	}
@@ -624,34 +688,40 @@ const char *Menu::GetTextString(int player, page_t page, int &keys)
 	LogError(amx, AMX_ERR_NATIVE, "Invalid menu id %d(%d)", p, g_NewMenus.length()); \
 	return 0; }
 
-//Makes a new menu handle (-1 for failure)
-//native csdm_makemenu(title[]);
+// native menu_create(const title[], const handler[], bool:ml = false);
 static cell AMX_NATIVE_CALL menu_create(AMX *amx, cell *params)
 {
-	int len;
-	char *title = get_amxstring(amx, params[1], 0, len);
-	validate_menu_text(title);
-	char *handler = get_amxstring(amx, params[2], 1, len);
+	enum args { arg_count, arg_title, arg_handler, arg_ml };
 
-	int func = registerSPForwardByName(amx, handler, FP_CELL, FP_CELL, FP_CELL, FP_DONE);
+	int length;
+	const auto title    = get_amxstring(amx, params[arg_title], 0, length);
+	const auto handler  = get_amxstring(amx, params[arg_handler], 1, length);
+	const auto callback = registerSPForwardByName(amx, handler, FP_CELL, FP_CELL, FP_CELL, FP_DONE);
 	
-	if (func == -1)
+	if (callback == -1)
 	{
-		LogError(amx, AMX_ERR_NOTFOUND, "Invalid function \"%s\"", handler);
+		LogError(amx, AMX_ERR_NOTFOUND, R"(Invalid function "%s")", handler);
 		return 0;
 	}
 
-	Menu *pMenu = new Menu(title, amx, func);
+	validate_menu_text(title);
+
+	auto pMenu = new Menu(title, amx, callback, params[arg_ml] != 0);
 
 	if (g_MenuFreeStack.empty())
 	{
 		g_NewMenus.append(pMenu);
-		pMenu->thisId = (int)g_NewMenus.length() - 1;
-	} else {
-		int pos = g_MenuFreeStack.front();
+
+		pMenu->thisId = static_cast<int>(g_NewMenus.length()) - 1;
+	}
+	else
+	{
+		const auto position = g_MenuFreeStack.front();
+
 		g_MenuFreeStack.pop();
-		g_NewMenus[pos] = pMenu;
-		pMenu->thisId = pos;
+		g_NewMenus[position] = pMenu;
+
+		pMenu->thisId = position;
 	}
 
 	return pMenu->thisId;
@@ -808,16 +878,50 @@ static cell AMX_NATIVE_CALL menu_items(AMX *amx, cell *params)
 //page indices start at 0!
 static cell AMX_NATIVE_CALL menu_display(AMX *amx, cell *params)
 {
-	GETMENU(params[2]);
+	auto handle = params[2];
+	GETMENU(handle);
 	
 	int player = params[1];
 	int page = params[3];
+	
+	if (player < 1 || player > gpGlobals->maxClients)
+	{
+		LogError(amx, AMX_ERR_NATIVE, "Invalid player id %d.", player);
+		return 0;
+	}
+	
 	CPlayer* pPlayer = GET_PLAYER_POINTER_I(player);
 	
+	if (!pPlayer->ingame)
+	{
+		LogError(amx, AMX_ERR_NATIVE, "Player %d is not in game.", player);
+		return 0;
+	}
+
 	if (!CloseNewMenus(pPlayer))
 	{
 		LogError(amx, AMX_ERR_NATIVE, "Plugin called menu_display when item=MENU_EXIT");
 		return 0;
+	}
+
+	if (!g_NewMenus[handle])
+	{
+		LogError(amx, AMX_ERR_NATIVE, "Invalid menu id %d (was previously destroyed).", handle);
+		return 0;
+	}
+
+	if (g_bmod_cstrike)
+	{
+		enum JoinState { Joined = 0 };
+		enum MenuState { Menu_OFF = 0, Menu_ChooseTeam = 1, Menu_ChooseAppearance = 3 };
+
+		GET_OFFSET("CBasePlayer", m_iJoiningState);
+		GET_OFFSET("CBasePlayer", m_iMenu);
+
+		if (get_pdata<int>(pPlayer->pEdict, m_iJoiningState) == Joined || (get_pdata<int>(pPlayer->pEdict, m_iMenu) != Menu_ChooseTeam && get_pdata<int>(pPlayer->pEdict, m_iMenu) != Menu_ChooseAppearance))
+		{
+			set_pdata<int>(pPlayer->pEdict, m_iMenu, Menu_OFF);
+		}
 	}
 
 	int time = -1;
@@ -825,7 +929,7 @@ static cell AMX_NATIVE_CALL menu_display(AMX *amx, cell *params)
 		time = params[4];
 
 	if (time < 0)
-		pPlayer->menuexpire = INFINITE;
+		pPlayer->menuexpire = static_cast<float>(INFINITE);
 	else
 		pPlayer->menuexpire = gpGlobals->time + static_cast<float>(time);
 
@@ -941,6 +1045,20 @@ static cell AMX_NATIVE_CALL menu_item_setcall(AMX *amx, cell *params)
 	return 1;
 }
 
+static cell AMX_NATIVE_CALL menu_item_setaccess(AMX *amx, cell *params)
+{
+	GETMENU(params[1]);
+
+	menuitem *pItem = pMenu->GetMenuItem(static_cast<item_t>(params[2]));
+
+	if (!pItem)
+		return 0;
+
+	pItem->access = params[3];
+
+	return 1;
+}
+
 static cell AMX_NATIVE_CALL menu_setprop(AMX *amx, cell *params)
 {
 	GETMENU(params[1]);
@@ -954,6 +1072,33 @@ static cell AMX_NATIVE_CALL menu_setprop(AMX *amx, cell *params)
 
 	switch (params[2])
 	{
+	case MPROP_PAGE_CALLBACK:
+		{
+			const char *str = get_amxstring_null(amx, params[3], 0, len);
+			if (str == nullptr)
+			{
+				unregisterSPForward(pMenu->pageCallback);
+				pMenu->pageCallback = -1;
+				break;
+			}
+
+			int callback = registerSPForwardByName(amx, str, FP_CELL, FP_CELL, FP_CELL, FP_DONE);
+			if (callback < 0)
+			{
+				LogError(amx, AMX_ERR_NATIVE, "Function %s not present", str);
+				return 0;
+			}
+
+			unregisterSPForward(pMenu->pageCallback);
+			pMenu->pageCallback = callback;
+
+			break;
+		}
+	case MPROP_SHOWPAGE:
+		{
+			pMenu->showPageNumber = *get_amxaddr(amx, params[3]) != 0;
+			break;
+		}
 	case MPROP_SET_NUMBER_COLOR:
 		{
 			char *str = get_amxstring(amx, params[3], 0, len);
@@ -1145,6 +1290,7 @@ AMX_NATIVE_INFO g_NewMenuNatives[] =
 	{"menu_item_getinfo",		menu_item_getinfo},
 	{"menu_makecallback",		menu_makecallback},
 	{"menu_item_setcall",		menu_item_setcall},
+	{"menu_item_setaccess",		menu_item_setaccess},
 	{"menu_item_setcmd",		menu_item_setcmd},
 	{"menu_item_setname",		menu_item_setname},
 	{"menu_destroy",			menu_destroy},

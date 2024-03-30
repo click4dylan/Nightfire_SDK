@@ -18,11 +18,10 @@
  *  2.  Altered source versions must be plainly marked as such, and must not be
  *      misrepresented as being the original software.
  *  3.  This notice may not be removed or altered from any source distribution.
- *
- *  Version: $Id: sc5.c 1724 2005-07-24 20:00:55Z dvander $
  */
+
 #include <assert.h>
-#if defined	__WIN32__ || defined _WIN32 || defined __MSDOS__
+#if defined __WIN32__ || defined _WIN32 || defined __MSDOS__
   #include <io.h>
 #endif
 #if defined LINUX || defined __APPLE__ || defined __GNUC__
@@ -42,7 +41,7 @@
   #pragma warning(disable:4125)  /* decimal digit terminates octal escape sequence */
 #endif
 
-#include "sc5.scp"
+#include "sc5-in.scp"
 
 #if defined _MSC_VER
   #pragma warning(pop)
@@ -52,7 +51,9 @@
 static unsigned char warndisable[(NUM_WARNINGS + 7) / 8]; /* 8 flags in a char */
 
 static int errflag;
+static int errfile;
 static int errstart;    /* line number at which the instruction started */
+static int errline;     /* forced line number for the error message */
 
 /*  error
  *
@@ -71,9 +72,11 @@ SC_FUNC int error(int number,...)
 static char *prefix[3]={ "error", "fatal error", "warning" };
 static int lastline,errorcount;
 static short lastfile;
-  char *msg,*pre;
+  char *msg,*pre,*filename;
   va_list argptr;
-  char string[128];
+  int is_warning;
+
+  is_warning = (number >= 200 && !sc_warnings_are_errors);
 
   /* errflag is reset on each semicolon.
    * In a two-pass compiler, an error should not be reported twice. Therefore
@@ -102,17 +105,31 @@ static short lastfile;
     errnum++;           /* a fatal error also counts as an error */
   } else {
     msg=warnmsg[number-200];
-    pre=prefix[2];
-    warnnum++;
+    if (sc_warnings_are_errors) {
+      pre=prefix[0];
+      errnum++;
+    } else {
+      pre=prefix[2];
+      warnnum++;
+    }
   } /* if */
 
-  strexpand(string,(unsigned char *)msg,sizeof string,SCPACK_TABLE);
+ if (errline>0)
+    errstart=errline;           /* forced error position, set single line destination */
+  else
+    errline=fline;              /* normal error, errstart may (or may not) have been marked, endpoint is current line */
+  if (errstart>errline)
+    errstart=errline;           /* special case: error found at end of included file */
+  if (errfile>=0)
+    filename=get_inputfile(errfile);/* forced filename */
+  else
+    filename=inpfname;          /* current file */
+  assert(filename!=NULL);
 
-  assert(errstart<=fline);
   va_start(argptr,number);
   if (strlen(errfname)==0) {
-    int start= (errstart==fline) ? -1 : errstart;
-    if (pc_error(number,string,inpfname,start,fline,argptr)) {
+    int start= (errstart==errline) ? -1 : errstart;
+    if (pc_error((int)number,msg,filename,start,errline,argptr)) {
       if (outf!=NULL) {
         pc_closeasm(outf,TRUE);
         outf=NULL;
@@ -122,11 +139,11 @@ static short lastfile;
   } else {
     FILE *fp=fopen(errfname,"a");
     if (fp!=NULL) {
-      if (errstart>=0 && errstart!=fline)
-        fprintf(fp,"%s(%d -- %d) : %s %03d: ",inpfname,errstart,fline,pre,number);
+      if (errstart>=0 && errstart!=errline)
+        fprintf(fp,"%s(%d -- %d) : %s %03d: ",filename,errstart,errline,pre,number);
       else
-        fprintf(fp,"%s(%d) : %s %03d: ",inpfname,fline,pre,number);
-      vfprintf(fp,string,argptr);
+        fprintf(fp,"%s(%d) : %s %03d: ",filename,errline,pre,number);
+      vfprintf(fp,msg,argptr);
       fclose(fp);
     } /* if */
   } /* if */
@@ -145,12 +162,14 @@ static short lastfile;
     longjmp(errbuf,2);          /* fatal error, quit */
   } /* if */
 
+  errline=-1;
+  errfile=-1;
   /* check whether we are seeing many errors on the same line */
   if ((errstart<0 && lastline!=fline) || lastline<errstart || lastline>fline || fcurrent!=lastfile)
     errorcount=0;
   lastline=fline;
   lastfile=fcurrent;
-  if (number<200)
+  if (!is_warning)
     errorcount++;
   if (errorcount>=3)
     error(107);         /* too many error/warning messages on one line */
@@ -158,7 +177,7 @@ static short lastfile;
   return 0;
 }
 
-SC_FUNC void errorset(int code)
+SC_FUNC void errorset(int code,int line)
 {
   switch (code) {
   case sRESET:
@@ -172,6 +191,15 @@ SC_FUNC void errorset(int code)
     break;
   case sEXPRRELEASE:
     errstart=-1;        /* forget start line number */
+    errline=-1;
+    errfile=-1;
+    break;
+  case sSETLINE:
+    errstart=-1;        /* force error line number, forget start line */
+    errline=line;
+    break;
+  case sSETFILE:
+    errfile=line;
     break;
   } /* switch */
 }

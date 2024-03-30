@@ -1,50 +1,29 @@
-/* AMX Mod X
-*   Stats Logging Plugin
-*
-* by the AMX Mod X Development Team
-*  originally developed by JustinHoMi
-*
-* This file is part of AMX Mod X.
-*
-*
-*  This program is free software; you can redistribute it and/or modify it
-*  under the terms of the GNU General Public License as published by the
-*  Free Software Foundation; either version 2 of the License, or (at
-*  your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful, but
-*  WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-*  General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with this program; if not, write to the Free Software Foundation, 
-*  Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*
-*  In addition, as a special exception, the author gives permission to
-*  link the code of this program with the Half-Life Game Engine ("HL
-*  Engine") and Modified Game Libraries ("MODs") developed by Valve, 
-*  L.L.C ("Valve"). You must obey the GNU General Public License in all
-*  respects for all of the code used other than the HL Engine and MODs
-*  from Valve. If you modify this file, you may extend this exception
-*  to your version of the file, but you are not obligated to do so. If
-*  you do not wish to do so, delete this exception statement from your
-*  version.
-*/
+// vim: set ts=4 sw=4 tw=99 noet:
+//
+// AMX Mod X, based on AMX Mod by Aleksander Naszko ("OLO").
+// Copyright (C) The AMX Mod X Development Team.
+//
+// This software is licensed under the GNU General Public License, version 3 or higher.
+// Additional exceptions apply. For full license details, see LICENSE.txt or visit:
+//     https://alliedmods.net/amxmodx-license
+
+//
+// Stats Logging Plugin
+//
 
 #include <amxmodx>
 #include <csx>
 
-new g_pingSum[33]
-new g_pingCount[33]
-new g_inGame[33]
+new g_pingSum[MAX_PLAYERS + 1]
+new g_pingCount[MAX_PLAYERS + 1]
+new g_inGame[MAX_PLAYERS + 1]
 
 public plugin_init()
 {
 	register_plugin("CS Stats Logging", AMXX_VERSION_STR, "AMXX Dev Team")
 }
 
-public client_disconnect(id)
+public client_disconnected(id)
 {
 	if (!g_inGame[id])
 		return
@@ -58,24 +37,24 @@ public client_disconnect(id)
 
 	remove_task(id)
 	
-	new szTeam[16], szName[32], szAuthid[32], iStats[8], iHits[8], szWeapon[24]
+	new szTeam[16], szName[MAX_NAME_LENGTH], szAuthid[32], iStats[STATSX_MAX_STATS], iHits[MAX_BODYHITS], szWeapon[24]
 	new iUserid = get_user_userid(id)
 	new _max = xmod_get_maxweapons()
 	
-	get_user_team(id, szTeam, 15)
-	get_user_name(id, szName, 31)
-	get_user_authid(id, szAuthid, 31)
+	get_user_team(id, szTeam, charsmax(szTeam))
+	get_user_name(id, szName, charsmax(szName))
+	get_user_authid(id, szAuthid, charsmax(szAuthid))
 
 	for (new i = 1 ; i < _max ; ++i)
 	{
 		if (get_user_wstats(id, i, iStats, iHits))
 		{
-			xmod_get_wpnname(i, szWeapon, 23)
+			xmod_get_wpnname(i, szWeapon, charsmax(szWeapon))
 			
 			log_message("^"%s<%d><%s><%s>^" triggered ^"weaponstats^" (weapon ^"%s^") (shots ^"%d^") (hits ^"%d^") (kills ^"%d^") (headshots ^"%d^") (tks ^"%d^") (damage ^"%d^") (deaths ^"%d^")", 
-						szName, iUserid, szAuthid, szTeam, szWeapon, iStats[4], iStats[5], iStats[0], iStats[2], iStats[3], iStats[6], iStats[1])
+						szName, iUserid, szAuthid, szTeam, szWeapon, iStats[STATSX_SHOTS], iStats[STATSX_HITS], iStats[STATSX_KILLS], iStats[STATSX_HEADSHOTS], iStats[STATSX_TEAMKILLS], iStats[STATSX_DAMAGE], iStats[STATSX_DEATHS])
 			log_message("^"%s<%d><%s><%s>^" triggered ^"weaponstats2^" (weapon ^"%s^") (head ^"%d^") (chest ^"%d^") (stomach ^"%d^") (leftarm ^"%d^") (rightarm ^"%d^") (leftleg ^"%d^") (rightleg ^"%d^")", 
-						szName, iUserid, szAuthid, szTeam, szWeapon, iHits[1], iHits[2], iHits[3], iHits[4], iHits[5], iHits[6], iHits[7])
+						szName, iUserid, szAuthid, szTeam, szWeapon, iHits[HIT_HEAD], iHits[HIT_CHEST], iHits[HIT_STOMACH], iHits[HIT_LEFTARM], iHits[HIT_RIGHTARM], iHits[HIT_LEFTLEG], iHits[HIT_RIGHTLEG])
 		}
 	}
 	

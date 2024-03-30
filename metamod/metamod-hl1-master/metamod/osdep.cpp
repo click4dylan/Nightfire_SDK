@@ -215,13 +215,13 @@ mBOOL IS_VALID_PTR(void *memptr) {
 // in plugin commands and produced confusing output ("plugin has been
 // unloaded", when really it segfaultd), and (b) wasn't necessary since
 // IS_VALID_PTR() should cover the situation.
-mBOOL os_safe_call(REG_CMD_FN pfn, unsigned int numargs, const char** args) {
+mBOOL os_safe_call(REG_CMD_FN pfn, void* ecx, unsigned int numargs, const char** args) {
 	// try and see if this is a valid memory location
 	if(!IS_VALID_PTR((void *) pfn))
 		// meta_errno should be already set in is_valid_ptr()
 		return(mFALSE);
 
-	pfn(numargs, args);
+	pfn(ecx, numargs, args);
 	return(mTRUE);
 }
 

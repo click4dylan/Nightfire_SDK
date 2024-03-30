@@ -1,0 +1,33 @@
+# vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
+import os.path
+
+binary = AMXX.MetaModule(builder, 'cstrike')
+
+binary.compiler.defines += [
+  'HAVE_STDINT_H',
+]
+
+binary.sources = [
+  '../../../public/sdk/amxxmodule.cpp',
+  'CstrikeMain.cpp',
+  'CstrikePlayer.cpp',
+  'CstrikeNatives.cpp',
+  'CstrikeHacks.cpp',
+  'CstrikeUtils.cpp',
+  'CstrikeUserMessages.cpp',
+  'CstrikeItemsInfos.cpp',
+  '../../../public/memtools/MemoryUtils.cpp',
+  '../../../public/memtools/CDetour/detours.cpp',
+  '../../../public/memtools/CDetour/asm/asm.c',
+  '../../../public/resdk/mod_rehlds_api.cpp',
+  '../../../public/resdk/mod_regamedll_api.cpp',
+]
+
+if builder.target_platform == 'windows':
+  binary.sources += ['version.rc']
+  binary.compiler.linkflags += [
+    '/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1',
+    '/SECTION:.data,RW',
+  ]
+
+AMXX.modules += [builder.Add(binary)]

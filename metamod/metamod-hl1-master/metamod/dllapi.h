@@ -90,7 +90,7 @@ extern void mm_StartFrame( void );
 extern void mm_ParmsNewLevel( void );
 extern void mm_ParmsChangeLevel( void );
 extern const char *mm_GetGameDescription( void );
-extern edict_t* mm_GetPlayerSpawnSpot(int* pPlayer);
+//extern edict_t* mm_GetPlayerSpawnSpot(int* pPlayer);
 //extern void mm_PlayerCustomization( edict_t *pEntity, customization_t *pCust );
 extern void mm_SpectatorConnect ( edict_t *pEntity );
 extern void mm_SpectatorDisconnect ( edict_t *pEntity );
@@ -104,9 +104,9 @@ extern void mm_PM_Init ( struct playermove_s *ppmove );
 
 
 // From SDK dlls/client.h:
+extern char mm_PM_FindTextureType(const char* name);
 extern void mm_SetupVisibility( edict_t *pViewEntity, edict_t *pClient, unsigned char **pvs, unsigned char **pas );
 extern void mm_UpdateClientData ( const struct edict_s *ent, int sendweapons, struct clientdata_s *cd );
-extern char mm_PM_FindTextureType ( const char *name );
 extern void mm_CreateBaseline( int player, int eindex, struct entity_state_s *baseline, struct edict_s *entity, int playermodelindex, vec3_t player_mins, vec3_t player_maxs );
 extern void mm_RegisterEncoders( void );
 extern int mm_GetWeaponData( struct edict_s *player, struct weapon_data_s *info );
@@ -115,12 +115,15 @@ extern void mm_CmdEnd ( const edict_t *player );
 extern int mm_ConnectionlessPacket( const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size );
 extern int mm_GetHullBounds( int hullnumber, float *mins, float *maxs );
 extern void mm_CreateInstancedBaselines ( void );
-extern int mm_InconsistentFile( const edict_t *player, const char *filename, char *disconnect_message );
+extern int mm_InconsistentFile( const edict_t *player, const char *filename, char *disconnect_message, unsigned int buffersize );
 extern int mm_AllowLagCompensation( void );
+extern void mm_SpawnPlayerAfterLevelLoad(edict_t* player);
 
 // No example from SDK...
-extern void mm_OnFreeEntPrivateData(edict_t pEnt);
-extern void mm_GameShutdown(void);
+extern void mm_NullFunc0(void);
+extern void mm_NullFunc1(void);
+//extern void mm_OnFreeEntPrivateData(edict_t pEnt);
+//extern void mm_GameShutdown(void);
 extern int mm_ShouldCollide(edict_t *pentTouched, edict_t *pentOther);
 extern BOOLEAN mm_OnSaveGame(void);
 extern BOOLEAN mm_OnLoadGame(qboolean loading);
@@ -170,7 +173,8 @@ typedef void (*FN_STARTFRAME) ( void );
 typedef void (*FN_PARMSNEWLEVEL) ( void );
 typedef void (*FN_PARMSCHANGELEVEL) ( void );
 typedef const char *(*FN_GETGAMEDESCRIPTION) ( void );
-typedef edict_t* (*FN_GETPLAYERSPAWNSPOT) (int* pPlayer);
+typedef void (*FN_SPAWNPLAYERAFTERLEVELLOAD) (edict_t* player);
+//typedef edict_t* (*FN_GETPLAYERSPAWNSPOT) (int* pPlayer);
 //typedef void (*FN_PLAYERCUSTOMIZATION) ( edict_t *pEntity, customization_t *pCust );
 typedef void (*FN_SPECTATORCONNECT)  ( edict_t *pEntity );
 typedef void (*FN_SPECTATORDISCONNECT)  ( edict_t *pEntity );
@@ -192,7 +196,7 @@ typedef void (*FN_CMDEND)  ( const edict_t *player );
 typedef int (*FN_CONNECTIONLESSPACKET) ( const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size );
 typedef int (*FN_GETHULLBOUNDS) ( int hullnumber, float *mins, float *maxs );
 typedef void (*FN_CREATEINSTANCEDBASELINES)  ( void );
-typedef int (*FN_INCONSISTENTFILE) ( const edict_t *player, const char *filename, char *disconnect_message );
+typedef int (*FN_INCONSISTENTFILE) ( const edict_t *player, const char *filename, char *disconnect_message, unsigned int buffersize );
 typedef int (*FN_ALLOWLAGCOMPENSATION) ( void );
 
 typedef void (*FN_ONFREEENTPRIVATEDATA) (edict_t *pEnt);
@@ -206,5 +210,6 @@ typedef void (*FN_ADDBOT) (const char *difficulty, const char *botname, const ch
 typedef void (*FN_CVARVALUE)(const edict_t *pEnt, const char *value);   //! Obsolete! Use FN_CVARVALUE2 instead
 //Added 2005-11-22 (no SDK update)
 typedef void (*FN_CVARVALUE2)(const edict_t *pEnt, int requestID, const char *cvarName, const char *value);
-
+typedef void (*FN_NULLFUNC0)();
+typedef void (*FN_NULLFUNC1)();
 #endif /* DLLAPI_H */

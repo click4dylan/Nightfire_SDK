@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 # else
 		printf("compiler failed to instantiate: %d\n", GetLastError());
 # endif
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 
 	COMPILER sc32 = (COMPILER)dlsym(lib, "Compile32");
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 #else
 		printf("compiler failed to link: %d.\n", GetLastError());
 #endif
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 
 	pc_printf("AMX Mod X Compiler %s\n", AMXX_VERSION);
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 		pc_printf("Usage: <file.sma> [options]\n");
 		pc_printf("Use -? or --help to see full options\n\n");
 		getchar();
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 
 	if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "--help"))
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 		show_help();
 		pc_printf("Press any key to continue.\n");
 		getchar();
-		exit(0);
+		exit(EXIT_SUCCESS);
 	}
 
 	sc32(argc, argv);
@@ -109,16 +109,16 @@ int main(int argc, char **argv)
 	if (file == NULL)
 	{
 		pc_printf("Could not locate the output file.\n");
-		exit(0);
+		exit(EXIT_FAILURE);
 	} else if (strstr(file, ".asm")) {
 		pc_printf("Assembler output succeeded.\n");
-		exit(0);
+		exit(EXIT_SUCCESS);
 	} else {
 		FILE *fp = fopen(file, "rb");
 		if (fp == NULL)
 		{
 			pc_printf("Could not locate output file %s (compile failed).\n", file);
-			exit(0);
+			exit(EXIT_FAILURE);
 		}
 		ReadFileIntoPl(&pl32, fp);
 		pl32.cellsize = 4;
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 	if (!fp)
 	{
 		pc_printf("Error trying to write file %s.\n", newfile);
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 
 	BinPlugin bh32;
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
 #if !defined EMSCRIPTEN
 		dlclose(lib);
 #endif
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 
 	fclose(fp);
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
 	dlclose(lib);
 #endif
 
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
 void WriteBh(BinaryWriter *bw, BinPlugin *bh)
@@ -228,7 +228,7 @@ bool CompressPl(abl *pl)
 	if (err != Z_OK)
 	{
 		pc_printf("internal error - compression failed on first pass: %d\n", err);
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 
 	return true;
@@ -343,22 +343,23 @@ char *FindFileName(int argc, char **argv)
 void show_help()
 {
 	printf("Options:\n");
-	printf("\t-A<num>  alignment in bytes of the data segment and the stack\n");
-	printf("\t-a       output assembler code\n");
-	printf("\t-C[+/-]  compact encoding for output file (default=-)\n");
-	printf("\t-c<name> codepage name or number; e.g. 1252 for Windows Latin-1\n");
-	printf("\t-Dpath   active directory path\n");
-	printf("\t-d0      no symbolic information, no run-time checks\n");
-	printf("\t-d1      [default] run-time checks, no symbolic information\n");
-	printf("\t-d2      full debug information and dynamic checking\n");
-	printf("\t-d3      full debug information, dynamic checking, no optimization\n");
-	printf("\t-e<name> set name of error file (quiet compile)\n");
-	printf("\t-H<hwnd> window handle to send a notification message on finish\n");
-	printf("\t-i<name> path for include files\n");
-	printf("\t-l       create list file (preprocess only)\n");
-	printf("\t-o<name> set base name of output file\n");
-	printf("\t-p<name> set name of \"prefix\" file\n");
-	printf("\t-r[name] write cross reference report to console or to specified file\n");
+	printf("\t-A<num>   alignment in bytes of the data segment and the stack\n");
+	printf("\t-a        output assembler code\n");
+	printf("\t-C[+/-]   compact encoding for output file (default=-)\n");
+	printf("\t-c<name>  codepage name or number; e.g. 1252 for Windows Latin-1\n");
+	printf("\t-Dpath    active directory path\n");
+	printf("\t-d0       no symbolic information, no run-time checks\n");
+	printf("\t-d1       [default] run-time checks, no symbolic information\n");
+	printf("\t-d2       full debug information and dynamic checking\n");
+	printf("\t-d3       full debug information, dynamic checking, no optimization\n");
+	printf("\t-e<name>  set name of error file (quiet compile)\n");
+	printf("\t-H<hwnd>  window handle to send a notification message on finish\n");
+	printf("\t-i<name>  path for include files\n");
+	printf("\t-l        create list file (preprocess only)\n");
+	printf("\t-o<name>  set base name of output file\n");
+	printf("\t-p<name>  set name of \"prefix\" file\n");
+	printf("\t-r[name]  write cross reference report to console or to specified file\n");
+	printf("\t-sui[+/-] show stack usage info\n");
 }
 
 #if defined(__linux__) || defined(__APPLE__)

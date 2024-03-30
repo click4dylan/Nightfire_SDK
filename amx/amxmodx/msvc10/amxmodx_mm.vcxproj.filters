@@ -252,7 +252,7 @@
     <ClCompile Include="..\..\third_party\zlib\compress.c">
       <Filter>Third Party\ZLib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\third_party\zlib\crc32.c">
+    <ClCompile Include="..\..\third_party\zlib\zcrc32.c">
       <Filter>Third Party\ZLib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\third_party\zlib\deflate.c">
@@ -470,7 +470,7 @@
     <ClInclude Include="..\..\public\memtools\MemoryUtils.h">
       <Filter>MemTools</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\third_party\zlib\crc32.h">
+    <ClInclude Include="..\..\third_party\zlib\zcrc32.h">
       <Filter>Third Party\ZLib</Filter>
     </ClInclude>
     <ClInclude Include="..\..\third_party\zlib\deflate.h">
@@ -502,6 +502,9 @@
     </ClInclude>
     <ClInclude Include="..\..\third_party\zlib\zutil.h">
       <Filter>Third Party\ZLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CFrameAction.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

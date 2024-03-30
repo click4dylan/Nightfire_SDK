@@ -4,9 +4,9 @@ CONF_MENU = Configs Menu
 SPE_MENU = Speech Menu
 
 [de]
-CMD_MENU = Menu > Befehle
-CONF_MENU = Menu > Konfiguration
-SPE_MENU = Menu > Sprechen
+CMD_MENU = Menü > Befehle
+CONF_MENU = Menü > Konfiguration
+SPE_MENU = Menü > Sprechen
 
 [sr]
 CMD_MENU = Komandne
@@ -14,8 +14,8 @@ CONF_MENU = Podesavanja
 SPE_MENU = Govorne Komande
 
 [tr]
-CMD_MENU = Emir Menusu
-CONF_MENU = Configler Menusu
+CMD_MENU = Komut Menu
+CONF_MENU = Config Menu
 SPE_MENU = Konusma Menusu
 
 [fr]
@@ -63,25 +63,20 @@ CMD_MENU = Komentovalikko
 CONF_MENU = Saatovalikko
 SPE_MENU = Puhevalikko
 
-[ls]
-CMD_MENU = l33t cmdz M3nu
-CONF_MENU = l33t c0nf!gz M3nu
-SPE_MENU = l33t $p33ch M3nu
-
 [bg]
-CMD_MENU = Comandnoto Menu
-CONF_MENU = Configuracionno Menu
-SPE_MENU = Menu za Govorene
+CMD_MENU = Menu s komandi
+CONF_MENU = Konfiguracionno menu
+SPE_MENU = Menu za govorene
 
 [ro]
-CMD_MENU = Menu Comenzi
-CONF_MENU = Menu Configuratie
-SPE_MENU = Menu Speech
+CMD_MENU = Meniu comenzi
+CONF_MENU = Meniu configuri
+SPE_MENU = Meniu Speech
 
 [hu]
-CMD_MENU = Parancs Menu
-CONF_MENU = Beallitas Menu
-SPE_MENU = Beszed Menu
+CMD_MENU = Parancs Menü
+CONF_MENU = Beállítás Menü
+SPE_MENU = Beszéd Menü
 
 [lt]
 CMD_MENU = Komandu meniu
@@ -97,3 +92,33 @@ SPE_MENU = Nastavenie reci
 CMD_MENU = Meni so komandi
 CONF_MENU = Meni so konfiguracii
 SPE_MENU = Meni so glasovni komandi
+
+[hr]
+CMD_MENU = Naredbe
+CONF_MENU = Podesavanja
+SPE_MENU = Izbornik govora
+
+[bs]
+CMD_MENU = Komande
+CONF_MENU = Podesavanja
+SPE_MENU = Govorne Komande
+
+[ru]
+CMD_MENU = Меню команд
+CONF_MENU = Меню настроек
+SPE_MENU = Меню звуков
+
+[cn]
+CMD_MENU = 命令菜单
+CONF_MENU = 配置菜单
+SPE_MENU = 语音菜单
+
+[al]
+CMD_MENU = Lista Komandave
+CONF_MENU = Lista Konfigurimeve
+SPE_MENU = Lista Fjalëve
+
+[pt]
+CMD_MENU = Menu de Comandos
+CONF_MENU = Menu de Configurações
+SPE_MENU = Menu de Voz

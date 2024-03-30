@@ -10,7 +10,7 @@
 #ifndef AMXMODX_H
 #define AMXMODX_H
 
-#if defined(__linux__) || defined(__APPLE__)
+#if defined PLATFORM_POSIX
 #include <unistd.h>
 #include <stdlib.h>
 #include "sclinux.h"
@@ -30,14 +30,13 @@
 #endif
 
 #include "hashing.h"
-#include "CList.h"
-#include "CQueue.h"
 #include "modules.h"
 #include "CPlugin.h"
 #include "CLibrarySys.h"
 #include <auto-string.h>
 #include <amtl/am-string.h>
 #include <amtl/am-vector.h>
+#include <amtl/am-inlinelist.h>
 #include "CMisc.h"
 #include "CVault.h"
 #include "CModule.h"
@@ -51,6 +50,7 @@
 #include "amxxlog.h"
 #include "CvarManager.h"
 #include "CoreConfig.h"
+#include "CFrameAction.h"
 #include <amxmodx_version.h>
 #include <HLTypeConversion.h>
 
@@ -74,7 +74,7 @@ extern AMX_NATIVE_INFO g_TextParserNatives[];
 extern AMX_NATIVE_INFO g_CvarNatives[];
 extern AMX_NATIVE_INFO g_GameConfigNatives[];
 
-#if defined(_WIN32)
+#if defined PLATFORM_WINDOWS
 #define DLLOAD(path) (DLHANDLE)LoadLibrary(path)
 #define DLPROC(m, func) GetProcAddress(m, func)
 #define DLFREE(m) FreeLibrary(m)
@@ -95,19 +95,11 @@ extern AMX_NATIVE_INFO g_GameConfigNatives[];
 	#endif
 #endif
 
-#if defined(_WIN32)
+#if defined PLATFORM_WINDOWS
 	typedef HINSTANCE DLHANDLE;
 #else
 	typedef void* DLHANDLE;
 	#define INFINITE 0xFFFFFFFF
-#endif
-
-#if defined(_WIN32)
-	#define PATH_SEP_CHAR		'\\'
-	#define ALT_SEP_CHAR		'/'
-#else
-	#define PATH_SEP_CHAR		'/'
-	#define ALT_SEP_CHAR		'\\'
 #endif
 
 #ifndef GETPLAYERAUTHID
@@ -120,6 +112,8 @@ extern AMX_NATIVE_INFO g_GameConfigNatives[];
 #define RUNPLAYERMOVE       (*g_engfuncs.pfnRunPlayerMove)
 #define SETCLIENTLISTENING  (*g_engfuncs.pfnVoice_SetClientListening)
 #define SETCLIENTMAXSPEED   (*g_engfuncs.pfnSetClientMaxspeed)
+
+#define MAX_BUFFER_LENGTH 16384
 
 char* UTIL_SplitHudMessage(register const char *src);
 int UTIL_ReadFlags(const char* c);
@@ -138,10 +132,15 @@ void UTIL_TeamInfo(edict_t *pEntity, int playerIndex, const char *pszTeamName);
 template <typename D> int UTIL_CheckValidChar(D *c); 
 template <typename D, typename S> unsigned int strncopy(D *dest, const S *src, size_t count);
 unsigned int UTIL_GetUTF8CharBytes(const char *stream);
-unsigned int UTIL_ReplaceAll(char *subject, size_t maxlength, const char *search, const char *replace, bool caseSensitive);
+size_t UTIL_ReplaceAll(char *subject, size_t maxlength, const char *search, const char *replace, bool caseSensitive);
+size_t UTIL_ReplaceAll(char *subject, size_t maxlength, const char *search, size_t searchLen, const char *replace, size_t replaceLen, bool caseSensitive);
 char *UTIL_ReplaceEx(char *subject, size_t maxLen, const char *search, size_t searchLen, const char *replace, size_t replaceLen, bool caseSensitive);
 void UTIL_TrimLeft(char *buffer);
 void UTIL_TrimRight(char *buffer);
+
+char* utf8stristr(const char *string1, const char *string2);
+int utf8strncasecmp(const char *string1, const char *string2, size_t n);
+int utf8strcasecmp(const char *string1, const char *string2);
 
 #define GET_PLAYER_POINTER(e)   (&g_players[ENTINDEX(e)])
 //#define GET_PLAYER_POINTER(e)   (&g_players[(((int)e-g_edict_point)/sizeof(edict_t))])
@@ -166,15 +165,16 @@ struct fakecmd_t
 extern CLog g_log;
 extern CPluginMngr g_plugins;
 extern CTaskMngr g_tasksMngr;
+extern CFrameActionMngr g_frameActionMngr;
 extern CPlayer g_players[33];
 extern CPlayer* mPlayer;
 extern CmdMngr g_commands;
-extern CList<ForceObject> g_forcemodels;
-extern CList<ForceObject> g_forcesounds;
-extern CList<ForceObject> g_forcegeneric;
-extern CList<CModule, const char *> g_modules;
-extern CList<CScript, AMX*> g_loadedscripts;
-extern CList<CPlayer*> g_auth;
+extern ke::Vector<ke::AutoPtr<ForceObject>> g_forcemodels;
+extern ke::Vector<ke::AutoPtr<ForceObject>> g_forcesounds;
+extern ke::Vector<ke::AutoPtr<ForceObject>> g_forcegeneric;
+extern ke::Vector<ke::AutoPtr<CPlayer *>> g_auth;
+extern ke::InlineList<CModule> g_modules;
+extern ke::InlineList<CScript> g_loadedscripts;
 extern EventsMngr g_events;
 extern Grenades g_grenades;
 extern LogEventsMngr g_logevents;
@@ -188,12 +188,19 @@ extern WeaponsVault g_weaponsData[MAX_WEAPONS];
 extern XVars g_xvars;
 extern bool g_bmod_cstrike;
 extern bool g_bmod_dod;
+extern bool g_bmod_dmc;
+extern bool g_bmod_ricochet;
+extern bool g_bmod_valve;
+extern bool g_bmod_gearbox;
+extern bool g_official_mod;
 extern bool g_dontprecache;
 extern int g_srvindex;
-extern cvar_t* amxmodx_version;
-extern cvar_t* amxmodx_language;
-extern cvar_t* hostname;
-extern cvar_t* mp_timelimit;
+extern ConsoleVariable* amxmodx_version;
+extern ConsoleVariable* amxmodx_debug;
+extern ConsoleVariable* amxmodx_language;
+extern ConsoleVariable* amxmodx_perflog;
+extern ConsoleVariable* hostname;
+extern ConsoleVariable* mp_timelimit;
 extern fakecmd_t g_fakecmd;
 extern float g_game_restarting;
 extern float g_game_timeleft;
@@ -248,8 +255,15 @@ void Client_DamageEnd(void*);
 void Client_DeathMsg(void*);
 void Client_InitHUDEnd(void*);
 
-void amx_command();
-void plugin_srvcmd();
+class CAMX_Command : public ConsoleFunction
+{
+public:
+	using ConsoleFunction::ConsoleFunction; // Inherit constructors from base class, C++11 requirement
+	void run(unsigned int numargs, const char** args);
+};
+extern CAMX_Command amx_command;
+
+void plugin_srvcmd(unsigned int numargs, const char** args);
 
 const char* stristr(const char* a, const char* b);
 char *strptime(const char *buf, const char *fmt, struct tm *tm, short addthem);
@@ -257,10 +271,6 @@ char *strptime(const char *buf, const char *fmt, struct tm *tm, short addthem);
 int loadModules(const char* filename, PLUG_LOADTIME now);
 void detachModules();
 void detachReloadModules();
-
-#ifdef FAKEMETA
-	void attachModules();
-#endif
 
 // Count modules
 enum CountModulesMode
@@ -288,6 +298,7 @@ extern "C" size_t get_amxstring_r(AMX *amx, cell amx_addr, char *destination, in
 
 int amxstring_len(cell* cstr);
 int load_amxscript(AMX* amx, void** program, const char* path, char error[64], int debug);
+int load_amxscript_ex(AMX* amx, void** program, const char* path, char *error, size_t maxLength, int debug);
 int set_amxnatives(AMX* amx, char error[64]);
 int set_amxstring(AMX *amx, cell amx_addr, const char *source, int max);
 int set_amxstring_simple(cell *dest, const char *source, int max);
@@ -300,11 +311,8 @@ void copy_amxmemory(cell* dest, cell* src, int len);
 void get_modname(char*);
 void print_srvconsole(const char *fmt, ...);
 void report_error(int code, const char* fmt, ...);
-void* alloc_amxmemory(void**, int size);
-void free_amxmemory(void **ptr);
 // get_localinfo
 const char* get_localinfo(const char* name, const char* def);
-cell AMX_NATIVE_CALL require_module(AMX *amx, cell *params);
 extern "C" void LogError(AMX *amx, int err, const char *fmt, ...);
 
 enum ModuleCallReason

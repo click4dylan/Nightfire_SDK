@@ -51,10 +51,8 @@ class sp_list_function : public ConsoleFunction
 public:
 	virtual void run(unsigned int numargs, const char** args);
 	sp_list_function(const char* _name, const char* _description = "", unsigned int _flags = 0)
+		: ConsoleFunction(_name, _description, _flags)
 	{
-		name = _name;
-		description = _description;
-		flags = _flags;
 	}
 };
 

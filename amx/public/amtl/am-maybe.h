@@ -31,9 +31,12 @@
 
 #include <amtl/am-moveable.h>
 #include <amtl/am-storagebuffer.h>
+#include <amtl/am-type-traits.h>
 #include <assert.h>
 
 namespace ke {
+
+struct Nothing {};
 
 template <typename T>
 class Maybe
@@ -52,6 +55,9 @@ class Maybe
   {
     moveFrom(ke::Move(other));
   }
+  Maybe(Nothing)
+   : initialized_(false)
+  {}
 
   ~Maybe() {
     if (isValid())
@@ -75,7 +81,7 @@ class Maybe
     assert(isValid());
     return t_.address();
   }
-  T& operator *() {
+  T& operator*() {
     assert(isValid());
     return *t_.address();
   }
@@ -83,7 +89,7 @@ class Maybe
     assert(isValid());
     return t_.address();
   }
-  const T& operator *() const {
+  const T& operator*() const {
     assert(isValid());
     return *t_.address();
   }
@@ -120,6 +126,16 @@ class Maybe
   bool initialized_;
   StorageBuffer<T> t_;
 };
+
+template <typename T,
+          typename U = typename remove_cv<typename remove_reference<T>::type>::type>
+static inline Maybe<U>
+Some(T&& value)
+{
+  Maybe<U> m;
+  m.init(ke::Forward<T>(value));
+  return m;
+}
 
 } // namespace ke
 

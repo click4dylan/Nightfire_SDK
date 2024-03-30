@@ -231,17 +231,16 @@ class MPlugin {
 	SHOW_IFDEF(api_table, dllapi_info, pfnParmsNewLevel, 		pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnParmsChangeLevel, 	pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnGetGameDescription, 	pre_str, post_str); \
-	SHOW_IFDEF(api_table, dllapi_info, pfnGetPlayerSpawnSpot, 	pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnSpectatorConnect, 	pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnSpectatorDisconnect, 	pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnSpectatorThink, 		pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnSys_Error, 			pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnPM_Move, 				pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnPM_Init, 				pre_str, post_str); \
-	SHOW_IFDEF(api_table, dllapi_info, pfnSetupVisibility, 		pre_str, post_str); \
-	SHOW_IFDEF(api_table, dllapi_info, pfnAddToFullPack, 		pre_str, post_str); \
-	SHOW_IFDEF(api_table, dllapi_info, pfnUpdateClientData, 	pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnPM_FindTextureType, 	pre_str, post_str); \
+	SHOW_IFDEF(api_table, dllapi_info, pfnSetupVisibility, 		pre_str, post_str); \
+	SHOW_IFDEF(api_table, dllapi_info, pfnUpdateClientData, 	pre_str, post_str); \
+	SHOW_IFDEF(api_table, dllapi_info, pfnAddToFullPack, 		pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnCreateBaseline, 		pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnRegisterEncoders, 	pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnGetWeaponData, 		pre_str, post_str); \
@@ -251,12 +250,13 @@ class MPlugin {
 	SHOW_IFDEF(api_table, dllapi_info, pfnGetHullBounds, 			pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnCreateInstancedBaselines, 	pre_str, post_str); \
 	SHOW_IFDEF(api_table, dllapi_info, pfnInconsistentFile, 			pre_str, post_str); \
-	SHOW_IFDEF(api_table, dllapi_info, pfnAllowLagCompensation, 		pre_str, post_str);
+	SHOW_IFDEF(api_table, dllapi_info, pfnAllowLagCompensation, 		pre_str, post_str); \
+	SHOW_IFDEF(api_table, dllapi_info, pfnSpawnPlayerAfterLevelLoad, 		pre_str, post_str);
 
 #define SHOW_DEF_NEWAPI(api_table, pre_str, post_str) \
 	n=0; \
-	SHOW_IFDEF(api_table, newapi_info, pfnOnFreeEntPrivateData, pre_str, post_str); \
-	SHOW_IFDEF(api_table, newapi_info, pfnGameShutdown, pre_str, post_str); \
+	SHOW_IFDEF(api_table, newapi_info, pfnNullFunc0, pre_str, post_str); \
+	SHOW_IFDEF(api_table, newapi_info, pfnNullFunc1, pre_str, post_str); \
 	SHOW_IFDEF(api_table, newapi_info, pfnShouldCollide, pre_str, post_str); \
 	SHOW_IFDEF(api_table, newapi_info, pfnOnSaveGame, pre_str, post_str); \
 	SHOW_IFDEF(api_table, newapi_info, pfnOnLoadGame, pre_str, post_str); \
