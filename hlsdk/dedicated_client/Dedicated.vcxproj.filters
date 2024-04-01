@@ -141,6 +141,9 @@
     <ClCompile Include="netchan.cpp">
       <Filter>Source Files\fixes</Filter>
     </ClCompile>
+    <ClCompile Include="Effects.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc">

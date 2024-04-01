@@ -116,50 +116,52 @@ typedef struct tempent_s
 
 typedef struct efx_api_s efx_api_t;
 
+#define EFFECTS_API_VERSION 1
+
 struct efx_api_s
 {
-	int version;
-	int size; //0xB4
+	int version; //version 1
+	int size; //0xB4 bytes
 	particle_t  *( *R_AllocParticle )			( void ( *callback ) ( struct particle_s *particle, float frametime ) );
-	void		( *R_BreakModel )				( float *pos, float *size, float *dir, float random, float life, int count, int modelIndex, char flags );
-	void		( *R_Bubbles )					( float * mins, float * maxs, float height, int modelIndex, int count, float speed );
-	void		( *R_BubbleTrail )				( float * start, float * end, float height, int modelIndex, int count, float speed );
-	void		( *R_BulletImpactParticles )	( float * pos );
+	void		( *R_BreakModel )				( float const *pos, float const *size, float const *dir, float random, float life, int count, int modelIndex, char flags );
+	void		( *R_Bubbles )					( float const *mins, float const *maxs, float height, int modelIndex, int count, float speed );
+	void		( *R_BubbleTrail )				( float const *start, float const *end, float height, int modelIndex, int count, float speed );
+	void		( *R_BulletImpactParticles )	( float const *pos );
 	void		( *R_EntityParticles )			( struct cl_entity_s *ent );
-	void		( *R_FlickerParticles )			( float * org );
-	void		( *R_MuzzleFlash )				( float *pos1, int type );
-	void		( *R_RicochetSound )			( float * pos );
-	void		( *R_RicochetSprite )			( float *pos, struct model_s *pmodel, float duration, float scale );
-	void		( *R_RocketFlare )				( float *pos );
-	void		( *R_RocketTrail )				( float * start, float * end, int type );
-	void		( *R_RunParticleEffect )		( float * org, float * dir, int color, int count );
-	void		( *R_ShowLine )					( float * start, float * end );
-	void		( *R_SparkEffect )				( float *pos, int count, int velocityMin, int velocityMax );
-	void		( *R_SparkShower )				( float *pos );
-	void		( *R_SparkStreaks )				( float * pos, int count, int velocityMin, int velocityMax );
+	void		( *R_FlickerParticles )			( float const *org );
+	void		( *R_MuzzleFlash )				( float const *pos1, int type, bool add_sparks_maybe );
+	void		( *R_RicochetSound )			( float const *pos );
+	void		( *R_RicochetSprite )			( float const *pos, struct model_s *pmodel, float duration, float scale );
+	void		( *R_RocketFlare )				( float const *pos );
+	void		( *R_RocketTrail )				( float const *start, float const *end, int type );
+	void		( *R_RunParticleEffect )		( float const *org, float const *dir, int r, int g, int b, int count );
+	void		( *R_ShowLine )					( float const *start, float const *end );
+	void		( *R_SparkEffect )				( float const *pos, int count, int velocityMin, int velocityMax );
+	void		( *R_SparkShower )				( float const *pos );
+	void		( *R_SparkStreaks )				( float const *pos, int count, int velocityMin, int velocityMax );
 	void		( *R_Sprite_Explode )			( TEMPENTITY *pTemp, float scale, int flags );
 	void		( *R_Sprite_Smoke )				( TEMPENTITY *pTemp, float scale );
 	void		( *R_Sprite_Smoke_Color )		( TEMPENTITY *pTemp, float scale, int color );
-	void		( *R_Sprite_Smoke_Trail )		( float * start, float * end, int modelIndex, int count, int unknown, float life, float size, int renderamt); //guessed arguments
-	void		( *R_Sprite_Spray_Lit )			( float * pos, float * dir, int modelIndex, int count, int speed, int iRand, int unknown, float life, int unknown2 );//guessed
-	void		( *R_TracerEffect )				( float * start, float * end );
-	particle_t *( *R_TracerParticles )			( float * org, float * vel, float life );
-	void		( *R_UserTracerParticle )		( float * org, float * vel, float life, int colorIndex, float length, unsigned char deathcontext, void ( *deathfunc)( struct particle_s *particle ) );
-	TEMPENTITY	*( *R_TempModel )				( float *pos, float *dir, float *angles, float life, int modelIndex, int soundtype );
-	TEMPENTITY	*( *R_DefaultSprite )			( float *pos, int spriteIndex, float framerate );
-	TEMPENTITY	*( *R_TempSprite )				( float *pos, float *dir, float scale, int modelIndex, int rendermode, int renderfx, float a, float life, int flags );
-	int			( *CL_DecalIndexFromName )		( char *name );
-	void		( *R_DecalShoot )				( unsigned int textureIndex, int entity, int modelIndex, float * position, int flags );
-	BEAM		*( *R_BeamEntPoint )			( int startEnt, float * end, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b );
+	void		( *R_Sprite_Smoke_Trail )		( float const *start, float const *end, int modelIndex, int count, int speed, float scale, float life, int random);
+	void		( *R_Sprite_Spray_Lit )			( float const *pos, float const *dir, int modelIndex, int count, int speed, int iRand, int color, float scale, int brightness );//TODO: FIXME: TEST CALLING CONVENTION
+	void		( *R_TracerEffect )				( float const *start, float const *end );
+	particle_t *( *R_TracerParticles )			( float const *org, float const *vel, float life );
+	void		( *R_UserTracerParticle )		( float const *org, float const *vel, float life, int colorIndex, float length, unsigned char deathcontext, void ( *deathfunc)( struct particle_s *particle ) );
+	TEMPENTITY	*( *R_TempModel )				( float const *pos, float const *dir, float const* angles, float life, int modelIndex, int soundtype );
+	TEMPENTITY	*( *R_DefaultSprite )			( float const *pos, int spriteIndex, float framerate );
+	TEMPENTITY	*( *R_TempSprite )				( float const *pos, float const *dir, float scale, int modelIndex, int rendermode, int renderfx, float a, float life, int flags );
+	int			( *CL_DecalIndexFromName )		( char const *name );
+	void		( *R_DecalShoot )				( unsigned int textureIndex, int entity, int modelIndex, float const *position, int flags );
+	BEAM		*( *R_BeamEntPoint )			( int startEnt, float const *end, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b );
 	BEAM		*( *R_BeamEnts )				( int startEnt, int endEnt, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b );
-	BEAM		*( *R_BeamLightning )			( float * start, float * end, int modelIndex, float life, float width, float amplitude, float brightness, float speed );
-	BEAM		*( *R_BeamPoints )				( float * start, float * end, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b );
+	BEAM		*( *R_BeamLightning )			( float const *start, float const *end, int modelIndex, float life, float width, float amplitude, float brightness, float speed );
+	BEAM		*( *R_BeamPoints )				( float const *start, float const *end, int modelIndex, float life, float width, float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b );
 	dlight_t	*( *CL_AllocDlight )			( int key );
 	dlight_t	*( *CL_AllocElight )			( int key );
-	TEMPENTITY	*( *CL_TempEntAlloc )			( float * org, struct model_s *model );
-	TEMPENTITY	*( *CL_TempEntAllocNoModel )	( float * org );
-	TEMPENTITY	*( *CL_TempEntAllocHigh )		( float * org, struct model_s *model );
-	TEMPENTITY	*( *CL_AllocCustomTempEntity )	( float *origin, struct model_s *model, int high, void ( *callback ) ( struct tempent_s *ent, float frametime, float currenttime ) );
+	TEMPENTITY	*( *CL_TempEntAlloc )			( float const *org, struct model_s *model );
+	TEMPENTITY	*( *CL_TempEntAllocNoModel )	( float const *org );
+	TEMPENTITY	*( *CL_TempEntAllocHigh )		( float const *org, struct model_s *model );
+	TEMPENTITY	*( *CL_AllocCustomTempEntity )	( float const *origin, struct model_s *model, int high, void ( *callback ) ( struct tempent_s *ent, float frametime, float currenttime ) );
 	void		 ( *R_ToggleNightvision )		( int enable );
 	void		 ( *R_ToggleXrayVision )		( int enable );
 	void		 ( *R_ToggleInfraredVision )	( int enable );

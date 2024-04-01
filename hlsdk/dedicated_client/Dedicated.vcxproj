@@ -323,6 +323,7 @@
     <ClCompile Include="bzip2\src\randtable.c" />
     <ClCompile Include="conproc.cpp" />
     <ClCompile Include="console.cpp" />
+    <ClCompile Include="Effects.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="fixes.cpp" />
     <ClCompile Include="globals.cpp" />
