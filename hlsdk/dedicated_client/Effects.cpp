@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <vector>
-//#include <extdll.h>	
+#include <extdll.h>	
 //#include <CVector.h>
 //#include "CString.h"
 //#include "entity.h"
@@ -19,7 +19,7 @@
 #include <NightfireFileSystem.h>
 //#include <r_studioint.h>
 
-#include <vector_types.h>
+//#include <vector_types.h>
 //#include <eiface.h>
 #include <com_model.h>
 #include <pmtrace.h>
@@ -28,15 +28,19 @@
 #include <fragbuf.h>
 #include <netchan.h>
 #include <platformdll.h>
-#include <enginefuncs.h>
+//#include <enginefuncs.h>
 #include <globalvars.h>
 #include <server.h>
 #include <nightfire_pointers.h>
 #include "nightfire_hooks.h"
 
+extern vec3_t vec3_origin;
+
 #include <r_efx.h>
 
 //#define g_EffectsAPI ((efx_api_t*)0x4310BDB0)
+
+//todo: R_InvalidateAllLightmaps for dlights
 
 void(*g_oCL_ParseTEnt)() {};
 
@@ -48,9 +52,6 @@ void Hooked_CL_ParseTEnt(void)
 
 	int		type;
 	vec3_t	pos;
-	dlight_t* dl;
-	int		rnd;
-	int		colorStart, colorLength;
 
 	type = g_Pointers.MSG_ReadByte();
 	switch (type)

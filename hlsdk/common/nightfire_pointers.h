@@ -1,12 +1,14 @@
 #pragma once
 
 #include <Windows.h>
-#include <vector_types.h>
+//#include <vector_types.h>
+#include <extdll.h>
 #include <sizebuf.h>
 #include <fragbuf.h>
 #include <netchan.h>
 #include <usercmd.h>
 #include <server.h>
+//#include <vector_types.h>
 
 struct model_s;
 struct player_info_s;
@@ -89,7 +91,8 @@ public:
 	void (*MSG_ReadUsercmd)(usercmd_t* to, usercmd_t* from) {};
 	void (*MSG_WriteUsercmd)(sizebuf_t* buf, usercmd_t* to, usercmd_t* from) {};
 
-
+	DLL_FUNCTIONS* g_EntityInterface{};
+	NEW_DLL_FUNCTIONS* g_NewDLLFunctions{};
 	int* cl_maxents{}; //unknown name
 	struct sfx_t** cl_sfx_r_exp1{};
 	struct sfx_t** cl_sfx_r_exp2{};

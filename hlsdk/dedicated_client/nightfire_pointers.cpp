@@ -8,7 +8,7 @@
 #include <NightfireFileSystem.h>
 //#include <r_studioint.h>
 
-#include <vector_types.h>
+//#include <vector_types.h>
 //#include <eiface.h>
 #include <com_model.h>
 #include <pmtrace.h>
@@ -17,7 +17,7 @@
 #include <fragbuf.h>
 #include <netchan.h>
 #include <platformdll.h>
-#include <enginefuncs.h>
+//#include <enginefuncs.h>
 #include <globalvars.h>
 #include <server.h>
 #include <nightfire_pointers.h>
@@ -170,8 +170,11 @@ void nf_pointers::GetImportantEngineOffsets(long enginedll)
 		FindMemoryPattern(pattern_t(MSG_WriteVec3Coord, enginedll, "53 56 8B 74 24 10 8B 06", false, "MSG_WriteVec3Coord", true));
 		FindMemoryPattern(pattern_t(MSG_ReadUsercmd, enginedll, "E8 ? ? ? ? 8B C6 83 C4 08", false, false, 0, 1, true, "MSG_ReadUsercmd", true));
 		FindMemoryPattern(pattern_t(MSG_WriteUsercmd, enginedll, "E8 ? ? ? ? 83 C4 0C 4F", false, false, 0, 1, true, "MSG_WriteUsercmd", true));
+
+		// interfaces to game.dll
+		FindMemoryPattern(pattern_t(g_EntityInterface, enginedll, "68 ? ? ? ? 89 74 24 18", false, true, 1, 0, false, "gEntityInterface", true));
+		FindMemoryPattern(pattern_t(g_NewDLLFunctions, enginedll, "68 ? ? ? ? C7 44 24 18", false, true, 1, 0, false, "gNewDLLFunctions", true));
 	}
-	
 }
 
 void nf_pointers::GetImportantClientOffsets(long clientdll)

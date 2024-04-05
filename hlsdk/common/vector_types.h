@@ -7,5 +7,3 @@ struct CommonVector
 {
 	float x, y, z;
 };
-
-extern vec3_t vec3_origin;

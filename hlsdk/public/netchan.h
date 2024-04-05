@@ -1,5 +1,6 @@
 #pragma once
 
+#include <extdll.h>
 #include <const.h>
 #include <sizebuf.h>
 #include <fragbuf.h>

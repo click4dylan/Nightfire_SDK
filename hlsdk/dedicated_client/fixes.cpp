@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <vector>
-//#include <extdll.h>	
+#include <extdll.h>	
 //#include <CVector.h>
 //#include "CString.h"
 //#include "entity.h"
@@ -19,7 +19,6 @@
 #include <NightfireFileSystem.h>
 //#include <r_studioint.h>
 
-#include <vector_types.h>
 //#include <eiface.h>
 #include <com_model.h>
 #include <pmtrace.h>
@@ -28,7 +27,7 @@
 #include <fragbuf.h>
 #include <netchan.h>
 #include <platformdll.h>
-#include <enginefuncs.h>
+//#include <enginefuncs.h>
 #include <globalvars.h>
 #include <server.h>
 #include <nightfire_pointers.h>

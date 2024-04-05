@@ -8,7 +8,8 @@ extern void ShutdownMetaHook();
 #include <winsani_out.h>
 #include <stdio.h>
 
-#include <vector_types.h>
+#include <extdll.h>
+//#include <vector_types.h>
 
 #include <wrect.h>
 #include <interface.h>

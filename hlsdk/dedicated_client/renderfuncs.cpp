@@ -6,10 +6,11 @@
 #include <event_api.h>
 #include "MetaHook.h"
 #include <cvardef.h>
-typedef float vec_t;
-typedef float vec2_t[2];
-typedef float vec3_t[3];
+//typedef float vec_t;
+//typedef float vec2_t[2];
+//typedef float vec3_t[3];
 //#include <eiface.h>
+#include <extdll.h>
 #include <com_model.h>
 #include <pmtrace.h>
 #include "bzip2/bzlib.h"
@@ -17,7 +18,7 @@ typedef float vec3_t[3];
 #include <fragbuf.h>
 #include <netchan.h>
 #include <platformdll.h>
-#include <enginefuncs.h>
+//#include <enginefuncs.h>
 #include <globalvars.h>
 #include "renderfuncs.h"
 #include <bsprender.h>

@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <netchan.h>
 #include <vector>
 #include <const.h>
 //#include <extdll.h>	
@@ -20,16 +21,14 @@
 #include <NightfireFileSystem.h>
 //#include <r_studioint.h>
 
-#include <vector_types.h>
 //#include <eiface.h>
 #include <com_model.h>
 #include <pmtrace.h>
 #include "bzip2/bzlib.h"
 #include <sizebuf.h>
 #include <fragbuf.h>
-#include <netchan.h>
 #include <platformdll.h>
-#include <enginefuncs.h>
+//#include <enginefuncs.h>
 #include <globalvars.h>
 #include <server.h>
 #include <nightfire_pointers.h>

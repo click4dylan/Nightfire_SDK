@@ -7,7 +7,7 @@
 #include "fixes.h"
 #include "renderfuncs.h"
 #include <nightfire_pointers.h>
-#include <enginefuncs.h>
+//#include <enginefuncs.h>
 #include <edict.h>
 
 void(*g_oClientDLL_Init)() = nullptr;
@@ -153,6 +153,7 @@ void ShutdownMetaHook()
 
 void PostFrame()
 {
+	return;
 	if (g_Pointers.g_pCL_EngineFuncs->GetLevelName())
 	{
 		for (int i = 1; i <= 32; ++i)

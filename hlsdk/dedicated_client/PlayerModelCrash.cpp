@@ -21,7 +21,7 @@
 #include <fragbuf.h>
 #include <netchan.h>
 #include <platformdll.h>
-#include <enginefuncs.h>
+//#include <enginefuncs.h>
 #include <globalvars.h>
 #include <server.h>
 #include <nightfire_pointers.h>

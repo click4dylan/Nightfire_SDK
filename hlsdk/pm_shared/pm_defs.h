@@ -21,7 +21,8 @@
 #endif /* not __MINGW32__ */
 #endif
 
-#include <vector_types.h>
+//dylan added
+//#include <vector_types.h>
 
 #include "archtypes.h"     // DAL
 #define	MAX_PHYSENTS 600 		  // Must have room for all entities in the world.
