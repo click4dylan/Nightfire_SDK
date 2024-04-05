@@ -1,9 +1,8 @@
 struct d3dRenderMaterial;
-struct CConsoleVariable;
+class ConsoleVariable;
 struct IConsoleFunction;
 struct RenderTextureAPI;
 
-struct CConsoleVariable;
 struct IConsoleFunction;
 struct RenderTextureAPI;
 

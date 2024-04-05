@@ -15,16 +15,18 @@
 #ifndef CVARDEF_H
 #define CVARDEF_H
 
-#define	FCVAR_ARCHIVE		(1<<0)	// set to cause it to be saved to vars.rc
-#define	FCVAR_USERINFO		(1<<1)	// changes the client's info string
-#define	FCVAR_SERVER		(1<<2)	// notifies players when changed
-#define FCVAR_EXTDLL		(1<<3)	// defined by external DLL
-#define FCVAR_CLIENTDLL     (1<<4)  // defined by the client dll
-#define FCVAR_PROTECTED     (1<<5)  // It's a server cvar, but we don't send the data since it's a password, etc.  Sends 1 if it's not bland/zero, 0 otherwise as value
-#define FCVAR_SPONLY        (1<<6)  // This cvar cannot be changed by clients connected to a multiplayer server.
-#define FCVAR_PRINTABLEONLY (1<<7)  // This cvar's string cannot contain unprintable characters ( e.g., used for player name etc ).
-#define FCVAR_UNLOGGED		(1<<8)  // If this is a FCVAR_SERVER, don't log changes to the log file / console if we are creating a log
-#define FCVAR_NOEXTRAWHITEPACE	(1<<9) // strip trailing/leading white space from this cvar //NEW NOT IN NF
+//cl_name = archive, userinfo, printableonly
+
+#define FCVAR_NF_ALWAYSDEFINED (1 << 0) // internally defined by the game
+#define FCVAR_NF_GAMEDLL (1 << 1) // defined by RegisterGame
+#define FCVAR_NF_CLIENTDLL (1 << 2) // defined by RegisterClient
+#define FCVAR_ARCHIVE (1 << 3) // set to cause it to be saved to config.cfg
+#define FCVAR_USERINFO (1 << 4) // changes the client's info string
+#define FCVAR_SERVER (1 << 5) // notifies players when changed
+#define FCVAR_PROTECTED (1 << 6) // It's a server cvar, but we don't send the data since it's a password, etc.  Sends 1 if it's not bland/zero, 0 otherwise as value
+#define FCVAR_SPONLY (1 << 7) // This cvar cannot be changed by clients connected to a multiplayer server.
+#define FCVAR_UNLOGGED (1 << 8) // If this is a FCVAR_SERVER, don't log changes to the log file / console if we are creating a log
+#define FCVAR_PRINTABLEONLY (1 << 9) // This cvar's string cannot contain unprintable characters ( e.g., used for player name etc ).
 /*
 typedef struct cvar_s
 {

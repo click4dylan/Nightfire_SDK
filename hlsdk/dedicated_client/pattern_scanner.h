@@ -84,6 +84,11 @@ struct pattern_t
 		: dest((void*&) _dest), module_handle((void*)_module_handle), strpattern(pattern), double_wide(_double_wide_pattern), debug_name(_debug_name), crash_if_not_found(_crash_if_not_found)
 	{
 	}
+	template <class T, class M>
+	pattern_t(T& _dest, M _module_handle, const std::string& pattern, bool _double_wide_pattern, bool _dereference = false, int _addbeforedereference = 0, int _addatend = 0, bool _is_relative = false, const char* _debug_name = "", bool _crash_if_not_found = false)
+		: dest((void*&)_dest), module_handle((void*)_module_handle), strpattern(pattern), double_wide(_double_wide_pattern), dereference(_dereference), addbeforedereference(_addbeforedereference), addatend(_addatend), is_relative(_is_relative), debug_name(_debug_name), crash_if_not_found(_crash_if_not_found)
+	{
+	}
 };
 
 template<class T>

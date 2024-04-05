@@ -28,9 +28,9 @@ typedef struct engine_api_s
 	int		size;
 
 	// Functions
-	CConsoleVariable*	( *CreateConsoleVariable)				(IConsoleVariable pCvar ); //CvarRegister
+	ConsoleVariable*	( *CreateConsoleVariable)				(IConsoleVariable pCvar ); //CvarRegister
 	bool	( *DestroyConsoleVariable)			(IConsoleVariable*pCvar);
-	void	( *GetConsoleVariable )				( const char *cmd);
+	ConsoleVariable* ( *GetConsoleVariable )				( const char *cmd);
 	void	( *RegisterConsoleFunction )		(IConsoleFunction*func );
 	void	( *UnregisterConsoleFunction )		(IConsoleFunction* func);
 	int		( *LoadTexture_Launcher )			(char const* one, bool two, bool three, bool four );
@@ -88,7 +88,7 @@ typedef struct gui_imports_s
 	void(*Con_Printf)					(char *, ...);
 	void(*ConsoleBuffer_AddText)				(const char *text);
 	void(*ConsoleBuffer_InsertText)			(const char *text);
-	void(*GetConsoleVariable)			(const char *cmd);
+	ConsoleVariable*(*GetConsoleVariable)			(const char *cmd);
 	unsigned char* (*COM_LoadTempFile)			(const char *path, int *pLength);
 	unsigned char* (*COM_LoadHeapFile)	(const char *path, int *pLength);
 	void(*COM_FreeFile)					(unsigned char *buffer);

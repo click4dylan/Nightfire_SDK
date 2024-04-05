@@ -18,6 +18,10 @@ struct sizebuf_s;
 class nf_pointers
 {
 public:
+	int version;
+	int size;
+	nf_pointers() : version(1), size(sizeof(nf_pointers)) { };
+
 	//engine.dll
 	model_s* (*R_StudioSetupPlayerModel)(int playerindex) {};
 	player_info_s* (*ENG_GetPlayerInfo)(int index) {};
@@ -26,7 +30,84 @@ public:
 	void(*Log_Printf)(const char*, ...) {};
 	BOOL(*Host_IsSinglePlayerGame)() {};
 	void(*R_ChangeMPSkin)() {};
+	void(*Sys_Error)(const char* err, ...) {};
+	void(*CL_ParseTextMessage)() {};
+	void(*CL_InitTempEntModels)() {};
+	struct tempent_s*(*R_DefaultSprite)(float const* origin, int spriteindex, float framerate) {};
+	void(*S_StartDynamicSound)(int entnum, int entchannel, struct sfx_t* sfx, float* origin, float fvol, float attenuation, int flags, int pitch) {};
+	void(*CL_ParseTEnt)() {};
 
+	//engine.dll common.h
+	void (*MSG_StartBitWriting)(sizebuf_t* buf) {};
+	BOOL(*MSG_IsBitWriting)() {};
+	int (*MSG_CurrentBit)() {};
+	BOOL(*MSG_IsBitReading)() {};
+	void (*MSG_StartBitReading)(sizebuf_t* buf) {};
+	void (*MSG_EndBitReading)() {};
+	int (*MSG_ReadOneBit)() {};
+	unsigned int (*MSG_ReadBits)(int numbits) {};
+	unsigned int (*MSG_PeekBits)(int numbits) {};
+	int (*MSG_ReadSBits)(int numbits) {};
+	char* (*MSG_ReadBitString)() {};
+	void (*MSG_ReadBitData)(void* dest, int length) {};
+	float (*MSG_ReadBitCoord)() {};
+	void (*MSG_ReadBitVec3Coord)(vec3_t fa) {};
+	void (*MSG_BeginReading)() {};
+	int (*MSG_ReadChar)() {};
+	int (*MSG_ReadByte)() {};
+	int (*MSG_ReadShort)() {};
+	int (*MSG_ReadLong)() {};
+	float (*MSG_ReadFloat)() {};
+	int (*MSG_ReadBuf)(int iSize, void* pbuf) {};
+	char* (*MSG_ReadString)() {};
+	char* (*MSG_ReadStringLine)() {};
+	float (*MSG_ReadAngle)() {};
+	float (*MSG_ReadHiresAngle)() {};
+	void (*MSG_WriteByte)(sizebuf_t* sb, int c) {};
+	void (*MSG_WriteShort)(sizebuf_t* sb, int c) {};
+	void (*MSG_WriteWord)(sizebuf_t* sb, int c) {};
+	void (*MSG_WriteLong)(sizebuf_t* sb, int c) {};
+	void (*MSG_WriteFloat)(sizebuf_t* sb, float f) {};
+	void (*MSG_WriteString)(sizebuf_t* sb, const char* s) {};
+	void (*MSG_WriteBuf)(sizebuf_t* sb, int iSize, void* buf) {};
+	void (*MSG_WriteAngle)(sizebuf_t* sb, float f) {};
+	void (*MSG_WriteHiresAngle)(sizebuf_t* sb, float f) {};
+	void (*MSG_WriteOneBit)(int nValue) {};
+	void (*MSG_EndBitWriting)(sizebuf_t* buf) {};
+	void (*MSG_WriteBits)(uint32 data, int numbits) {};
+	void (*MSG_WriteSBits)(int data, int numbits) {};
+	void (*MSG_WriteBitString)(const char* p) {};
+	void (*MSG_WriteBitData)(void* src, int length) {};
+	void (*MSG_WriteBitAngle)(float fAngle, int numbits) {};
+	float (*MSG_ReadBitAngle)(int numbits) {};
+	void (*MSG_WriteBitCoord)(const float f) {};
+	void (*MSG_WriteBitVec3Coord)(const vec3_t fa);
+	float (*MSG_ReadCoord)() {};
+	void (*MSG_WriteCoord)(sizebuf_t* sb, const float f) {};
+	void (*MSG_ReadVec3Coord)(sizebuf_t* sb, vec3_t fa) {};
+	void (*MSG_WriteVec3Coord)(sizebuf_t* sb, const vec3_t fa) {};
+	void (*MSG_ReadUsercmd)(usercmd_t* to, usercmd_t* from) {};
+	void (*MSG_WriteUsercmd)(sizebuf_t* buf, usercmd_t* to, usercmd_t* from) {};
+
+
+	int* cl_maxents{}; //unknown name
+	struct sfx_t** cl_sfx_r_exp1{};
+	struct sfx_t** cl_sfx_r_exp2{};
+	struct sfx_t** cl_sfx_r_exp3{};
+	struct model_s** cl_sprite_dot{};
+	struct model_s** cl_sprite_lightning{};
+	struct model_s** cl_sprite_glow{};
+	struct model_s** cl_sprite_muzzleflash{};
+	struct model_s** cl_sprite_muzzleflash2{};
+	struct model_s** cl_sprite_muzzleflash3{};
+	struct model_s** cl_sprite_muzzleflash4{};
+	struct model_s** cl_sprite_muzzleflash5{};
+	struct model_s** cl_sprite_muzzleflash6{};
+	struct model_s** cl_sprite_muzzleflash7{};
+	struct model_s** cl_sprite_muzzleflash8{};
+	struct model_s** cl_sprite_muzzleflash9{};
+	struct model_s** cl_sprite_ricochet{};
+	struct model_s** cl_sprite_shell{};
 	double* realtime{};
 	int* msg_readcount{};
 	sizebuf_s* g_net_message{};
@@ -44,7 +125,7 @@ public:
 
 	void(*SZ_Clear)(sizebuf_s*) {};
 	void(*SZ_Write)(sizebuf_s* buf, const void* data, int length) {};
-	void(*MSG_BeginReading)() {};
+	//void(*MSG_BeginReading)() {};
 
 	//netchan
 	void(*Netchan_CreateFragments)(BOOL, netchan_s*, sizebuf_s*) {};

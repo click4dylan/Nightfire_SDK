@@ -486,16 +486,19 @@ ke::AutoString convertFlagsToString(int flags)
 
 	if (flags > 0)
 	{
+		if (flags & FCVAR_NF_ALWAYSDEFINED) flagsName = flagsName + "FCVAR_NF_ALWAYSDEFINED";
+		if (flags & FCVAR_NF_GAMEDLL) flagsName = flagsName + "FCVAR_NF_GAMEDLL";
+		if (flags & FCVAR_NF_CLIENTDLL) flagsName = flagsName + "FCVAR_NF_CLIENTDLL";
 		if (flags & FCVAR_ARCHIVE)          flagsName = flagsName + "FCVAR_ARCHIVE ";
 		if (flags & FCVAR_USERINFO)         flagsName = flagsName + "FCVAR_USERINFO ";
 		if (flags & FCVAR_SERVER)           flagsName = flagsName + "FCVAR_SERVER ";
-		if (flags & FCVAR_EXTDLL)           flagsName = flagsName + "FCVAR_EXTDLL ";
-		if (flags & FCVAR_CLIENTDLL)        flagsName = flagsName + "FCVAR_CLIENTDLL ";
+		//if (flags & FCVAR_EXTDLL)           flagsName = flagsName + "FCVAR_EXTDLL ";
+		//if (flags & FCVAR_CLIENTDLL)        flagsName = flagsName + "FCVAR_CLIENTDLL ";
 		if (flags & FCVAR_PROTECTED)        flagsName = flagsName + "FCVAR_PROTECTED ";
 		if (flags & FCVAR_SPONLY)           flagsName = flagsName + "FCVAR_SPONLY ";
-		if (flags & FCVAR_PRINTABLEONLY)    flagsName = flagsName + "FCVAR_PRINTABLEONLY ";
 		if (flags & FCVAR_UNLOGGED)         flagsName = flagsName + "FCVAR_UNLOGGED ";
-		if (flags & FCVAR_NOEXTRAWHITEPACE) flagsName = flagsName + "FCVAR_NOEXTRAWHITEPACE ";
+		if (flags & FCVAR_PRINTABLEONLY)    flagsName = flagsName + "FCVAR_PRINTABLEONLY ";
+		//if (flags & FCVAR_NOEXTRAWHITEPACE) flagsName = flagsName + "FCVAR_NOEXTRAWHITEPACE ";
 	}
 
 	if (!flagsName.length())

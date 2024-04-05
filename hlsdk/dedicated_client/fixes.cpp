@@ -36,8 +36,14 @@
 
 //#include <pm_defs.h>
 #include "fixes.h"
+//hack
+vec3_t vec3_origin{};
 
 nf_pointers g_Pointers;
+
+// declare access for third party dlls
+extern "C" { __declspec(dllexport) nf_pointers* GetNFPointers() { return &g_Pointers; }; }
+
 
 DWORD GUI_GetAction_JmpBack;
 __declspec(naked) void GUI_GetAction_Return()
@@ -304,6 +310,7 @@ void Fix_GameDLL_Bugs()
 
 	Force_ServerSide_Entities_GameDLL();
 	Fix_AI_TurnSpeed();
+	Fix_LighterSpark();
 }
 
 void Fix_ClientDLL_Bugs()
@@ -312,6 +319,8 @@ void Fix_ClientDLL_Bugs()
 	Fix_Model_Crash();
 	Fix_Water_Hull();
 	Fix_RainDrop_WaterCollision();
+	Fix_MiniMem_OutOfMemoryMissingNotification();
+	Fix_LighterSpark();
 	Force_ServerSide_Entities_ClientDLL();
 }
 
@@ -587,6 +596,24 @@ void Hook_GameDLLLoadLibrary()
 		return;
 }
 
+void Enable_Dlights_by_default()
+{
+	ConsoleVariable* r_nodlights = g_Pointers.g_pCL_EngineFuncs->GetConsoleVariableClient("r_nodlights");
+	if (r_nodlights)
+		r_nodlights->setValueBool(false);
+
+#if 0
+	DWORD adr;
+	FindMemoryPattern(pattern_t(adr, g_engineDllHinst, "6A 00 6A 01 68 ? ? ? ? 68 ? ? ? ? 6A 00 B9 ? ? ? ? E8 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? 59 C3 90 90 90 90 90 90 90 90 90 90 6A 00 6A 00 68 ? ? ? ? 68 ? ? ? ? 6A 00 B9 ? ? ? ? E8 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? 59 C3 90 90 90 90 90 90 90 90 90 90 6A 00 6A 00 68 ? ? ? ? 68 ? ? ? ? 6A 00 B9 ? ? ? ? E8 ? ? ? ? 68 ? ? ? ? E8 ? ? ? ? 59 C3 90 90 90 90 90 90 90 90 90 90 6A 08", false, "Enable_Dlights_by_default", false));
+	if (!adr)
+		return;
+	DWORD old, old2;
+	VirtualProtect((void*)(adr + 3), 32, PAGE_EXECUTE_READWRITE, &old);
+	*(char*)(adr + 3) = 0;
+	VirtualProtect((void*)(adr + 3), 32, old, &old2);
+#endif
+}
+
 void Fix_Engine_Bugs()
 {
 	Hook_GameDLLLoadLibrary();
@@ -598,6 +625,7 @@ void Fix_Engine_Bugs()
 	Fix_RateDesync();
 	Fix_FpsCap();
 	Fix_UserInfoString();
+	Fix_TempEnts();
 }
 
 void Fix_Gamespy()

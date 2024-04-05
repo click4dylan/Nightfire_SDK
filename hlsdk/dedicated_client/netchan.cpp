@@ -545,8 +545,8 @@ void Fix_Netchan()
 		return;
 	if (!FindMemoryPattern(g_Pointers.SZ_Write, g_engineDllHinst, "8B 44 24 0C 8B 4C 24 08 8B 54 24 04 50 51 50 52", false))
 		return;
-	if (!FindMemoryPattern(g_Pointers.MSG_BeginReading, g_engineDllHinst, "33 C0 A3 ? ? ? ? A2 ? ? ? ? C3", false))
-		return;
+	//if (!FindMemoryPattern(g_Pointers.MSG_BeginReading, g_engineDllHinst, "33 C0 A3 ? ? ? ? A2 ? ? ? ? C3", false))
+	//	return;
 	if (!FindMemoryPattern(nf_hooks::NetchanCreateFragments_Transmit_Retadr, g_engineDllHinst, "83 C4 0C 89 5D 6C 8D BD D0 1F 00 00 33 C0 8B CF", false))
 		return;
 	if (!FindMemoryPattern(g_Pointers.host_client, g_engineDllHinst, "A3 ? ? ? ? 7E 39 8B 7C 24 0C 80 38 00", false, true, 1))

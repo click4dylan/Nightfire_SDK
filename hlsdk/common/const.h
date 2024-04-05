@@ -331,9 +331,9 @@
 
 #define TE_DLIGHT			27		// dynamic light, effect world, minor entity effect
 // coord, coord, coord (pos) 
+// byte (brightness)
 // byte (radius in 10's) 
 // byte byte byte (color)
-// byte (brightness)
 // byte (life in 10's)
 // byte (decay rate in 10's)
 

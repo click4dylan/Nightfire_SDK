@@ -64,7 +64,7 @@ META_FUNCTIONS gMetaFunctionTable = {
 };
 
 
-IConsoleVariable init_plugin_debug(CVAR_INT, "sp_debug", "Single Player MM Debug", "0", FCVAR_EXTDLL);
+IConsoleVariable init_plugin_debug(CVAR_INT, "sp_debug", "Single Player MM Debug", "0", 0);
 
 
 // Meta_Query, any desired checks for valid use.

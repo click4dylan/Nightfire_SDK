@@ -43,7 +43,7 @@
 #include "log_meta.h"			// me
 #include "osdep.h"				// win32 vsnprintf, etc
 
-IConsoleVariable meta_debug = IConsoleVariable(CVAR_INT, "meta_debug", "debug metamod", "0", FCVAR_EXTDLL);
+IConsoleVariable meta_debug = IConsoleVariable(CVAR_INT, "meta_debug", "debug metamod", "0", 0);
 ConsoleVariable* meta_debug_ptr = nullptr;
 
 int GetMetaDebug() {

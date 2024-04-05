@@ -453,6 +453,7 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	timeBeginPeriod(1); //Set timer resolution
 	
 	linkEngineDll("engine.dll");
+
 	if (!g_bDedicated)
 		linkGUIDll("gui.dll");
 
@@ -586,6 +587,7 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 		if (CheckParm("-rinput"))
 			linkRInput();
 		HookFuncs(ENABLE_NVIDIA_FIX);
+		Enable_Dlights_by_default();
 		int iState = DLL_ACTIVE;
 		int iState2 = DLL_ACTIVE;
 		for (;;)

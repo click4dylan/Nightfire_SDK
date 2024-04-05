@@ -93,6 +93,85 @@ void nf_pointers::GetImportantEngineOffsets(long enginedll)
 
 	if (!R_StudioSetupPlayerModel)
 		FindMemoryPattern(R_StudioSetupPlayerModel, enginedll, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false);
+
+	if (!CL_InitTempEntModels)
+	{
+		FindMemoryPattern(pattern_t(CL_InitTempEntModels, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, "CL_initTempEntModels", true));
+		FindMemoryPattern(pattern_t(cl_sprite_dot, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0x18, 0, false, "cl_sprite_dot", true));
+		FindMemoryPattern(pattern_t(cl_sprite_lightning, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0x2B, 0, false, "cl_sprite_lightning", true));
+		FindMemoryPattern(pattern_t(cl_sprite_glow, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0x3E, 0, false, "cl_sprite_glow", true));
+		FindMemoryPattern(pattern_t(cl_sprite_muzzleflash, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0x51, 0, false, "cl_sprite_muzzleflash", true));
+		FindMemoryPattern(pattern_t(cl_sprite_muzzleflash2, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0x64, 0, false, "cl_sprite_muzzleflash2", true));
+		FindMemoryPattern(pattern_t(cl_sprite_muzzleflash3, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0x7A, 0, false, "cl_sprite_muzzleflash3", true));
+		FindMemoryPattern(pattern_t(cl_sprite_muzzleflash4, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0x8D, 0, false, "cl_sprite_muzzleflash4", true));
+		FindMemoryPattern(pattern_t(cl_sprite_muzzleflash5, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0xA0, 0, false, "cl_sprite_muzzleflash5", true));
+		FindMemoryPattern(pattern_t(cl_sprite_muzzleflash6, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0xB3, 0, false, "cl_sprite_muzzleflash6", true));
+		FindMemoryPattern(pattern_t(cl_sprite_muzzleflash7, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0xC6, 0, false, "cl_sprite_muzzleflash7", true));
+		FindMemoryPattern(pattern_t(cl_sprite_muzzleflash8, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0xD9, 0, false, "cl_sprite_muzzleflash8", true));
+		FindMemoryPattern(pattern_t(cl_sprite_muzzleflash9, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0xEF, 0, false, "cl_sprite_muzzleflash9", true));
+		FindMemoryPattern(pattern_t(cl_sprite_ricochet, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0x102, 0, false, "cl_sprite_ricochet", true));
+		FindMemoryPattern(pattern_t(cl_sprite_shell, enginedll, "6A 00 6A 00 68 ? ? ? ? E8 ? ? ? ? 6A 00", false, true, 0x10F, 0, false, "cl_sprite_shell", true));
+		FindMemoryPattern(pattern_t(CL_ParseTextMessage, enginedll, "51 56 57 E8 ? ? ? ? 8B F8", false, "CL_ParseTextMessage", true));
+		FindMemoryPattern(pattern_t(R_DefaultSprite, enginedll, "51 DD 05 ? ? ? ? 57", false, "R_DefaultSprite", true));
+		FindMemoryPattern(pattern_t(S_StartDynamicSound, enginedll, "8B 0D ? ? ? ? 85 C9 74 2D 8B 54 24 20 52 8B 54 24 20 8B 01 52 8B 54 24 20 52 8B 54 24 20 52 8B 54 24 20 52 8B 54 24 20 52 8B 54 24 20 52 8B 54 24 20 52 FF 50 0C C3", false, "S_StartDynamicSound", true));
+		FindMemoryPattern(pattern_t(CL_ParseTEnt, enginedll, "55 8B EC 83 E4 F8 83 EC 58", false, "CL_ParseTEnt", true));
+		FindMemoryPattern(pattern_t(cl_sfx_r_exp1, enginedll, "55 8B EC 83 E4 F8 83 EC 58", false, true, 0xA62, 0, false, "cl_sfx_r_exp1", true));
+		FindMemoryPattern(pattern_t(cl_sfx_r_exp2, enginedll, "55 8B EC 83 E4 F8 83 EC 58", false, true, 0xA07, 0, false, "cl_sfx_r_exp2", true));
+		FindMemoryPattern(pattern_t(cl_sfx_r_exp3, enginedll, "55 8B EC 83 E4 F8 83 EC 58", false, true, 0xA34, 0, false, "cl_sfx_r_exp3", true));
+		FindMemoryPattern(pattern_t(cl_maxents, enginedll, "3B 3D ? ? ? ? 7C 0E 57 68", false, true, 2, 0, false));
+		FindMemoryPattern(pattern_t(Sys_Error, enginedll, "E8 ? ? ? ? 8B 5C 24 34", false, "Sys_Error", true));
+		FindMemoryPattern(pattern_t(MSG_StartBitWriting, enginedll, "E8 ? ? ? ? 0F B7 84 24 ? ? ? ?", false, false, 0, 1, true, "MSG_StartBitWriting", true));
+		FindMemoryPattern(pattern_t(MSG_IsBitWriting, enginedll, "8B 0D ? ? ? ? 33 C0 85 C9 0F 95 C0 C3 90 90 A1 ? ? ? ? 85 C0", false, "MSG_IsBitWriting", true));
+		FindMemoryPattern(pattern_t(MSG_CurrentBit, enginedll, "E8 ? ? ? ? 6A 08 89 44 24 20 ", false, false, 0, 1, true, "MSG_CurrentBit", true));
+		FindMemoryPattern(pattern_t(MSG_IsBitReading, enginedll, "8B 0D ? ? ? ? 33 C0 85 C9 0F 95 C0 C3 90 90 A1 ? ? ? ? 33 C9", false, "MSG_IsBitReading", true));
+		FindMemoryPattern(pattern_t(MSG_StartBitReading, enginedll, "E8 ? ? ? ? 6A 09 E8 ? ? ? ?", false, false, 0, 1, true, "MSG_StartBitReading", true));
+		FindMemoryPattern(pattern_t(MSG_EndBitReading, enginedll, "E8 ? ? ? ? D9 45 40", false, false, 0, 1, true, "MSG_EndBitReading", true)); //fixme: check this
+		FindMemoryPattern(pattern_t(MSG_ReadOneBit, enginedll, "E8 ? ? ? ? 8B F0 8B 44 24 08", false, false, 0, 1, true, "MSG_ReadOneBit", true));
+		FindMemoryPattern(pattern_t(MSG_ReadBits, enginedll, "E8 ? ? ? ? 8B 37 ", false, false, 0, 1, true, "MSG_ReadBits", true));
+		FindMemoryPattern(pattern_t(MSG_PeekBits, enginedll, "8B 44 24 04 83 EC 18", false, "MSG_PeekBits", true));
+		FindMemoryPattern(pattern_t(MSG_ReadSBits, enginedll, "E8 ? ? ? ? 0F BF D0", false, false, 0, 1, true, "MSG_ReadSBits", true));
+		FindMemoryPattern(pattern_t(MSG_ReadBitString, enginedll, "56 6A 08 C6 05 ? ? ? ? ?", false, "MSG_ReadBitString", true));
+		FindMemoryPattern(pattern_t(MSG_ReadBitData, enginedll, "E8 ? ? ? ? 83 C4 10 6A 20", false, false, 0, 1, true, "MSG_ReadBitData", true));
+		FindMemoryPattern(pattern_t(MSG_ReadBitCoord, enginedll, "51 6A 20 E8 ? ? ? ?", false, "MSG_ReadBitCoord", true));
+		FindMemoryPattern(pattern_t(MSG_ReadBitVec3Coord, enginedll, "56 6A 20 E8 ? ? ? ? 8B 74 24 0C ", false, "MSG_ReadBitVec3Coord", true));
+		FindMemoryPattern(pattern_t(MSG_BeginReading, enginedll, "E8 ? ? ? ? 85 F6 74 2A", false, false, 0, 1, true, "MSG_BeginReading", true));
+		FindMemoryPattern(pattern_t(MSG_ReadChar, enginedll, "E8 ? ? ? ? 89 44 24 10 DB 44 24 10 46", false, false, 0, 1, true, "MSG_ReadChar", true));
+		FindMemoryPattern(pattern_t(MSG_ReadByte, enginedll, "E8 ? ? ? ? 0F B6 C8", false, false, 0, 1, true, "MSG_ReadByte", true));
+		FindMemoryPattern(pattern_t(MSG_ReadShort, enginedll, "E8 ? ? ? ? 83 FE 0D", false, false, 0, 1, true, "MSG_ReadShort", true));
+		FindMemoryPattern(pattern_t(MSG_ReadLong, enginedll, "E8 ? ? ? ? 89 46 50", false, false, 0, 1, true, "MSG_ReadLong", true));
+		FindMemoryPattern(pattern_t(MSG_ReadFloat, enginedll, "E8 ? ? ? ? DD 1D ? ? ? ? 83 3D ? ? ? ? ?", false, false, 0, 1, true, "MSG_ReadFloat", true));
+		FindMemoryPattern(pattern_t(MSG_ReadBuf, enginedll, "E8 ? ? ? ? 83 C4 08 6A 20", false, false, 0, 1, true, "MSG_ReadBuf", true));
+		FindMemoryPattern(pattern_t(MSG_ReadString, enginedll, "E8 ? ? ? ? 6A 28", false, false, 0, 1, true, "MSG_ReadString", true));
+		FindMemoryPattern(pattern_t(MSG_ReadStringLine, enginedll, "E8 ? ? ? ? 8D 4C 24 18 8B F0", false, false, 0, 1, true, "MSG_ReadStringLine", true));
+		FindMemoryPattern(pattern_t(MSG_ReadAngle, enginedll, "E8 ? ? ? ? D9 5C 24 54 89 74 24 58", false, false, 0, 1, true, "MSG_ReadAngle", true));
+		FindMemoryPattern(pattern_t(MSG_ReadHiresAngle, enginedll, "E8 ? ? ? ? D9 5C 24 00 D9 05 ? ? ? ?", false, false, 0, 1, true, "MSG_ReadHiresAngle", true));
+		FindMemoryPattern(pattern_t(MSG_WriteByte, enginedll, "E8 ? ? ? ? 6A 33", false, false, 0, 1, true, "MSG_WriteByte", true));
+		FindMemoryPattern(pattern_t(MSG_WriteShort, enginedll, "E8 ? ? ? ? 6A 2D", false, false, 0, 1, true, "MSG_WriteShort", true));
+		FindMemoryPattern(pattern_t(MSG_WriteWord, enginedll, "8B 44 24 04 6A 02 50 E8 ? ? ? ? 8B 4C 24 10 88 08 C1 F9 08 83 C4 08 88 48 01 C3 90 90 90 90 8B 44 24 04 6A 04", false, "MSG_WriteWord", true));
+		FindMemoryPattern(pattern_t(MSG_WriteLong, enginedll, "E8 ? ? ? ? 6A 39", false, false, 0, 1, true, "MSG_WriteLong", true));
+		FindMemoryPattern(pattern_t(MSG_WriteFloat, enginedll, "E8 ? ? ? ? 8A 15 ? ? ? ?", false, false, 0, 1, true, "MSG_WriteFloat", true));
+		FindMemoryPattern(pattern_t(MSG_WriteString, enginedll, "E8 ? ? ? ? 8D 44 24 44", false, false, 0, 1, true, "MSG_WriteString", true));
+		FindMemoryPattern(pattern_t(MSG_WriteBuf, enginedll, "E8 ? ? ? ? D9 43 28", false, false, 0, 1, true, "MSG_WriteBuf", true));
+		FindMemoryPattern(pattern_t(MSG_WriteAngle, enginedll, "E8 ? ? ? ? 83 C4 10 83 C7 04", false, false, 0, 1, true, "MSG_WriteAngle", true));
+		FindMemoryPattern(pattern_t(MSG_WriteHiresAngle, enginedll, "D9 44 24 08 53", false, "MSG_WriteHiresAngle", true));
+		FindMemoryPattern(pattern_t(MSG_WriteOneBit, enginedll, "8B 0D ? ? ? ? 83 F9 08 7C 25", false, "MSG_WriteOneBit", true));
+		FindMemoryPattern(pattern_t(MSG_EndBitWriting, enginedll, "A1 ? ? ? ? F6 40 04 02", false, "MSG_EndBitWriting", true));
+		FindMemoryPattern(pattern_t(MSG_WriteBits, enginedll, "E8 ? ? ? ? 8B 76 08", false, false, 0, 1, true, "MSG_WriteBits", true));
+		FindMemoryPattern(pattern_t(MSG_WriteSBits, enginedll, "E8 ? ? ? ? 83 C4 08 EB 69 ", false, false, 0, 1, true, "MSG_WriteSBits", true));
+		FindMemoryPattern(pattern_t(MSG_WriteBitString, enginedll, "56 8B 74 24 08 8A 06", false, "MSG_WriteBitString", true));
+		FindMemoryPattern(pattern_t(MSG_WriteBitData, enginedll, "56 8B 74 24 08 57 8B 7C 24 10 85 FF", false, "MSG_WriteBitData", true));
+		FindMemoryPattern(pattern_t(MSG_WriteBitAngle, enginedll, "8B 4C 24 08 83 F9 20", false, "MSG_WriteBitAngle", true));
+		FindMemoryPattern(pattern_t(MSG_ReadBitAngle, enginedll, "E8 ? ? ? ? 8B 46 24", false, false, 0, 1, true, "MSG_ReadBitAngle", true));
+		FindMemoryPattern(pattern_t(MSG_WriteBitCoord, enginedll, "8B 44 24 04 6A 20", false, "MSG_WriteBitCoord", true));
+		FindMemoryPattern(pattern_t(MSG_WriteBitVec3Coord, enginedll, "56 8B 74 24 08 8B 06 6A 20", false, "MSG_WriteBitVec3Coord", true));
+		FindMemoryPattern(pattern_t(MSG_ReadCoord, enginedll, "E8 ? ? ? ? D9 5E 04", false, false, 0, 1, true, "MSG_ReadCoord", true));
+		FindMemoryPattern(pattern_t(MSG_WriteCoord, enginedll, "E8 ? ? ? ? 8B 0F 51", false, false, 0, 1, true, "MSG_WriteCoord", true));
+		FindMemoryPattern(pattern_t(MSG_ReadVec3Coord, enginedll, "51 A1 ? ? ? ? 8B 0D ? ? ? ? 8A 14 08 88 54 24 00 8A 54 08 01 88 54 24 01 8A 54 08 02 8A 4C 08 03 88 54 24 02 88 4C 24 03 8B 54 24 00 56", false, "MSG_ReadVec3Coord", true));
+		FindMemoryPattern(pattern_t(MSG_WriteVec3Coord, enginedll, "53 56 8B 74 24 10 8B 06", false, "MSG_WriteVec3Coord", true));
+		FindMemoryPattern(pattern_t(MSG_ReadUsercmd, enginedll, "E8 ? ? ? ? 8B C6 83 C4 08", false, false, 0, 1, true, "MSG_ReadUsercmd", true));
+		FindMemoryPattern(pattern_t(MSG_WriteUsercmd, enginedll, "E8 ? ? ? ? 83 C4 0C 4F", false, false, 0, 1, true, "MSG_WriteUsercmd", true));
+	}
+	
 }
 
 void nf_pointers::GetImportantClientOffsets(long clientdll)

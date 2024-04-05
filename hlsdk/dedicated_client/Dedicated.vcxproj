@@ -326,14 +326,17 @@
     <ClCompile Include="Effects.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="fixes.cpp" />
+    <ClCompile Include="FOV.cpp" />
     <ClCompile Include="globals.cpp" />
     <ClCompile Include="keyboard.cpp" />
+    <ClCompile Include="LighterSpark.cpp" />
     <ClCompile Include="MetaHook.cpp" />
     <ClCompile Include="MinHook\buffer.c" />
     <ClCompile Include="MinHook\hde\hde32.c" />
     <ClCompile Include="MinHook\hde\hde64.c" />
     <ClCompile Include="MinHook\hook.c" />
     <ClCompile Include="MinHook\trampoline.c" />
+    <ClCompile Include="MiniMem.cpp" />
     <ClCompile Include="netchan.cpp" />
     <ClCompile Include="NightfireFileSystem.cpp" />
     <ClCompile Include="nightfire_hooks.cpp" />
@@ -354,6 +357,7 @@
   <ItemGroup>
     <ClInclude Include="bzip2\include\bzip2\bzlib.h" />
     <ClInclude Include="bzip2\src\bzlib_private.h" />
+    <ClInclude Include="clientdll_funcs.h" />
     <ClInclude Include="conproc.h" />
     <ClInclude Include="..\common\crc.h" />
     <ClInclude Include="console.h" />

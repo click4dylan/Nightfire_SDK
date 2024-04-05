@@ -144,6 +144,15 @@
     <ClCompile Include="Effects.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
+    <ClCompile Include="MiniMem.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="FOV.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="LighterSpark.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc">
@@ -233,6 +242,9 @@
       <Filter>Header Files\fixes</Filter>
     </ClInclude>
     <ClInclude Include="nightfire_hooks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="clientdll_funcs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
