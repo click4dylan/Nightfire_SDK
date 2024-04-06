@@ -259,6 +259,7 @@ engine_info_t engine_info = {
 	{ mFALSE,  9,	"ForceUnmodified" },	// pfnForceUnmodified
 	{ mFALSE,  9,	"GetPlayerStats" },		// pfnGetPlayerStats
 	{ mFALSE,  9,	"PM_FindSafeSpot" },		// pfnPM_FindSafeSpot
+	{ mFALSE, 9, 	"GetGameSpyPointer" },		// pfnGetGameSpyPointer
 	{ mFALSE,  9,	"IndexForSurface" },		// pfnIndexForSurface
 	{ mFALSE,  9,	"SurfaceForIndex" },		// pfnSurfaceForIndex
 	{ mFALSE,  9,	"SV_ClosestSurfaceToPoint" }, // pfnSV_ClosestSurfaceToPoint

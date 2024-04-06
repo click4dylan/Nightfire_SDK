@@ -24,6 +24,8 @@
 #define ENTITY_NORMAL		(1<<0)
 #define ENTITY_BEAM			(1<<1)
 
+#include <bool_nightfire.h>
+
 // Entity state is used for the baseline and for delta compression of a packet of 
 //  entities that is sent to a client.
 typedef struct entity_state_s entity_state_t;
@@ -85,7 +87,7 @@ struct entity_state_s
 	int			team;
 	int			playerclass; // Playerclass signifies it's a decalable glass item when referring to an object
 	int			health_old; //940
-	qboolean	spectator;
+	bool_nightfire	spectator;
 	int			weaponmodel;
 	int			gaitsequence;
 	// If standing on conveyor, e.g.
@@ -104,27 +106,28 @@ struct entity_state_s
 	int			weaponanim;
 
 	// Parametric movement overrides
-	//vec3_t		startpos;
+	vec3_t		startpos;
 	vec3_t		endpos;
 	float		impacttime;
 	float		starttime;
 
+	int jetpackfuel;
+
 	// For mods
-	int			iuser1;
-	int			iuser2;
-	//int			iuser3;
-	unsigned char			iuser4;
-	float		fuser1;
-	//float		fuser2;
-	//float		fuser3;
-	//float		fuser4;
-	vec3_t		vuser1;
-	vec3_t		vuser2;
-	//vec3_t		vuser3;
-	//vec3_t		vuser4;
-	int gbx_unknown;
-	float health;
-	char unknown2[56];
+	int iuser1;
+	int iuser2;
+	int iuser3;
+	int iuser4_is_visible_weather;
+	float fuser1;
+	float fuser2;
+	float fuser3;
+	float fuser4_health;
+	vec3_t vuser1;
+	vec3_t vuser2;
+	vec3_t vuser3;
+	vec3_t vuser4;
+	color24 fixedlight;
+	int spawnflags;
 };
 //size: 352 bytes
 
@@ -132,60 +135,56 @@ struct entity_state_s
 
 typedef struct clientdata_s
 {
-	vec3_t				origin;
-	vec3_t				velocity;
-
-	int					viewmodel;
-	vec3_t				punchangle;
-	int					flags;
-	int					waterlevel;
-	int					watertype;
-	vec3_t				view_ofs;
-	float				health;
-
-	int					bInDuck;
-
-	int					weapons; // remove?
-	
-	int					flTimeStepSound;
-	int					flDuckTime;
-	int					flSwimTime;
-	int					waterjumptime;
-
-	float				maxspeed;
-
-	float				fov;
-	int					weaponanim;
-
-	int					m_iId;
-	int					ammo_shells;
-	int					ammo_nails;
-	int					ammo_cells;
-	int					ammo_rockets;
-	float				m_flNextAttack;
-	
-	int					tfstate;
-
-	int					pushmsec;
-
-	int					deadflag;
-
-	char				physinfo[ MAX_PHYSINFO_STRING ];
+	vec3_t origin;
+	vec3_t velocity;
+	int viewmodel;
+	vec3_t punchangle;
+	int flags;
+	int waterlevel;
+	int watertype;
+	vec3_t view_ofs;
+	float health;
+	int bInDuck;
+	int bInLeanLeft;
+	int bInLeanRight;
+	vec3_t preleanangles;
+	int weapons; // remove?
+	int flTimeStepSound;
+	int flDuckTime;
+	int flLeanLeftTime;
+	int flLeanRightTime;
+	int flSwimTime;
+	int waterjumptime;
+	float maxspeed;
+	float fov;
+	int weaponanim;
+	int m_iId;
+	int ammo_shells;
+	int ammo_nails;
+	int ammo_cells;
+	int ammo_rockets;
+	float m_flNextAttack;
+	int tfstate;
+	int pushmsec;
+	int deadflag;
+	char physinfo[MAX_PHYSINFO_STRING];
+	int jetpackfuel;
 
 	// For mods
-	int					iuser1;
-	int					iuser2;
-	int					iuser3;
-	int					iuser4;
-	float				fuser1;
-	float				fuser2;
-	float				fuser3;
-	float				fuser4;
-	vec3_t				vuser1;
-	vec3_t				vuser2;
-	vec3_t				vuser3;
-	vec3_t				vuser4;
+	int iuser1;
+	int iuser2;
+	int iuser3;
+	int iuser4_is_visible_weather;
+	float fuser1;
+	float fuser2;
+	float fuser3;
+	float fuser4;
+	vec3_t vuser1;
+	vec3_t vuser2;
+	vec3_t vuser3;
+	vec3_t vuser4;
 } clientdata_t;
+//0x1FC mac
 
 #include "weaponinfo.h"
 

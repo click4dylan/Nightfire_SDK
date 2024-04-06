@@ -334,6 +334,7 @@ meta_enginefuncs_t::meta_enginefuncs_t(
             void             (*_pfnForceUnmodified)                 (FORCE_TYPE, float*, float*, const char*),
             void             (*_pfnGetPlayerStats)                  (const edict_t*, int*, int*),
 			void			 (*_pfnPM_FindSafeSpot)					( edict_t*),
+			void*			 (*_pfnGetGameSpyPointer)				( void ),
 			int				 (*_pfnIndexForSurface)					(const msurface_t*),
 			const msurface_t*(*_pfnSurfaceForIndex)					( int ),
 			const msurface_t*(*_pfnSV_ClosestSurfaceToPoint)		(const edict_t*, float const* )
@@ -481,6 +482,7 @@ meta_enginefuncs_t::meta_enginefuncs_t(
 	pfnForceUnmodified = _pfnForceUnmodified;
 	pfnGetPlayerStats = _pfnGetPlayerStats;
 	pfnPM_FindSafeSpot = _pfnPM_FindSafeSpot;
+	pfnGetGameSpyPointer = _pfnGetGameSpyPointer;
 	pfnIndexForSurface = _pfnIndexForSurface;
 	pfnSurfaceForIndex = _pfnSurfaceForIndex;
 	pfnSV_ClosestSurfaceToPoint = _pfnSV_ClosestSurfaceToPoint;

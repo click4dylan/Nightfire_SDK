@@ -37,6 +37,8 @@
 // This list is now kept in a separate file to facilitate generating the
 // list from game data stored in a convenient db.
 
+#if 0
+
 #ifdef __amd64__
 #  define MODARCH "_amd64"
 #else
@@ -130,3 +132,5 @@
 {"wormshl",        "wormshl_i586.so",        "wormshl.dll",    "none",            "WormsHL"},
 {"zp",             "none",                   "mp.dll",         "none",            "Zombie Panic"},
 {"bond",             "none",                 "game.dll",       "none",            "James Bond 007: Nightfire"},
+
+#endif

@@ -34,6 +34,7 @@
 //#include <enginefuncs.h>
 //#include <eiface.h>
 #include <globalvars.h>
+//#include <server_static.h>
 
 #include <server.h>
 #include "nightfire_pointers.h"
@@ -96,7 +97,7 @@ void SV_RunCmd(usercmd_t* ucmd, int random_seed)
 	trace_t trace;
 	float frametime;
 
-	if (HOST_CLIENT->ignorecmdtime > realtime)
+	if (HOST_CLIENT->ignorecmdtime > *g_Pointers.realtime)
 	{
 		HOST_CLIENT->cmdtime = (double)ucmd->msec / 1000.0 + HOST_CLIENT->cmdtime;
 		return;
@@ -167,7 +168,7 @@ void SV_RunCmd(usercmd_t* ucmd, int random_seed)
 	}
 
 	pmove->server = TRUE;
-	pmove->multiplayer = (g_psvs.maxclients > 1) ? TRUE : FALSE;
+	pmove->multiplayer = (g_Pointers.psvs->maxclients > 1) ? TRUE : FALSE;
 	pmove->time = float(1000.0 * HOST_CLIENT->svtimebase);
 	pmove->usehull = (sv_player->v.flags & FL_DUCKING) == FL_DUCKING;
 	pmove->maxspeed = sv_maxspeed.value;

@@ -53,7 +53,8 @@ game_modlist_t known_games = {
 	// separate file, generated based on game information stored in a 
 	// convenient db.
 	//
-#include "games.h"
+//#include "games.h"
+   {"bond",             "none",                 "game.dll",       "none",            "James Bond 007: Nightfire"},
 	// End of list terminator:
 	{NULL, NULL, NULL, NULL, NULL}
 };

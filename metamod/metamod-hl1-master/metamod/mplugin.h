@@ -407,6 +407,7 @@ class MPlugin {
 	SHOW_IFDEF(api_table, engine_info, pfnForceUnmodified, 		pre_str, post_str); \
 	SHOW_IFDEF(api_table, engine_info, pfnGetPlayerStats, 		pre_str, post_str); \
 	SHOW_IFDEF(api_table, engine_info, pfnPM_FindSafeSpot, 		pre_str, post_str); \
+	SHOW_IFDEF(api_table, engine_info, pfnGetGameSpyPointer,	pre_str, post_str); \
 	SHOW_IFDEF(api_table, engine_info, pfnIndexForSurface, 		pre_str, post_str); \
 	SHOW_IFDEF(api_table, engine_info, pfnSurfaceForIndex, 		pre_str, post_str); \
 	SHOW_IFDEF(api_table, engine_info, pfnSV_ClosestSurfaceToPoint, 		pre_str, post_str);

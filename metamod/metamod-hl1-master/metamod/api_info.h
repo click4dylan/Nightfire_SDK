@@ -275,7 +275,8 @@ typedef struct engine_info_s {
 	api_info_t pfnCreateInstancedBaseline;
 	api_info_t pfnForceUnmodified;
 	api_info_t pfnGetPlayerStats;
-	api_info_t pfnPM_FindSafeSpot;
+	api_info_t pfnPM_FindSafeSpot;	
+	api_info_t pfnGetGameSpyPointer;
 	api_info_t pfnIndexForSurface;
 	api_info_t pfnSurfaceForIndex;
 	api_info_t pfnSV_ClosestSurfaceToPoint;

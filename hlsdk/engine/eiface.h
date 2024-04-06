@@ -262,6 +262,7 @@ typedef struct enginefuncs_s
 	void		(*pfnGetPlayerStats)	( const edict_t *pClient, int *ping, int *packet_loss );
 	
 	void		(*pfnPM_FindSafeSpot)	( edict_t* pClient );
+	void*		(*pfnGetGameSpyPointer) ( void );
 	int			(*pfnIndexForSurface)	( const msurface_t* pSurface );
 	const msurface_t* (*pfnSurfaceForIndex)	( int index ); //added
 	const msurface_t* (*pfnSV_ClosestSurfaceToPoint)		(edict_t const* pClient, float const* pPoint);

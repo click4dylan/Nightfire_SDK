@@ -65,11 +65,6 @@ typedef struct pvPrivateData_s {
 
 typedef struct entvars_s
 {
-	//int unknown;
-	//int padding[37];
-
-	//void *Test; //removeme
-	//pvPrivateData_t/*void*/		*pvPrivateData; //0x11C
 	string_t	classname;
 	string_t	globalname;
 	vec3_t		origin;
@@ -197,43 +192,40 @@ typedef struct entvars_s
 	int			playerclass;
 	float		maxspeed;
 
-	float		fov;
-	int			weaponanim;
-
-	int			pushmsec;
-
-	int			bInDuck;
-	int			flTimeStepSound;
-	int			flSwimTime;
-	int			flDuckTime;
-	int			iStepLeft;
-	float		flFallVelocity;
-
-	int			gamestate;
-
-	int			oldbuttons;
-
-	int			groupinfo;
-
-	// For mods
-	int			iuser1;
-	int			iuser2;
-	int			iuser3;
-	int			iuser4;
-	float		fuser1;
-	float		fuser2;
-	float		fuser3;
-	//float		fuser4;
-	vec3_t		vuser1;
-	vec3_t		vuser2;
-	vec3_t		vuser3; //ROCKET LAUNCHER GUIDED MISSILE
-	vec3_t		vuser4;
-	edict_t		*euser1;
-	edict_t		*euser2;
-	edict_t		*euser3;
-	edict_t		*euser4;
-	float		fuser4;
-	int unknown[8];
+	float fov;
+	int weaponanim;
+	int pushmsec;
+	int bInDuck;
+	int bInLeanLeft;
+	int bInLeanRight;
+	int flTimeStepSound;
+	int flSwimTime;
+	int flDuckTime;
+	int flLeanLeftTime;
+	int flLeanRightTime;
+	int iStepLeft;
+	float flFallVelocity;
+	int iunknown;
+	int oldbuttons;
+	int groupinfo;
+	int jetpackfuel;
+	int iuser1;
+	int iuser2;
+	int iuser3;
+	int iuser4_is_visible_weather;
+	float fuser1;
+	float fuser2;
+	float fuser3;
+	float fuser4;
+	vec3_t vuser1;
+	vec3_t vuser2;
+	vec3_t vuser3;
+	vec3_t vuser4;
+	edict_t* euser1;
+	edict_t* euser2;
+	edict_t* euser3;
+	edict_t* euser4;
+	vec3_t fixedlight;
 } entvars_t; //size: 704 (0x2C0)
 
 typedef struct entvars_s2 //Used by CBaseEntity/CBasePlayer, dylan added

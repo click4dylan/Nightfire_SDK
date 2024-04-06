@@ -204,6 +204,7 @@ extern char* mm_COM_Token();
 extern void mm_COM_FreeFile(void *buffer);
 
 extern void mm_PM_FindSafeSpot(edict_t* pClient);
+extern void* mm_GetGameSpyPointer(void);
 extern int mm_IndexForSurface(const msurface_t* pSurface);
 extern const msurface_t* mm_SurfaceForIndex(int index);
 extern const msurface_t* mm_SV_ClosestSurfaceToPoint(const edict_t* pClient, const float* pPos);
@@ -262,6 +263,7 @@ extern void mm_ForceUnmodified( FORCE_TYPE type, float *mins, float *maxs, const
 
 extern void mm_GetPlayerStats( const edict_t *pClient, int *ping, int *packet_loss );
 extern void	mm_PM_FindSafeSpot( edict_t* pClient );
+extern void* mm_GetGameSpyPointer( void );
 extern int	mm_IndexForSurface( const msurface_t* pSurface );
 extern const msurface_t*	mm_SurfaceForIndex( int index );
 extern const msurface_t*	mm_SV_ClosestSurfaceToPoint(const edict_t* pClient, float const* pPos);
@@ -284,6 +286,7 @@ typedef const char* (*FN_COM_PARSEFILE)	(const char *buffer, char *adr, unsigned
 typedef byte* (*FN_COM_LOADHEAPFILE)	(const char* buffer, int* length);
 typedef char* (*FN_COM_TOKEN)            ();
 typedef void (*FN_PM_FINDSAFESPOT)				( edict_t* pClient ); 
+typedef void* (*FN_GETGAMESPYPOINTER)			( void );
 typedef int  (*FN_INDEXFORSURFACE)				( const msurface_t* ); 
 typedef const msurface_t* (*FN_SURFACEFORINDEX)				( int index); 
 typedef const msurface_t* (*FN_CLOSESTSURFACETOPOINT)				( const edict_t* pClient, const float* pPos ); 

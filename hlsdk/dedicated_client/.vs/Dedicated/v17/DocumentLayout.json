@@ -3,12 +3,19 @@
   "WorkspaceRootPath": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\renderfuncs.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|solutionrelative:renderfuncs.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\dllapi.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|solutionrelative:MetaHook.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\pattern_scanner.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|solutionrelative:pattern_scanner.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\renderfuncs.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|solutionrelative:renderfuncs.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\WaterPrediction.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -21,9 +28,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\nightfire_pointers.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|solutionrelative:nightfire_pointers.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\NIGHTFIRE_SDK\\HLSDK\\COMMON\\NIGHTFIRE_POINTERS.H||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -49,10 +53,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\PlayerModelCrash.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|solutionrelative:PlayerModelCrash.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\pattern_scanner.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|solutionrelative:pattern_scanner.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\pattern_scanner.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -85,6 +85,9 @@
     {
       "AbsoluteMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|E:\\nightfire_sdk\\hlsdk\\dedicated_client\\globals.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{916BF1F1-9E35-EAD0-BEA1-1FF8B3158C43}|Dedicated.vcxproj|solutionrelative:globals.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\nightfire_sdk\\hlsdk\\common\\nightfire_pointers.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -99,6 +102,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "dllapi.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\dllapi.cpp",
+              "RelativeDocumentMoniker": "..\\..\\metamod\\metamod-hl1-master\\metamod\\dllapi.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\metamod\\metamod-hl1-master\\metamod\\dllapi.cpp",
+              "RelativeToolTip": "..\\..\\metamod\\metamod-hl1-master\\metamod\\dllapi.cpp",
+              "ViewState": "AQIAALQAAAAAAAAAAADgv9IAAAAXAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-04-06T04:06:01.274Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "renderfuncs.cpp",
               "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\renderfuncs.cpp",
               "RelativeDocumentMoniker": "renderfuncs.cpp",
@@ -111,33 +127,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "WaterPrediction.cpp",
-              "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\WaterPrediction.cpp",
-              "RelativeDocumentMoniker": "WaterPrediction.cpp",
-              "ToolTip": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\WaterPrediction.cpp",
-              "RelativeToolTip": "WaterPrediction.cpp",
-              "ViewState": "AQIAABsAAAAAAAAAAAAAACcAAAA4AAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-03-29T23:18:46.297Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "MetaHook.h",
-              "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.h",
-              "RelativeDocumentMoniker": "MetaHook.h",
-              "ToolTip": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.h",
-              "RelativeToolTip": "MetaHook.h",
-              "ViewState": "AQIAABkAAAAAAAAAAAAAACIAAAAUAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-03-29T22:57:09.796Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "PlayerModelCrash.cpp",
               "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\PlayerModelCrash.cpp",
               "RelativeDocumentMoniker": "PlayerModelCrash.cpp",
@@ -145,8 +135,7 @@
               "RelativeToolTip": "PlayerModelCrash.cpp",
               "ViewState": "AQIAAO0AAAAAAAAAAAApwAoBAAAJAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-03-28T23:08:10.664Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T23:08:10.664Z"
             },
             {
               "$type": "Document",
@@ -158,8 +147,7 @@
               "RelativeToolTip": "pattern_scanner.cpp",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAdAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-03-28T23:03:38.537Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T23:03:38.537Z"
             },
             {
               "$type": "Document",
@@ -169,14 +157,14 @@
               "RelativeDocumentMoniker": "MetaHook.cpp",
               "ToolTip": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.cpp",
               "RelativeToolTip": "MetaHook.cpp",
-              "ViewState": "AQIAAGQAAAAAAAAAAAAkwHwAAAAJAAAA",
+              "ViewState": "AQIAABgAAAAAAAAAAAAAADAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2024-03-28T21:06:48.233Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 22,
               "Title": "nightfire_pointers.h",
               "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\common\\nightfire_pointers.h",
               "RelativeDocumentMoniker": "..\\common\\nightfire_pointers.h",
@@ -184,12 +172,11 @@
               "RelativeToolTip": "..\\common\\nightfire_pointers.h",
               "ViewState": "AQIAAAAAAAAAAAAAAAD4vxcAAAAVAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-03-29T21:26:47.318Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-29T21:26:47.318Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "nightfire_pointers.cpp",
               "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\nightfire_pointers.cpp",
               "RelativeDocumentMoniker": "nightfire_pointers.cpp",
@@ -197,12 +184,11 @@
               "RelativeToolTip": "nightfire_pointers.cpp",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAACQAAAAUAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-03-28T22:37:00.185Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T22:37:00.185Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "fixes.cpp",
               "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\fixes.cpp",
               "RelativeDocumentMoniker": "fixes.cpp",
@@ -215,7 +201,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "netchan.cpp",
               "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\netchan.cpp",
               "RelativeDocumentMoniker": "netchan.cpp",
@@ -223,12 +209,11 @@
               "RelativeToolTip": "netchan.cpp",
               "ViewState": "AQIAAAgAAAAAAAAAAAAgwB8AAAAVAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-03-28T23:16:26.403Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T23:16:26.403Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "eiface.h",
               "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\engine\\eiface.h",
               "RelativeDocumentMoniker": "..\\engine\\eiface.h",
@@ -236,12 +221,11 @@
               "RelativeToolTip": "..\\engine\\eiface.h",
               "ViewState": "AQIAALQBAAAAAAAAAAAYwL4BAAAWAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-03-28T21:50:05.382Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T21:50:05.382Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "cvardef.h",
               "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\common\\cvardef.h",
               "RelativeDocumentMoniker": "..\\common\\cvardef.h",
@@ -249,12 +233,11 @@
               "RelativeToolTip": "..\\common\\cvardef.h",
               "ViewState": "AQIAAKUAAAAAAAAAAAAQwK4AAAAYAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-03-29T21:26:47.299Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-29T21:26:47.299Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "engine.cpp",
               "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\engine.cpp",
               "RelativeDocumentMoniker": "engine.cpp",
@@ -267,14 +250,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "exit.cpp",
               "DocumentMoniker": "C:\\Program Files (x86)\\Windows Kits\\10\\Source\\10.0.10240.0\\ucrt\\startup\\exit.cpp",
               "ToolTip": "C:\\Program Files (x86)\\Windows Kits\\10\\Source\\10.0.10240.0\\ucrt\\startup\\exit.cpp",
               "ViewState": "AQIAAG0AAAAAAAAAAAASwIEAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-03-29T22:36:05.974Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-29T22:36:05.974Z"
             },
             {
               "$type": "Document",
@@ -286,8 +268,32 @@
               "RelativeToolTip": "AITurnSpeed.cpp",
               "ViewState": "AQIAADwAAAAAAAAAAAAxwE4AAACJAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-03-28T22:34:48.304Z",
+              "WhenOpened": "2024-03-28T22:34:48.304Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "pattern_scanner.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\pattern_scanner.h",
+              "RelativeDocumentMoniker": "pattern_scanner.h",
+              "ToolTip": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\pattern_scanner.h",
+              "RelativeToolTip": "pattern_scanner.h",
+              "ViewState": "AQIAAMEAAAAAAAAAAAAAANkAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-28T21:53:34.875Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "MetaHook.h",
+              "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.h",
+              "RelativeDocumentMoniker": "MetaHook.h",
+              "ToolTip": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\MetaHook.h",
+              "RelativeToolTip": "MetaHook.h",
+              "ViewState": "AQIAABkAAAAAAAAAAAAAACIAAAAUAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-03-29T22:57:09.796Z"
             },
             {
               "$type": "Document",
@@ -299,21 +305,19 @@
               "RelativeToolTip": "renderfuncs.h",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAABEAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-03-28T22:34:42.635Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T22:34:42.635Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "pattern_scanner.h",
-              "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\pattern_scanner.h",
-              "RelativeDocumentMoniker": "pattern_scanner.h",
-              "ToolTip": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\pattern_scanner.h",
-              "RelativeToolTip": "pattern_scanner.h",
-              "ViewState": "AQIAAL8AAAAAAAAAAAApwNgAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-03-28T21:53:34.875Z",
-              "EditorCaption": ""
+              "DocumentIndex": 4,
+              "Title": "WaterPrediction.cpp",
+              "DocumentMoniker": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\WaterPrediction.cpp",
+              "RelativeDocumentMoniker": "WaterPrediction.cpp",
+              "ToolTip": "E:\\nightfire_sdk\\hlsdk\\dedicated_client\\WaterPrediction.cpp",
+              "RelativeToolTip": "WaterPrediction.cpp",
+              "ViewState": "AQIAABsAAAAAAAAAAAAAACcAAAA4AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-03-29T23:18:46.297Z"
             },
             {
               "$type": "Document",
@@ -325,8 +329,7 @@
               "RelativeToolTip": "bzip2\\src\\bzlib.c",
               "ViewState": "AQIAAAkEAAAAAAAAAAAgwCAEAAAiAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
-              "WhenOpened": "2024-03-28T21:50:17.174Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T21:50:17.174Z"
             },
             {
               "$type": "Document",
@@ -338,8 +341,7 @@
               "RelativeToolTip": "conproc.cpp",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-03-28T21:50:13.646Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T21:50:13.646Z"
             },
             {
               "$type": "Document",
@@ -364,8 +366,7 @@
               "RelativeToolTip": "globals.h",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAABcAAAAdAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-03-28T21:06:47.551Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T21:06:47.551Z"
             },
             {
               "$type": "Document",
@@ -377,8 +378,7 @@
               "RelativeToolTip": "globals.cpp",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAABIAAAAWAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-03-28T21:06:40.065Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-03-28T21:06:40.065Z"
             }
           ]
         }

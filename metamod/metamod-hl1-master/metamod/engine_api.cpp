@@ -124,6 +124,10 @@ void mm_PM_FindSafeSpot ( edict_t* pClient ) {
 	META_ENGINE_HANDLE_void(FN_PM_FINDSAFESPOT, pfnPM_FindSafeSpot, (pClient));
 	RETURN_API_void()
 }
+void* mm_GetGameSpyPointer ( void ) {
+	META_ENGINE_HANDLE(void*, 0, FN_GETGAMESPYPOINTER, pfnGetGameSpyPointer, ());
+	RETURN_API()
+}
 int mm_IndexForSurface ( const msurface_t* pSurface ) {
 	META_ENGINE_HANDLE(int, 0, FN_INDEXFORSURFACE, pfnIndexForSurface, (pSurface));
 	RETURN_API()
@@ -986,6 +990,7 @@ meta_enginefuncs_t meta_engfuncs(
 
 	&mm_GetPlayerStats,			// pfnGetPlayerStats()
 	&mm_PM_FindSafeSpot,
+	&mm_GetGameSpyPointer,
 	&mm_IndexForSurface,
 	&mm_SurfaceForIndex,
 	&mm_SV_ClosestSurfaceToPoint
