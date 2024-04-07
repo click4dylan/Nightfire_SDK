@@ -24,4 +24,5 @@ void NightfirePlatformFuncs::Init(unsigned long platform_module)
 	MembankUsageTypeDestructor = (MembankUsageTypeDestructor_t)GetProcAddress((HMODULE)platform_module, "??1MembankUsageType@@QAE@XZ");
 	mallocx = (mallocx_t)GetProcAddress((HMODULE)platform_module, "?mallocx@@YGPAXH@Z");
 	freex = (freex_t)GetProcAddress((HMODULE)platform_module, "?freex@@YGXPAX@Z");
+	strcmpx = (strcmpx_t)GetProcAddress((HMODULE)platform_module, "?strcmpx@@YGHPBD0@Z");
 }

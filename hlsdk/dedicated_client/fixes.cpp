@@ -613,9 +613,111 @@ void Enable_Dlights_by_default()
 #endif
 }
 
+void __cdecl LoadAdjacentEntities_InternalCall_Rebuild(DWORD* src, DWORD* dest, const char* string_to_search)
+{
+	signed int v3; // esi
+	const char* v4; // edi
+	int v5; // esi
+
+	v3 = 0;
+	if ((int)src[9] <= 0 || string_to_search == nullptr) //string_to_search is nullptr when sv_newunit 1 and changelevel2 m1_austria01 while being on m1_austria01
+	{
+		dest[1] = 0;
+		*dest = 0;
+		dest[2] = 0;
+	}
+	else
+	{
+		v4 = (const char*)(src + 19);
+
+		while (g_pNightfirePlatformFuncs->strcmpx(v4, string_to_search))     // crashhere
+		{
+			++v3;
+			v4 += 84;
+			if (v3 >= (int)src[9])
+			{
+				dest[1] = 0;
+				*dest = 0;
+				dest[2] = 0;
+				return;
+			}
+		}
+		v5 = 21 * v3;
+		*dest = src[v5 + 28];
+		dest[1] = src[v5 + 29];
+		dest[2] = src[v5 + 30];
+	}
+}
+
+DWORD g_oLoadAdjacentEntities_InternalCall;
+__declspec(naked) void __cdecl LoadAdjacentEntities_InternalCall_Hooked(DWORD* src, DWORD* dest, const char* string_to_search)
+{
+	__asm
+	{
+		push[esp + 8]
+		push[esp + 8]
+		push ebx //ptr
+		call LoadAdjacentEntities_InternalCall_Rebuild
+		add esp, 12
+		retn
+	}
+}
+
+void Fix_LoadAdjacentEntities_Crash()
+{
+	DWORD loadadjacententities_internalcall;
+	if (!FindMemoryPattern(pattern_t(loadadjacententities_internalcall, g_engineDllHinst, "8B 43 24 55", false, "LoadAdjacentEntities_CrashFix", true)))
+		return;
+	if (!HookFunctionWithMinHook(loadadjacententities_internalcall, (void*)&LoadAdjacentEntities_InternalCall_Hooked, (void**)&g_oLoadAdjacentEntities_InternalCall))
+		ErrorBox("Failed to hook LoadAdjacentEntities_CrashFix");
+}
+
+unsigned int (*g_ogetTime)() {};
+unsigned int initial_time = -1;
+unsigned int getTime_Hooked()
+{
+	unsigned int time = timeGetTime();
+	if (initial_time == -1)
+		initial_time = time;
+
+	return time - initial_time;
+}
+
+void Fix_PlatformDLL_Bugs()
+{
+	// this is not the best way to fix the timer. TODO: proper fix
+	BYTE* getTime = (BYTE*)GetProcAddress((HMODULE)g_platformDllHinst, "?getTime@@YGKXZ");
+	if (!getTime)
+		return;
+
+	if (!HookFunctionWithMinHook(getTime, getTime_Hooked, (void**)&g_ogetTime))
+		return;
+}
+
+void* g_oCOM_EntsForPlayerSlots;
+int COM_EntsForPlayerSlots(int nPlayers)
+{
+	// return 32 * nPlayers + 1368;
+
+	int numedicts = 2048;
+	return (numedicts + 15 * (nPlayers - 1));
+}
+
+void Fix_Edict_Limit()
+{
+	DWORD adr;
+	if (!FindMemoryPattern(adr, g_engineDllHinst, "8B 44 24 04 C1 E0 05 05", false))
+		return;
+
+	if (!HookFunctionWithMinHook((void*)adr, COM_EntsForPlayerSlots, (void**)&g_oCOM_EntsForPlayerSlots))
+		return;
+}
+
 void Fix_Engine_Bugs()
 {
 	Hook_GameDLLLoadLibrary();
+	Fix_Edict_Limit();
+	Fix_LoadAdjacentEntities_Crash();
 	Fix_Sound_Overflow();
 	Fix_Netchan();
 	Fix_AlertMessage_Crash();

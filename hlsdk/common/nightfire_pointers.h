@@ -123,7 +123,7 @@ public:
 	struct playermove_s** g_PlayerMove{};
 	cl_enginefuncs_s* g_pCL_EngineFuncs{};
 	char* DM_PlayerState{};
-
+	
 	client_s** host_client{};
 
 	void(*SZ_Clear)(sizebuf_s*) {};

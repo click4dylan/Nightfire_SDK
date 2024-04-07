@@ -3,7 +3,10 @@
 extern void Fix_Model_Crash();
 extern void Fix_GUI_GetAction_Crash();
 extern void Fix_Sound_Overflow();
+extern void Fix_Edict_Limit();
+extern void Fix_LoadAdjacentEntities_Crash();
 extern void Enable_Dlights_by_default();
+extern void Fix_PlatformDLL_Bugs();
 extern void Fix_Engine_Bugs();
 extern void Fix_GameDLL_Bugs();
 extern void Fix_ClientDLL_Bugs();

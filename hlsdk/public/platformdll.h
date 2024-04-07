@@ -18,8 +18,9 @@ typedef int(__thiscall *MembankUsageType_t) (MembankUsageType_Class* c, int type
 typedef void(__thiscall *MembankUsageTypeDestructor_t) (MembankUsageType_Class* c);
 typedef void* (__stdcall *mallocx_t)(size_t bytes);
 typedef void (__stdcall *freex_t)(void* mem);
+typedef int (__stdcall *strcmpx_t)(char const* str1, char const* str2);
 
-#define NIGHTFIRE_PLATFORM_FUNCS_VERSION 1
+#define NIGHTFIRE_PLATFORM_FUNCS_VERSION 2
 
 class NightfirePlatformFuncs
 {
@@ -35,6 +36,7 @@ public:
 	MembankUsageTypeDestructor_t MembankUsageTypeDestructor;
 	mallocx_t mallocx;
 	freex_t freex;
+	strcmpx_t strcmpx;
 
 	NightfirePlatformFuncs() : version(0), hPlatformDll(0) {};
 	void Init(unsigned long platform_module);

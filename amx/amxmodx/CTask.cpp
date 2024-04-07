@@ -193,7 +193,7 @@ CTaskMngr::~CTaskMngr()
 	clear();
 }
 
-void CTaskMngr::registerTimers(float *pCurrentTime, float *pTimeLimit, float *pTimeLeft)
+void CTaskMngr::registerTimers(float *pCurrentTime, int *pTimeLimit, float *pTimeLeft)
 {
 	m_pTmr_CurrentTime = pCurrentTime;
 	m_pTmr_TimeLimit = pTimeLimit;

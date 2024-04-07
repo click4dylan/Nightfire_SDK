@@ -22,6 +22,7 @@
 #include "MetaHook.h"
 #include <platformdll.h>
 #include "pattern_scanner.h"
+#include <nightfire_pointers.h>
 
 typedef int (*engine_api_func)( int version, int size, struct engine_api_s *api );
 typedef int(*gui_api_func)(int version, int size, struct gui_api_s *api);
@@ -112,6 +113,8 @@ void linkPlatformDll(const char* name)
 		ErrorMessage(-1, "Was not able to load in the membank \"platform.dll\"");
 
 	g_pNightfirePlatformFuncs->Init(g_platformDllHinst);
+
+	Fix_PlatformDLL_Bugs();
 }
 
 void linkGUIDll(const char* name)
@@ -499,7 +502,7 @@ void __cdecl Launcher_PlayMovie(char* movie)
 	(*(void(__thiscall**)(int, int, const char*, const char*))(*(DWORD*)v4 + 52))(v4, v2, "themovie", movie);
 }
 
-int __cdecl Launcher_OpenFrontEnd(int a1, int a2, int a3, int a4)
+void __cdecl Launcher_OpenFrontEnd(bool to_escape_menu, bool multiplayer, bool is_server, bool is_teamplay)
 {
 	int v4; // eax@2
 	int v5; // esi@2
@@ -538,7 +541,7 @@ int __cdecl Launcher_OpenFrontEnd(int a1, int a2, int a3, int a4)
 	char* off_41904C = "gui/Scripts/Escapemenu/mpmenu.txt";
 
 
-	if (a1)
+	if (to_escape_menu)
 	{
 		v4 = ((int(__cdecl *)())g_guiAPI.GUI_Manager)();
 		v5 = (*(int(__thiscall **)(int, char *))(*(DWORD *)v4 + 20))(v4, off_419044); //[0]
@@ -547,18 +550,18 @@ int __cdecl Launcher_OpenFrontEnd(int a1, int a2, int a3, int a4)
 			v6 = g_guiAPI.GUI_Manager();
 			(*(void(__thiscall **)(DWORD*, int, DWORD))(*(DWORD *)v6 + 36))(v6, v5, 0);
 		}
-		if (a2)
+		if (multiplayer)
 		{
 			v7 = g_guiAPI.GUI_Manager();
 			v8 = (*(int(__thiscall **)(DWORD*, char *))(*(DWORD *)v7 + 16))(v7, off_41904C);
 			v10 = g_guiAPI.GUI_Manager();
-			(*(void(__thiscall **)(DWORD*, int, const char *, DWORD))(*(DWORD *)v10 + 48))(v10, v8, "mpmenu_server", a3 != 0);
+			(*(void(__thiscall **)(DWORD*, int, const char *, DWORD))(*(DWORD *)v10 + 48))(v10, v8, "mpmenu_server", is_server != 0);
 			v12 = g_guiAPI.GUI_Manager();
 			(*(void(__thiscall **)(DWORD*, int, const char *, DWORD))(*(DWORD *)v12 + 48))(
 				v12,
 				v8,
 				"mpmenu_teamplay",
-				a4 != 0);
+				is_teamplay != 0);
 		}
 		else
 		{
@@ -598,7 +601,7 @@ int __cdecl Launcher_OpenFrontEnd(int a1, int a2, int a3, int a4)
 	v27 = g_guiAPI.GUI_Manager();
 	v28 = (*(int(__thiscall **)(DWORD*, const char *))(*(DWORD *)v27 + 16))(v27, "gui/Scripts/Dialogs/dlg_wait.txt");
 	v30 = g_guiAPI.GUI_Manager();
-	return (*(int(__thiscall **)(DWORD*, int, signed int))(*(DWORD *)v30 + 36))(v30, v28, 1);
+	(*(int(__thiscall **)(DWORD*, int, signed int))(*(DWORD *)v30 + 36))(v30, v28, 1);
 }
 
 

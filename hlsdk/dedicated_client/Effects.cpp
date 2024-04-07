@@ -479,7 +479,7 @@ void Hooked_CL_ParseTEnt(void)
 			g_Pointers.Sys_Error("Decal: entity = %i");
 
 		static ConsoleVariable* r_decals = g_pEngineFuncs->pfnGetConsoleVariableGame("r_decals");
-		if (r_decals->getValueFloat() != 0.0f)
+		if (r_decals->getValue() != 0.0f)
 			g_EffectsAPI->R_DecalShoot(textureindex, entityindex, modelindex, pos, flags);
 		break;
 	}
@@ -498,7 +498,7 @@ void Hooked_CL_ParseTEnt(void)
 			g_Pointers.Sys_Error("Decal: entity = %i");
 
 		static ConsoleVariable* r_decals = g_pEngineFuncs->pfnGetConsoleVariableGame("r_decals");
-		if (r_decals->getValueFloat() != 0.0f)
+		if (r_decals->getValue() != 0.0f)
 			g_EffectsAPI->R_DecalShoot(textureindex, entityindex, 0, pos, flags);
 		break;
 	}
@@ -509,15 +509,15 @@ void Hooked_CL_ParseTEnt(void)
 		pos[2] = g_Pointers.MSG_ReadCoord();
 
 		int flags = 0;
+		int entityindex = 0;
 		float decalsize = g_Pointers.MSG_ReadCoord();
 		int textureindex = g_Pointers.MSG_ReadByte();
-		int entityindex = g_Pointers.MSG_ReadShort();
 
 		if (entityindex >= *g_Pointers.cl_maxents)
 			g_Pointers.Sys_Error("Decal: entity = %i");
 
 		static ConsoleVariable* r_decals = g_pEngineFuncs->pfnGetConsoleVariableGame("r_decals");
-		if (r_decals->getValueFloat() != 0.0f)
+		if (r_decals->getValue() != 0.0f)
 			g_EffectsAPI->R_DecalShoot(textureindex, entityindex, 0, pos, flags);
 		break;
 	}
@@ -528,15 +528,15 @@ void Hooked_CL_ParseTEnt(void)
 		pos[2] = g_Pointers.MSG_ReadCoord();
 
 		int flags = 0;
+		int entityindex = 0;
 		float decalsize = g_Pointers.MSG_ReadCoord();
 		int textureindex = g_Pointers.MSG_ReadByte() + 256;
-		int entityindex = g_Pointers.MSG_ReadShort();
 
 		if (entityindex >= *g_Pointers.cl_maxents)
 			g_Pointers.Sys_Error("Decal: entity = %i");
 
 		static ConsoleVariable* r_decals = g_pEngineFuncs->pfnGetConsoleVariableGame("r_decals");
-		if (r_decals->getValueFloat() != 0.0f)
+		if (r_decals->getValue() != 0.0f)
 			g_EffectsAPI->R_DecalShoot(textureindex, entityindex, 0, pos, flags);
 		break;
 	}
@@ -555,7 +555,7 @@ void Hooked_CL_ParseTEnt(void)
 			g_Pointers.Sys_Error("Decal: entity = %i");
 
 		static ConsoleVariable* r_decals = g_pEngineFuncs->pfnGetConsoleVariableGame("r_decals");
-		if (r_decals->getValueFloat() != 0.0f)
+		if (r_decals->getValue() != 0.0f)
 			g_EffectsAPI->R_DecalShoot(textureindex, entityindex, 0, pos, flags);
 
 		break;

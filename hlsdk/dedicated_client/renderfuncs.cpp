@@ -80,11 +80,44 @@ void RunRenderCode()
 	}
 }
 
+#include "clientdll_funcs.h"
+
+void RunTestCode()
+{
+
+	if (gViewPort && gViewPort->singleplayerscoreboard)
+	{
+		static bool initial_visible_state = false;
+		static bool first_press = true;
+		static bool pressing = false;
+
+		if (GetAsyncKeyState(VK_F1))
+		{
+
+			if (first_press)
+			{
+				first_press = false;
+				initial_visible_state = gViewPort->singleplayerscoreboard->is_visible;
+				gViewPort->singleplayerscoreboard->setVisible(true);
+			}
+
+			pressing = true;
+		}
+		else if (pressing)
+		{
+			first_press = true;
+			pressing = false;
+			gViewPort->singleplayerscoreboard->setVisible(initial_visible_state);
+		}
+	}
+}
+
 __declspec(naked) void Hooked_SCR_ConnectMsg()
 {
 	__asm
 	{
 		call RunRenderCode
+		call RunTestCode
 		SUB ESP, 0x0C
 		MOV ECX, 0x449B03F4
 		MOV EAX, 0x430568D8

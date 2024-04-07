@@ -382,7 +382,7 @@ int	C_Spawn(edict_t *pent)
 		static IConsoleVariable timelimit_holder;
 
 		timelimit_holder.name = "mp_timelimit";
-		timelimit_holder.type = CVAR_FLOAT;
+		timelimit_holder.type = CVAR_INT;
 		timelimit_holder.description = "";
 		timelimit_holder.value = "0";
 		timelimit_holder.flags = 0;
@@ -396,7 +396,7 @@ int	C_Spawn(edict_t *pent)
 
 	// ###### Initialize task manager
 	//DYLAN FIXME: hack for now.. 
-	float* timelimit_raw_address = (float*)((uintptr_t)mp_timelimit + 20);
+	int* timelimit_raw_address = (int*)((uintptr_t)mp_timelimit + 20);
 	g_tasksMngr.registerTimers(&gpGlobals->time, timelimit_raw_address, &g_game_timeleft);
 
 	// ###### Initialize commands prefixes

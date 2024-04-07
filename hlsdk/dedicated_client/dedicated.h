@@ -39,7 +39,7 @@ void CDAudio_Pause();
 void CDAudio_Resume();
 void CDAudio_Update();
 void __cdecl Launcher_PlayMovie(char* movie);
-int __cdecl Launcher_OpenFrontEnd(int a1, int a2, int a3, int a4);
+void __cdecl Launcher_OpenFrontEnd(bool to_escape_menu, bool multiplayer, bool is_server, bool is_teamplay);
 DWORD GetOSPlatform();
 int getOSVersion();
 extern BYTE g_AltTabbedAway;

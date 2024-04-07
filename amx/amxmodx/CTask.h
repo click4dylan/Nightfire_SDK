@@ -65,13 +65,13 @@ private:
 	ke::Vector<ke::AutoPtr<CTask>> m_Tasks;
 	
 	float *m_pTmr_CurrentTime;
-	float *m_pTmr_TimeLimit;
+	int *m_pTmr_TimeLimit;
 	float *m_pTmr_TimeLeft;
 public:
 	CTaskMngr();
 	~CTaskMngr();
 
-	void registerTimers(float *pCurrentTime, float *pTimeLimit, float *pTimeLeft);	// The timers will always point to the right value
+	void registerTimers(float *pCurrentTime, int *pTimeLimit, float *pTimeLeft);	// The timers will always point to the right value
 	void registerTask(CPluginMngr::CPlugin *pPlugin, int iFunc, int iFlags, cell iId, float fBase, int iParamsLen, const cell *pParams, int iRepeat);
 	
 	int removeTasks(int iId, AMX *pAmx);											// remove all tasks that match the id and amx

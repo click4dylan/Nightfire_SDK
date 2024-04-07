@@ -26,6 +26,6 @@ typedef int (*IsValidCDT)(void);
 typedef DWORD(*GetCDKeyT)(char* dest, unsigned int buffer_size, DWORD* new_length, BYTE* result);
 typedef void (*ChangeGameDirectoryT)(const char* a1);
 typedef void (*Launcher_PlayMovieT)(char* movie);
-typedef int (*Launcher_OpenFrontEndT)(int one, int two, int three, int four);
+typedef void (*Launcher_OpenFrontEndT)(bool one, bool two, bool three, bool four);
 typedef int (*getOSVersionT)();
 typedef DWORD* (*GUI_ManagerT)();
