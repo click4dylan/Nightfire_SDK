@@ -2226,7 +2226,7 @@ static cell AMX_NATIVE_CALL num_to_word(AMX *amx, cell *params) /* 3 param */
 
 static cell AMX_NATIVE_CALL get_timeleft(AMX *amx, cell *params)
 {
-	float flCvarTimeLimit = mp_timelimit->getValueFloat();
+	float flCvarTimeLimit = mp_timelimit->getValue();
 
 	if (flCvarTimeLimit)
 	{

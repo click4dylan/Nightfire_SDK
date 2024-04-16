@@ -31,6 +31,7 @@
 
 #include <studio.h>
 #include <StudioModelRenderer.h>
+#include <r_studioint.h>
 
 mstudioanim_t* (__fastcall* g_oStudioGetAnim)(CStudioModelRenderer*, void*, model_t*, mstudioseqdesc_t*);
 mstudioanim_t* __fastcall CStudioModelRenderer_StudioGetAnim(CStudioModelRenderer* me, void* edx, model_t* m_pSubModel, mstudioseqdesc_t* pseqdesc)
@@ -75,8 +76,10 @@ mstudioanim_t* __fastcall CStudioModelRenderer_StudioGetAnim(CStudioModelRendere
 
 DWORD invalid_sequence_jmpback;
 DWORD valid_sequence_jmpback;
-bool StudioSequenceGetAnimPosOutOfBoundsCheck(CStudioModelRenderer* renderer, model_t* model)
+bool __cdecl StudioSequenceGetAnimPosOutOfBoundsCheck(CStudioModelRenderer* renderer, model_t* model)
 {
+	renderer->m_pStudioHeader = (studiohdr_t*)g_Pointers.g_pStudioModelAPI->Mod_Extradata(model);
+
 	return renderer->m_pCurrentEntity->curstate.sequence < renderer->m_pStudioHeader->numseq;
 }
 
@@ -275,8 +278,8 @@ void Fix_Model_Crash()
 	}
 	if (FindMemoryPattern(adr, *g_clientDllHinst, "50 FF 15 ? ? ? ? 89 46 ? 88 5E", false))
 	{
-		valid_sequence_jmpback = adr;
+		valid_sequence_jmpback = adr;// +0xA;
 		invalid_sequence_jmpback = adr + 0x1E3;
-		PlaceJMP((BYTE*)(adr - 6), (DWORD)&StudioGetAnimPos_Hook, 5);
+		PlaceJMP((BYTE*)(adr - 6), (DWORD)&StudioGetAnimPos_Hook, 6);
 	}
 }

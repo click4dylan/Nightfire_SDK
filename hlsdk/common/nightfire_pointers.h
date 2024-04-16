@@ -91,6 +91,9 @@ public:
 	void (*MSG_ReadUsercmd)(usercmd_t* to, usercmd_t* from) {};
 	void (*MSG_WriteUsercmd)(sizebuf_t* buf, usercmd_t* to, usercmd_t* from) {};
 
+	//engine.dll
+	struct engine_studio_api_s* g_pStudioModelAPI{};
+
 	DLL_FUNCTIONS* g_EntityInterface{};
 	NEW_DLL_FUNCTIONS* g_NewDLLFunctions{};
 	int* cl_maxents{}; //unknown name

@@ -121,10 +121,10 @@ void ClientDLL_Init()
 void RunMetaHook()
 {
 	// hook renderer temporarily for debugging
-#ifdef _DEBUG
+//#ifdef _DEBUG
 	Hook_SCR_ConnectMsg();
 	Hook_CL_PrecacheResources();
-#endif
+//#endif
 
 	if (!FindMemoryPattern(pattern_t(g_pClientDLL_Init, g_engineDllHinst, "A0 ? ? ? ? 81 EC 04 01 00 00 84 C0 0F 85 D3", false, "ClientDLL_Init", true)))
 		return;

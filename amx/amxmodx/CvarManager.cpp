@@ -437,7 +437,7 @@ void CvarManager::SetCvarMin(CvarInfo* info, bool set, float value, int pluginId
 		info->bound.minVal = value;
 
 		// Current value is already in the allowed range.
-		if (info->var->getValueFloat() >= value)
+		if (info->var->getValue() >= value)
 		{
 			return;
 		}
@@ -460,7 +460,7 @@ void CvarManager::SetCvarMax(CvarInfo* info, bool set, float value, int pluginId
 		info->bound.maxVal = value;
 
 		// Current value is already in the allowed range.
-		if (info->var->getValueFloat() <= value)
+		if (info->var->getValue() <= value)
 		{
 			return;
 		}

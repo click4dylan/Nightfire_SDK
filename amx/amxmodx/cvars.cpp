@@ -184,7 +184,7 @@ static cell AMX_NATIVE_CALL get_cvar_float(AMX *amx, cell *params)
 	if (!info)
 		return 0;
 
-	float value = info->var->getValueFloat();
+	float value = info->var->getValue();
 	return amx_ftoc(value);
 }
 
@@ -196,7 +196,7 @@ static cell AMX_NATIVE_CALL get_cvar_num(AMX *amx, cell *params)
 
 	CvarInfo* info = g_CvarManager.FindCvar(name);
 
-	return info ? (int)info->var->getValueInt() : 0;
+	return info ? (int)info->var->getValue() : 0;
 }
 
 // get_cvar_string(const cvarname[], output[], iLen)
@@ -309,7 +309,7 @@ static cell AMX_NATIVE_CALL get_pcvar_float(AMX *amx, cell *params)
 		LogError(amx, AMX_ERR_NATIVE, "Invalid CVAR pointer");
 		return 0;
 	}
-	float value = ptr->getValueFloat();
+	float value = ptr->getValue();
 	return amx_ftoc(value);
 }
 
@@ -323,7 +323,7 @@ static cell AMX_NATIVE_CALL get_pcvar_num(AMX *amx, cell *params)
 		return 0;
 	}
 
-	return (int)ptr->getValueInt();
+	return (int)ptr->getValue();
 }
 
 // bool:get_pcvar_bool(pcvar)

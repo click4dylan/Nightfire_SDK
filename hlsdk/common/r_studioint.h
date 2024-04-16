@@ -122,6 +122,8 @@ typedef struct engine_studio_api_s
 	//void			( *StudioRenderShadow )			( int iSprite, float *p1, float *p2, float *p3, float *p4 );
 } engine_studio_api_t;
 
+extern engine_studio_api_t* g_StudioModelAPI;
+
 typedef struct server_studio_api_s
 {
 	// Allocate number*size bytes and zero it

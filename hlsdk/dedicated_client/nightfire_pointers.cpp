@@ -23,6 +23,7 @@
 #include <nightfire_pointers.h>
 #include "nightfire_hooks.h"
 #include "pattern_scanner.h"
+#include <r_studioint.h>
 
 #include <pm_defs.h>
 
@@ -90,6 +91,18 @@ void nf_pointers::GetImportantEngineOffsets(long enginedll)
 		if (adr)
 			g_psv = *(server_t***)(adr + 1);
 	}
+
+	// get studio model api from the engine
+	if (!g_pStudioModelAPI)
+	{
+		DWORD adr;
+		if (FindMemoryPattern(adr, enginedll, "68 ? ? ? ? 68 ? ? ? ? 6A 01 FF D0 83 C4 0C 85 C0 75 12", false, true, 1))
+		{
+			g_pStudioModelAPI = (engine_studio_api_s*)adr;
+			g_StudioModelAPI = g_pStudioModelAPI;
+		}
+	}
+
 
 	if (!R_StudioSetupPlayerModel)
 		FindMemoryPattern(R_StudioSetupPlayerModel, enginedll, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false);
