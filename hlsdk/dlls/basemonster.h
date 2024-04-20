@@ -19,7 +19,7 @@
 //
 // generic Monster
 //
-class CBaseMonster : public CBaseToggle
+class CBaseCharacter : public CBaseToggle
 {
 private:
 		int					m_afConditions;
@@ -123,7 +123,7 @@ public:
 	
 	virtual int	 BloodColor( void ) { return m_bloodColor; }
 
-	virtual CBaseMonster *MyMonsterPointer( void ) { return this; }
+	virtual CBaseCharacter *MyCharacterPointer( void ) { return this; }
 	virtual void Look ( int iDistance );// basic sight function for monsters
 	virtual void RunAI ( void );// core ai function!	
 	void Listen ( void );
