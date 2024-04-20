@@ -73,7 +73,7 @@ public:
 	void Think( void );
 	void Initialize ( void );
 	
-	static void		InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration );
+	static void		InsertSound ( int iType, const Vector &vecOrigin, const Vector& vecAngles, int iVolume, float flDuration );
 	static void		FreeSound ( int iSound, int iPrevious );
 	static int		ActiveList( void );// return the head of the active list
 	static int		FreeList( void );// return the head of the free list

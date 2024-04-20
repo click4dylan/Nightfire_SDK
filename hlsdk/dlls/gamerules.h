@@ -56,6 +56,76 @@ enum
 	GR_NEUTRAL,
 };
 
+//TODO : place in respective files
+#if 0
+#define TEAM_MI6 0
+#define TEAM_PHOENIX 1
+#define TEAM_COUNT 2
+#define CHARACTER_SLOTS 20
+#define MAX_NAME_SIZE 32
+
+const char team_names[TEAM_COUNT][MAX_NAME_SIZE] = {
+	"MI6\0",
+	"Phoenix\0"
+};
+
+const char team_chars[TEAM_COUNT][CHARACTER_SLOTS][MAX_NAME_SIZE] = {
+	// Team MI6
+	{
+		"MP_MI6_tux\0",
+		"MP_MI6_suit\0",
+		"MP_MI6_stealth\0",
+		"MP_alura_combat\0",
+		"MP_dominique\0",
+		"MP_Zoe\0",
+		"MP_Q\0",
+		"MP_christmas_jones\0",
+		"MP_pussy_galore\0",
+		"MP_wai_lin\0",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		""
+	},
+	// Team PHOENIX
+	{
+		"MP_castle_guard\0",
+		"MP_commando\0",
+		"MP_drake\0",
+		"MP_kiko\0",
+		"MP_Rook\0",
+		"MP_snowguard\0",
+		"MP_yakuza\0",
+		"MP_mayday\0",
+		"MP_xenia\0",
+		"MP_jaws\0",
+		"MP_oddjob\0",
+		"MP_elektra\0",
+		"MP_goldfinger\0",
+		"MP_baren_samedi\0",
+		"MP_renard\0",
+		"MP_scaramanga\0",
+		"",
+		"",
+		"",
+		""
+	}
+};
+
+__declspec(noinline) const char* GetCharacterType(int team, int charactermodel_slot) {
+	if (charactermodel_slot >= CHARACTER_SLOTS)
+		return "";  // Return empty string if charactermodel_slot is out of bounds
+
+	return team_chars[team][charactermodel_slot];
+}
+#endif
+
 class CGameRules
 {
 public:
@@ -72,7 +142,8 @@ public:
 	virtual BOOL IsDeathmatch( void ) = 0;//is this a deathmatch game?
 	virtual BOOL IsTeamplay( void ) { return FALSE; };// is this deathmatch game being played with team rules?
 	virtual BOOL IsCoOp( void ) = 0;// is this a coop game?
-	virtual const char *GetGameDescription( void ) { return "Half-Life"; }  // this is the game name that gets seen in the server browser
+	virtual BOOL IsCTF(void) = 0;// is this a coop game?
+	virtual const char *GetGameDescription( void ) { return "Vega"; }  // this is the game name that gets seen in the server browser
 	
 // Client connection/disconnection
 	virtual BOOL ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ] ) = 0;// a client just connected to the server (player hasn't spawned yet)
@@ -93,13 +164,17 @@ public:
 	virtual edict_t *GetPlayerSpawnSpot( CBasePlayer *pPlayer );// Place this player on their spawnspot and face them the proper direction.
 
 	virtual BOOL AllowAutoTargetCrosshair( void ) { return TRUE; };
-	virtual BOOL ClientCommand( CBasePlayer *pPlayer, const char *pcmd ) { return FALSE; };  // handles the user commands;  returns TRUE if command handled properly
+	virtual BOOL ClientCommand( CBasePlayer *pPlayer, const char *pcmd, unsigned int numargs, const char** args ) { return FALSE; };  // handles the user commands;  returns TRUE if command handled properly
 	virtual void ClientUserInfoChanged( CBasePlayer *pPlayer, char *infobuffer ) {}		// the player has changed userinfo;  can change it now
 
 // Client kills/scoring
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled ) = 0;// how many points do I award whoever kills this player?
 	virtual void PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor ) = 0;// Called each time a player dies
+	virtual void PlayerFailed(CBasePlayer* pVictim) { };
+	virtual void CharacterKilled(CBaseCharacter* pVictim, entvars_t* pKiller) { };
 	virtual void DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor )=  0;// Call this from within a GameRules class to report an obituary.
+	virtual void ShotFired(CBasePlayer* pAttacker) { };
+	virtual void PlayerTakeDamage(CBasePlayer* pMessageTarget, entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) { };
 // Weapon retrieval
 	virtual BOOL CanHavePlayerItem( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon );// The player is touching an CBasePlayerItem, do I give it to him?
 	virtual void PlayerGotWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon ) = 0;// Called each time a player picks up a weapon from the ground
@@ -148,12 +223,18 @@ public:
 	virtual void ChangePlayerTeam( CBasePlayer *pPlayer, const char *pTeamName, BOOL bKill, BOOL bGib ) {}
 	virtual const char *SetDefaultPlayerTeam( CBasePlayer *pPlayer ) { return ""; }
 
+	virtual const char* GetCharacterType(int team, int charactermodel_slot) { return ""; }
+
+	virtual int GetNumTeams() { return 0; }
+	virtual int TeamWithFewestPlayers() { return 0; }
+	virtual BOOL TeamsBalanced() { return TRUE; }
+
 // Sounds
 	virtual BOOL PlayTextureSounds( void ) { return TRUE; }
 	virtual BOOL PlayFootstepSounds( CBasePlayer *pl, float fvol ) { return TRUE; }
 
 // Monsters
-	virtual BOOL FAllowMonsters( void ) = 0;//are monsters allowed
+	virtual BOOL FAllowCharacters( void ) = 0;//are monsters allowed
 
 	// Immediately end a multiplayer game
 	virtual void EndMultiplayerGame( void ) {}
@@ -166,15 +247,15 @@ extern CGameRules *InstallGameRules( void );
 // CHalfLifeRules - rules for the single player Half-Life 
 // game.
 //=========================================================
-class CHalfLifeRules : public CGameRules
+class CBondRules : public CGameRules
 {
 public:
-	CHalfLifeRules ( void );
+	CBondRules ( void );
 
 // GR_Think
 	virtual void Think( void );
 	virtual BOOL IsAllowedToSpawn( CBaseEntity *pEntity );
-	virtual BOOL FAllowFlashlight( void ) { return TRUE; };
+	virtual BOOL FAllowFlashlight( void );
 
 	virtual BOOL FShouldSwitchWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon );
 	virtual BOOL GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pCurrentWeapon );
@@ -183,11 +264,13 @@ public:
 	virtual BOOL IsMultiplayer( void );
 	virtual BOOL IsDeathmatch( void );
 	virtual BOOL IsCoOp( void );
+	virtual BOOL IsCTF(void) { return FALSE; }
 
 // Client connection/disconnection
 	virtual BOOL ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ] );
 	virtual void InitHUD( CBasePlayer *pl );		// the client dll is ready for updating
 	virtual void ClientDisconnected( edict_t *pClient );
+	virtual void UpdateGameMode(CBasePlayer* pPlayer);
 
 // Client damage rules
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
@@ -203,7 +286,11 @@ public:
 // Client kills/scoring
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled );
 	virtual void PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor );
+	virtual void PlayerFailed(CBasePlayer* pVictim);
+	virtual void CharacterKilled(CBaseCharacter* pVictim, entvars_t* pKiller);
 	virtual void DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor );
+	virtual void ShotFired(CBasePlayer* pAttacker);
+	virtual void PlayerTakeDamage(CBasePlayer* pMessageTarget, entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType);
 
 // Weapon retrieval
 	virtual void PlayerGotWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon );
@@ -233,6 +320,7 @@ public:
 
 // Healthcharger respawn control
 	virtual float FlHealthChargerRechargeTime( void );
+	virtual float FlHEVChargerRechargeTime(void); // how long until a depleted HealthCharger recharges itself?
 
 // What happens to a dead player's weapons
 	virtual int DeadPlayerWeapons( CBasePlayer *pPlayer );
@@ -240,22 +328,24 @@ public:
 // What happens to a dead player's ammo	
 	virtual int DeadPlayerAmmo( CBasePlayer *pPlayer );
 
-// Monsters
-	virtual BOOL FAllowMonsters( void );
-
 // Teamplay stuff	
-	virtual const char *GetTeamID( CBaseEntity *pEntity ) {return "";};
+	virtual const char* GetTeamID(CBaseEntity* pEntity);
 	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
+
+// Sounds
+
+// Monsters
+	virtual BOOL FAllowCharacters(void);
 };
 
 //=========================================================
 // CHalfLifeMultiplay - rules for the basic half life multiplayer
 // competition
 //=========================================================
-class CHalfLifeMultiplay : public CGameRules
+class CBondMultiplay : public CGameRules
 {
 public:
-	CHalfLifeMultiplay();
+	CBondMultiplay();
 
 // GR_Think
 	virtual void Think( void );
@@ -270,6 +360,7 @@ public:
 	virtual BOOL IsMultiplayer( void );
 	virtual BOOL IsDeathmatch( void );
 	virtual BOOL IsCoOp( void );
+	virtual BOOL IsCTF(void) { return FALSE; };
 
 // Client connection/disconnection
 	// If ClientConnected returns FALSE, the connection is rejected and the user is provided the reason specified in
@@ -292,7 +383,8 @@ public:
 	virtual edict_t *GetPlayerSpawnSpot( CBasePlayer *pPlayer );
 
 	virtual BOOL AllowAutoTargetCrosshair( void );
-	virtual BOOL ClientCommand( CBasePlayer *pPlayer, const char *pcmd );
+	virtual BOOL ClientCommand(CBasePlayer* pPlayer, const char* pcmd, unsigned int numargs, const char** args);  // handles the user commands;  returns TRUE if command handled properly
+	virtual void ClientUserInfoChanged(CBasePlayer* pPlayer, char* infobuffer);		// the player has changed userinfo;  can change it now
 
 // Client kills/scoring
 	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled );
@@ -300,8 +392,8 @@ public:
 	virtual void DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor );
 
 // Weapon retrieval
-	virtual void PlayerGotWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon );
 	virtual BOOL CanHavePlayerItem( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon );// The player is touching an CBasePlayerItem, do I give it to him?
+	virtual void PlayerGotWeapon(CBasePlayer* pPlayer, CBasePlayerItem* pWeapon);
 
 // Weapon spawn/respawn control
 	virtual int WeaponShouldRespawn( CBasePlayerItem *pWeapon );
@@ -337,14 +429,15 @@ public:
 	virtual int DeadPlayerAmmo( CBasePlayer *pPlayer );
 
 // Teamplay stuff	
-	virtual const char *GetTeamID( CBaseEntity *pEntity ) {return "";}
+	virtual const char *GetTeamID( CBaseEntity *pEntity ) { return ""; }
 	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
+	virtual const char* SetDefaultPlayerTeam(CBasePlayer* pPlayer);
 
 	virtual BOOL PlayTextureSounds( void ) { return FALSE; }
 	virtual BOOL PlayFootstepSounds( CBasePlayer *pl, float fvol );
 
 // Monsters
-	virtual BOOL FAllowMonsters( void );
+	virtual BOOL FAllowCharacters( void );
 
 	// Immediately end a multiplayer game
 	virtual void EndMultiplayerGame( void ) { GoToIntermission(); }
@@ -352,9 +445,196 @@ public:
 protected:
 	virtual void ChangeLevel( void );
 	virtual void GoToIntermission( void );
-	float m_flIntermissionEndTime;
-	BOOL m_iEndIntermissionButtonHit;
+
+	float m_flIntermissionStartTime = 0;
+	float m_flIntermissionEndTime = 0;
+	bool_nightfire m_iEndIntermissionButtonHit;
 	void SendMOTDToClient( edict_t *client );
+};
+
+//=========================================================
+// CHalfLifeTeamplay - rules for the basic half life multiplayer teamplay
+// competition
+//=========================================================
+class CBondTeamplay : public CBondMultiplay
+{
+public:
+	CBondTeamplay();
+
+	// GR_Think
+	virtual void Think(void);
+
+	// Functions to verify the single/multiplayer status of a game
+	virtual BOOL IsTeamplay(void) { return TRUE; };// is this deathmatch game being played with team rules?
+	virtual BOOL IsCTF(void) { return FALSE; }
+	virtual const char* GetGameDescription(void) { return "HL Teamplay"; }  // this is the game name that gets seen in the server browser
+
+	// Client connection/disconnection
+		// If ClientConnected returns FALSE, the connection is rejected and the user is provided the reason specified in
+		//  svRejectReason
+		// Only the client's name and remote address are provided to the dll for verification.
+	virtual void InitHUD(CBasePlayer* pl);		// the client dll is ready for updating
+	virtual void UpdateGameMode(CBasePlayer* pPlayer);  // the client needs to be informed of the current game mode
+
+// Client damage rules
+	virtual BOOL  FPlayerCanTakeDamage(CBasePlayer* pPlayer, CBaseEntity* pAttacker);
+	virtual BOOL ShouldAutoAim(CBasePlayer* pPlayer, edict_t* target);
+
+	// Client spawn/respawn control
+
+	virtual BOOL ClientCommand(CBasePlayer* pPlayer, const char* pcmd, unsigned int numargs, const char** args);  // handles the user commands;  returns TRUE if command handled properly
+	virtual void ClientUserInfoChanged(CBasePlayer* pPlayer, char* infobuffer);		// the player has changed userinfo;  can change it now
+
+	// Client kills/scoring
+	virtual int IPointsForKill(CBasePlayer* pAttacker, CBasePlayer* pKilled);
+	virtual void PlayerKilled(CBasePlayer* pVictim, entvars_t* pKiller, entvars_t* pInflictor);
+	virtual void DeathNotice(CBasePlayer* pVictim, entvars_t* pKiller, entvars_t* pInflictor);
+
+	// Weapon retrieval
+
+// Weapon spawn/respawn control
+
+	// Item retrieval
+
+	// Item spawn/respawn control
+
+	// Ammo retrieval
+
+	// Ammo spawn/respawn control
+
+	// Healthcharger respawn control
+
+	// What happens to a dead player's weapons
+
+	// What happens to a dead player's ammo	
+
+	// Teamplay stuff	
+	virtual const char* GetTeamID(CBaseEntity* pEntity);
+	virtual int PlayerRelationship(CBaseEntity* pPlayer, CBaseEntity* pTarget);
+	virtual int GetTeamIndex(const char* pTeamName);
+	virtual const char* GetIndexedTeamName(int teamIndex);
+	virtual BOOL IsValidTeam(const char* pTeamName);
+	virtual void ChangePlayerTeam(CBasePlayer* pPlayer, const char* pTeamName, BOOL bKill, BOOL bGib);
+	virtual const char* SetDefaultPlayerTeam(CBasePlayer* pPlayer);
+
+	virtual int TeamWithFewestPlayers();
+
+private:
+	void RecountTeams(bool bResendInfo = FALSE);
+
+	bool_nightfire m_DisableDeathMessages;
+	bool_nightfire m_DisableDeathPenalty;
+	bool_nightfire m_teamLimit;				// This means the server set only some teams as valid
+	char m_szTeamList[TEAMPLAY_TEAMLISTLENGTH]; //512
+};
+
+
+//=========================================================
+// CHalfLifeMultiplayCTF - rules for the basic half life multiplayer ctf
+// competition
+//=========================================================
+class CBondCTFPlay : public CBondMultiplay
+{
+private:
+	enum class StatsPhase
+	{
+		Nothing,
+		SendTeam0,
+		SendTeam1,
+		SendTeam2,
+		SendPlayers,
+		OpenMenu
+	};
+
+public:
+	CBondCTFPlay();
+
+	// GR_Think
+	virtual void Think(void);
+
+	// Functions to verify the single/multiplayer status of a game
+	virtual BOOL IsTeamplay(void) { return TRUE; }
+	virtual BOOL IsCTF(void) { return TRUE; }
+	virtual const char* GetGameDescription(void) { return "Bond CTF"; }  // this is the game name that gets seen in the server browser
+
+	// Client connection/disconnection
+		// If ClientConnected returns FALSE, the connection is rejected and the user is provided the reason specified in
+		//  svRejectReason
+		// Only the client's name and remote address are provided to the dll for verification.
+	virtual BOOL ClientConnected(edict_t* pEntity, const char* pszName, const char* pszAddress, char szRejectReason[128]);
+	virtual void InitHUD(CBasePlayer* pl);		// the client dll is ready for updating
+	virtual void ClientDisconnected(edict_t* pClient);
+	virtual void UpdateGameMode(CBasePlayer* pPlayer);  // the client needs to be informed of the current game mode
+
+// Client damage rules
+	virtual BOOL  FPlayerCanTakeDamage(CBasePlayer* pPlayer, CBaseEntity* pAttacker);
+
+	// Client spawn/respawn control
+	virtual void PlayerSpawn(CBasePlayer* pPlayer);
+
+	virtual BOOL ClientCommand(CBasePlayer* pPlayer, const char* pcmd, unsigned int numargs, const char** args);  // handles the user commands;  returns TRUE if command handled properly
+	virtual void ClientUserInfoChanged(CBasePlayer* pPlayer, char* infobuffer);		// the player has changed userinfo;  can change it now
+
+	// Client kills/scoring
+	virtual int IPointsForKill(CBasePlayer* pAttacker, CBasePlayer* pKilled);
+	virtual void PlayerKilled(CBasePlayer* pVictim, entvars_t* pKiller, entvars_t* pInflictor);
+	virtual void DeathNotice(CBasePlayer* pVictim, entvars_t* pKiller, entvars_t* pInflictor);
+
+	// Weapon retrieval
+
+// Weapon spawn/respawn control
+
+	// Item retrieval
+
+	// Item spawn/respawn control
+
+	// Ammo retrieval
+	virtual BOOL CanHaveAmmo(CBasePlayer* pPlayer, const char* pszAmmoName, int iMaxCarry);// can this player take more of this ammo?
+
+	// Ammo spawn/respawn control
+
+	// Healthcharger respawn control
+
+	// What happens to a dead player's weapons
+
+	// What happens to a dead player's ammo	
+
+	// Teamplay stuff	
+	virtual const char* GetTeamID(CBaseEntity* pEntity);
+	virtual int PlayerRelationship(CBaseEntity* pPlayer, CBaseEntity* pTarget);
+	virtual int GetTeamIndex(const char* pTeamName);
+	virtual const char* GetIndexedTeamName(int teamIndex);
+	virtual BOOL IsValidTeam(const char* pTeamName);
+	virtual void ChangePlayerTeam(CBasePlayer* pPlayer, const char* pTeamName, BOOL bKill, BOOL bGib);
+	virtual const char* SetDefaultPlayerTeam(CBasePlayer* pPlayer);
+
+	virtual const char* GetCharacterType(int team, int charactermodel_slot);
+
+	virtual int GetNumTeams();
+	virtual int TeamWithFewestPlayers();
+	virtual BOOL TeamsBalanced();
+
+protected:
+	virtual void GoToIntermission(void);
+
+private:
+
+	void SendTeamStatInfo(CBondCTFPlay* this, int team);
+	void SendPlayerStatInfo(CBasePlayer* pPlayer);
+
+	void RecountTeams(bool bResendInfo = FALSE);
+
+	const char* getTeamChoice(CBasePlayer* pPlayer);
+	void setPlayerToTeam(CBasePlayer* pPlayer, const char* teamname, int teamchoice);
+	void notifyTeamChange(CBasePlayer* pPlayer, const char* teamname, const char* character_model_name);
+
+	bool_nightfire m_DisableDeathMessages = false;
+	bool_nightfire m_DisableDeathPenalty = false;
+	bool_nightfire m_fRefreshScores = false;
+	float m_flNextStatsSend;
+	StatsPhase m_iStatsPhase = StatsPhase::Nothing;
+	//Use a sane default to avoid lockups
+	int m_iStatsPlayer = 1;
 };
 
 extern DLL_GLOBAL CGameRules*	g_pGameRules;

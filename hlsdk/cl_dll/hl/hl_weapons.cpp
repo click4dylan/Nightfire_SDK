@@ -286,6 +286,25 @@ CBaseEntity::FireBulletsPlayer
 Only produces random numbers to match the server ones.
 =====================
 */
+#if 1
+//Nightfire
+Vector CBasePlayer::FirePredictedBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting, float flSpread, float flDistance, int iBulletType)
+{
+	float x = 0.0, y = 0.0, z;
+	//Use player's random seed.
+	// get circular gaussian spread
+	do {
+		x = UTIL_SharedRandomFloat(random_seed, -0.5, 0.5) + UTIL_SharedRandomFloat(random_seed + 1, -0.5, 0.5);
+		random_seed += 2;
+		y = UTIL_SharedRandomFloat(random_seed, -0.5, 0.5) + UTIL_SharedRandomFloat(random_seed + 1, -0.5, 0.5);
+		random_seed += 2;
+
+		z = x * x + y * y;
+	} while (z > 1);
+
+	return Vector(x * flSpread, y * flSpread, 0.0);
+}
+#else
 Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecDirShooting, Vector vecSpread, float flDistance, int iBulletType, int iTracerFreq, int iDamage, entvars_t *pevAttacker, int shared_rand )
 {
 	float x = 0.0, y = 0.0, z;
@@ -314,6 +333,7 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 
     return Vector ( x * vecSpread.x, y * vecSpread.y, 0.0 );
 }
+#endif
 
 /*
 =====================

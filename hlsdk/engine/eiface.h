@@ -268,6 +268,7 @@ typedef struct enginefuncs_s
 	const msurface_t* (*pfnSV_ClosestSurfaceToPoint)		(edict_t const* pClient, float const* pPoint);
 } enginefuncs_t;
 
+//extern enginefuncs_t g_engfuncsExportedToDlls;
 
 // ONLY ADD NEW FUNCTIONS TO THE END OF THIS STRUCT.  INTERFACE VERSION IS FROZEN AT 138
 

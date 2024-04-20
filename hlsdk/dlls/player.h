@@ -307,6 +307,9 @@ public:
 
 	void TabulateAmmo( void );
 
+	//Nightfire
+	Vector FirePredictedBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting, float flSpread, float flDistance, int iBulletType);
+
 	float m_flStartCharge;
 	float m_flAmmoStartCharge;
 	float m_flPlayAftershock;

@@ -33,6 +33,8 @@
 #include <StudioModelRenderer.h>
 #include <r_studioint.h>
 
+// this was used for debugging model crashes, but is not currently in use
+#if 0
 mstudioanim_t* (__fastcall* g_oStudioGetAnim)(CStudioModelRenderer*, void*, model_t*, mstudioseqdesc_t*);
 mstudioanim_t* __fastcall CStudioModelRenderer_StudioGetAnim(CStudioModelRenderer* me, void* edx, model_t* m_pSubModel, mstudioseqdesc_t* pseqdesc)
 {
@@ -73,7 +75,9 @@ mstudioanim_t* __fastcall CStudioModelRenderer_StudioGetAnim(CStudioModelRendere
 	}
 	return (mstudioanim_t*)((byte*)paSequences[pseqdesc->seqgroup].data + pseqdesc->animindex);
 }
+#endif
 
+// this check was added later to the half-life SDK but is missing from Nightfire. this check fixes attempting to use invalid sequences on a model
 DWORD invalid_sequence_jmpback;
 DWORD valid_sequence_jmpback;
 bool __cdecl StudioSequenceGetAnimPosOutOfBoundsCheck(CStudioModelRenderer* renderer, model_t* model)
@@ -179,6 +183,7 @@ model_s* nf_hooks::R_StudioSetupPlayerModel(int playerindex)
 				state->modelname[MAX_PATH - 1] = 0;
 
 #if 1
+				// first check the models/player/ folder for the designated model
 				strncpy(state->modelpath, "models/player/", 260);
 				strncat(state->modelpath, info->model, 260);
 				state->modelpath[MAX_PATH - 1] = 0;
@@ -189,10 +194,12 @@ model_s* nf_hooks::R_StudioSetupPlayerModel(int playerindex)
 				strncat(state->modelpath, ".mdl", 260);
 				state->modelpath[MAX_PATH - 1] = 0;
 
+				// only set the model if it exists
 				if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
 					state->model = g_Pointers.g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
 				else
 				{
+					// model did not exist, so check the root models/ folder
 					strncpy(state->modelpath, "models/", 260);
 					strncat(state->modelpath, info->model, 260);
 					strncat(state->modelpath, ".mdl", 260);
@@ -201,6 +208,7 @@ model_s* nf_hooks::R_StudioSetupPlayerModel(int playerindex)
 						state->model = g_Pointers.g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
 					else
 					{
+						// model did not exist in the root models folder, so check the root models/water/ folder
 						strncpy(state->modelpath, "models/water/", 260);
 						strncat(state->modelpath, info->model, 260);
 						state->modelpath[MAX_PATH - 1] = 0;
@@ -210,6 +218,7 @@ model_s* nf_hooks::R_StudioSetupPlayerModel(int playerindex)
 							state->model = g_Pointers.g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
 						else
 						{
+							// model did not exist in the water models folder, so check the skybox models folder
 							strncpy(state->modelpath, "models/sky/", 260);
 							strncat(state->modelpath, info->model, 260);
 							state->modelpath[MAX_PATH - 1] = 0;
@@ -218,12 +227,15 @@ model_s* nf_hooks::R_StudioSetupPlayerModel(int playerindex)
 							if (g_pNightfireFileSystem->COM_FileExists(state->modelpath, nullptr))
 								state->model = g_Pointers.g_pCL_EngineFuncs->Mod_ForName(state->modelpath, false, true);
 							else
+							{
+								// model was never found! TODO: maybe check sprites folder? they're technically models
 								state->model = nullptr;
+							}
 						}
 					}
 				}
 #else
-				//gearbox code
+				// original gearbox code
 				strncpy(state->modelpath, "models/player/", 260);
 				state->modelpath[MAX_PATH - 1] = 0;
 				strncat(state->modelpath, info->model, 260);
@@ -257,6 +269,7 @@ model_s* nf_hooks::R_StudioSetupPlayerModel(int playerindex)
 	return state->model;
 }
 
+// Fixes numerous issues and a crash when the player sets the playermodel to something not precached and located in the models/player/ folder
 void Fix_Model_Crash()
 {
 	DWORD adr;
@@ -267,16 +280,22 @@ void Fix_Model_Crash()
 	//if (!FindMemoryPattern(g_Pointers.R_StudioSetupPlayerModel, g_engineDllHinst, "A1 ? ? ? ? 55 8B 6C 24 08 57 8B FD 69 FF", false))
 	//	return;
 	if (!g_Pointers.R_StudioSetupPlayerModel)
+	{
+		ErrorBox("ERROR: Tried to Fix_Model_Crash when R_StudioSetupPlayerModel was not found yet!");
 		return;
+	}
+
 	if (!HookFunctionWithMinHook(g_Pointers.R_StudioSetupPlayerModel, nf_hooks::R_StudioSetupPlayerModel, nullptr))
 		return;
-	if (FindMemoryPattern(adr, *g_clientDllHinst, "8B 80 ? ? ? ? 85 C0 0F ? ? ? ? ? 8B ? ? ? ? ? 69 ? ? ? ? ? 03", false))
+
+	if (FindMemoryPattern(pattern_t(adr, *g_clientDllHinst, "8B 80 ? ? ? ? 85 C0 0F ? ? ? ? ? 8B ? ? ? ? ? 69 ? ? ? ? ? 03", false, "StudioSetupBones", true)))
 	{
 		invalid_gaitsequence_jmpback = adr + 0xDC;
 		valid_gaitsequence_jmpback = adr + 6;
 		PlaceJMP((BYTE*)adr, (DWORD)&StudioSetupBones_Hook, 5);
 	}
-	if (FindMemoryPattern(adr, *g_clientDllHinst, "50 FF 15 ? ? ? ? 89 46 ? 88 5E", false))
+
+	if (FindMemoryPattern(pattern_t(adr, *g_clientDllHinst, "50 FF 15 ? ? ? ? 89 46 ? 88 5E", false, "StudioGetAnimPos", true)))
 	{
 		valid_sequence_jmpback = adr;// +0xA;
 		invalid_sequence_jmpback = adr + 0x1E3;

@@ -20,7 +20,7 @@ CBaseEntity
 	CBaseDelay
 		CBaseToggle
 			CBaseItem
-			CBaseMonster
+			CBaseCharacter
 				CBaseCycler
 				CBasePlayer
 				CBaseGroup
@@ -109,12 +109,16 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 #define	CLASS_BARNACLE			99 // special because no one pays attention to it, and it eats a wide cross-section of creatures.
 
 class CBaseEntity;
-class CBaseMonster;
+class CBaseCharacter;
 class CBasePlayerItem;
-class CSquadMonster;
+class CSquadCharacter;
+class CSearchLight;
+class CDeathCamera;
+class CCycler;
 
-
+#define SF_ALLOW_BULLETS ( 1 << 16 ) // nightfire added this. it's the "Allow Bullets" spawnflags on brush objects
 #define	SF_NORESPAWN	( 1 << 30 )// !!!set this bit on guns and stuff that should never respawn.
+
 
 //
 // EHANDLE. Safe way to point to CBaseEntities who may die between frames
@@ -146,8 +150,7 @@ public:
 	// Constructor.  Set engine to use C/C++ callback functions
 	// pointers to engine data
 
-	//entvars_t *pev;		// Don't need to save/restore this pointer, the engine resets it
-	entvars_t *pev; //dylan added //0x4
+	entvars_t *pev;		// Don't need to save/restore this pointer, the engine resets it
 
 	// path corners
 	CBaseEntity			*m_pGoalEnt;// path corner we are heading towards //0x8, correct
@@ -180,8 +183,11 @@ public:
 	virtual int		BloodColor( void ) { return DONT_BLEED; }
 	virtual void	TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType );
 	virtual BOOL    IsTriggered( CBaseEntity *pActivator ) {return TRUE;}
-	virtual CBaseMonster *MyMonsterPointer( void ) { return NULL;}
-	virtual CSquadMonster *MySquadMonsterPointer( void ) { return NULL;}
+	virtual CBaseCharacter *MyCharacterPointer( void ) { return NULL;}
+	virtual CSquadCharacter *MySquadCharacterPointer( void ) { return NULL;}
+	virtual CSearchLight* MySearchLightPointer(void) { return NULL; }
+	virtual CDeathCamera* MyDeathCameraPointer(void) { return NULL; }
+	virtual CCycler* MyCyclerPointer(void) { return NULL; }
 	virtual	int		GetToggleState( void ) { return TS_AT_TOP; }
 	virtual void	AddPoints( int score, BOOL bAllowNegativeScore ) {}
 	virtual void	AddPointsToTeam( int score, BOOL bAllowNegativeScore ) {}
@@ -191,50 +197,76 @@ public:
 	virtual float	GetDelay( void ) { return 0; }
 	virtual int		IsMoving( void ) { return pev->velocity != g_vecZero; }
 	virtual void	OverrideReset( void ) {}
-	virtual int		DamageDecal( int bitsDamageType );
+	
+	//virtual int		DamageDecal( int bitsDamageType );
 	// This is ONLY used by the node graph to test movement through a door
-	//virtual void	SetToggleState( int state ) {}
+	virtual void	SetToggleState( int state ) {}
 	//virtual void    StartSneaking( void ) {}
 	//virtual void    StopSneaking( void ) {}
 	virtual BOOL	OnControls( entvars_t *pev ) { return FALSE; }
 	//virtual BOOL    IsSneaking( void ) { return FALSE; }
 	virtual BOOL	IsAlive( void ) { return (pev->deadflag == DEAD_NO) && pev->health > 0; }
-	//virtual BOOL	IsBSPModel( void ) { return pev->solid == SOLID_BSP || pev->movetype == MOVETYPE_PUSHSTEP; }
-	//virtual BOOL	ReflectGauss( void ) { return ( IsBSPModel() && !pev->takedamage ); }
-	virtual BOOL	ReflectGauss( void ) { return ( (pev->solid == SOLID_BSP || pev->movetype == MOVETYPE_PUSHSTEP) && !pev->takedamage ); }
-
-	virtual BOOL	IsAlive2( void ) { return (pev->deadflag == DEAD_NO) && pev->health > 0; } //?
-
+	virtual BOOL	IsBSPModel( void ) { return pev->solid == SOLID_BSP || pev->movetype == MOVETYPE_PUSHSTEP; }
+	virtual BOOL	ReflectGauss( void ) { return ( IsBSPModel() && !pev->takedamage ); }
 	virtual BOOL	HasTarget( string_t targetname ) { return FStrEq(STRING(targetname), STRING(pev->targetname) ); }
 	virtual BOOL    IsInWorld( void );
 	virtual	BOOL	IsPlayer( void ) { return FALSE; }
+	virtual BOOL    IsEnemy( void ) { return FALSE; }
 	virtual BOOL	IsNetClient( void ) { return FALSE; }
-	virtual int	Teamchoice(void) { return 0; }
 	virtual const char *TeamID( void ) { return ""; }
-
-	virtual void Unknown(void);
+	virtual void BlowUpExplosive(void) { };
 //	virtual void	SetActivator( CBaseEntity *pActivator ) {}
 	virtual CBaseEntity *GetNextTarget( void );
+	virtual BOOL ShouldCollide(edict_t* ent) { return TRUE; }
+	virtual BOOL OnSaveGame() { return TRUE; }
+	virtual void Think(void) { if (m_pfnThink) (this->*m_pfnThink)(); };
+	virtual void Touch(CBaseEntity* pOther) { if (m_pfnTouch) (this->*m_pfnTouch)(pOther); };
+	virtual void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
+	{
+		if (m_pfnUse)
+			(this->*m_pfnUse)(pActivator, pCaller, useType, value);
+	}
+	virtual void Blocked(CBaseEntity* pOther) { if (m_pfnBlocked) (this->*m_pfnBlocked)(pOther); };
+	virtual BOOL BlockedTest(CBaseEntity* pOther) { if (m_pfnBlockedTest) return (this->*m_pfnBlockedTest)(pOther); return TRUE; };
+	virtual void UpdateOnRemove(void);
+	virtual CBaseEntity* Respawn(void) { return NULL; }
 
-	virtual BOOL ShouldCollide(int unknown) { return TRUE; }
-	virtual bool ShouldUnknown(void) { return true; }
+	// used by monsters that are created by the MonsterMaker
+	virtual	void UpdateOwner(void) { return; };
+
+	virtual BOOL FBecomeProne(void) { return FALSE; };
+
+	virtual Vector Center() { return (pev->absmax + pev->absmin) * 0.5; }; // center point of entity
+	virtual Vector EyePosition() { return pev->origin + pev->view_ofs; };			// position of eyes
+	virtual Vector EarPosition() { return pev->origin + pev->view_ofs; };			// position of ears
+	virtual Vector BodyTarget(const Vector& posSrc) { return Center(); };		// position to shoot at
+
+	virtual int Illumination() { return GETENTITYILLUM(ENT(pev)); };
+
+	virtual	BOOL FVisible(CBaseEntity* pEntity);
+	virtual	BOOL FVisible(const Vector& vecOrigin);
+
+	virtual BOOL ActivateAIEvent(CBaseEntity* pEntity, CBaseEntity* pEntity2) { return FALSE; }
+	
+	virtual void ActivateNightvision(bool enable) { }
+	virtual void ActivateXRay(bool enable) { }
+	virtual void ActivateHeat(bool enable) { }
+
+	virtual BOOL IsGrappleTarget() { return FALSE; }
+	virtual BOOL CanAnimate() { return FALSE; }
+	virtual void ItemDropped() { }
+	virtual int DisplayHudInformation(CBaseEntity* other) { return 0; }
 	
 	// fundamental callbacks
-	void (CBaseEntity ::*m_pfnThink)(void);
-	void (CBaseEntity ::*m_pfnTouch)( CBaseEntity *pOther );
-	void (CBaseEntity ::*m_pfnUse)( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	void (CBaseEntity ::*m_pfnBlocked)( CBaseEntity *pOther );
+	void (CBaseEntity ::*m_pfnThink)(void); //16 dec on PC/MAC
+	void (CBaseEntity ::*m_pfnTouch)( CBaseEntity *pOther ); //20 dec on PC/MAC
+	void (CBaseEntity ::*m_pfnUse)( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value ); //24 dec on PC/MAC
+	void (CBaseEntity ::*m_pfnBlocked)( CBaseEntity *pOther ); //28 dec on PC/MAC
+	BOOL (CBaseEntity ::*m_pfnBlockedTest)(CBaseEntity* pOther); //32 dec on PC/MAC
 
-	//Dylan says: Everything after is not guaranteed, table not complete
 
-	virtual void Think( void ) { if (m_pfnThink) (this->*m_pfnThink)(); };
-	virtual void Touch( CBaseEntity *pOther ) { if (m_pfnTouch) (this->*m_pfnTouch)( pOther ); };
-	virtual void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value ) 
-	{ 
-		if (m_pfnUse) 
-			(this->*m_pfnUse)( pActivator, pCaller, useType, value );
-	}
-	virtual void Blocked( CBaseEntity *pOther ) { if (m_pfnBlocked) (this->*m_pfnBlocked)( pOther ); };
+	//FIXME todo: dylan: unknown if these are used in Nightfire
+#if 1
 
 	// allow engine to allocate instance data
     void *operator new( size_t stAllocateBlock, entvars_t *pev )
@@ -249,8 +281,7 @@ public:
 		pev->flags |= FL_KILLME;
 	};
 #endif
-
-	void UpdateOnRemove( void );
+#endif
 
 	// common member functions
 	void EXPORT SUB_Remove( void );
@@ -260,9 +291,7 @@ public:
 	void EXPORT SUB_CallUseToggle( void ) { this->Use( this, this, USE_TOGGLE, 0 ); }
 	int			ShouldToggle( USE_TYPE useType, BOOL currentState );
 	void		FireBullets( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL  );
-	Vector		FireBulletsPlayer( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL, int shared_rand = 0 );
-
-	virtual CBaseEntity *Respawn( void ) { return NULL; }
+	//Vector		FireBulletsPlayer( ULONG	cShots, Vector  vecSrc, Vector	vecDirShooting,	Vector	vecSpread, float flDistance, int iBulletType, int iTracerFreq = 4, int iDamage = 0, entvars_t *pevAttacker = NULL, int shared_rand = 0 );
 
 	void SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, float value );
 	// Do the bounding boxes of these two intersect?
@@ -282,18 +311,18 @@ public:
 	static CBaseEntity *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
 	static CBaseEntity *Instance( int eoffset) { return Instance( ENT( eoffset) ); }
 
-	CBaseMonster *GetMonsterPointer( entvars_t *pevMonster ) 
+	CBaseCharacter *GetCharacterPointer( entvars_t *pevMonster ) 
 	{ 
 		CBaseEntity *pEntity = Instance( pevMonster );
 		if ( pEntity )
-			return pEntity->MyMonsterPointer();
+			return pEntity->MyCharacterPointer();
 		return NULL;
 	}
-	CBaseMonster *GetMonsterPointer( edict_t *pentMonster ) 
+	CBaseCharacter * GetCharacterPointer( edict_t *pentMonster )
 	{ 
 		CBaseEntity *pEntity = Instance( pentMonster );
 		if ( pEntity )
-			return pEntity->MyMonsterPointer();
+			return pEntity->MyCharacterPointer();
 		return NULL;
 	}
 
@@ -338,30 +367,14 @@ public:
 
 	// virtual functions used by a few classes
 	
-	// used by monsters that are created by the MonsterMaker
-	virtual	void UpdateOwner( void ) { return; };
 
 
 	//
 	static CBaseEntity *Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner = NULL );
 
-	virtual BOOL FBecomeProne( void ) {return FALSE;};
 	edict_t *edict() { return ENT( pev ); };
 	EOFFSET eoffset( ) { return OFFSET( pev ); };
 	int	  entindex( ) { return ENTINDEX( edict() ); };
-
-	virtual void UNKNOWN_FIXME1(void);
-	virtual void UNKNOWN_FIXME2(void);
-
-	virtual Vector Center( ) { return (pev->absmax + pev->absmin) * 0.5; }; // center point of entity
-	virtual Vector EyePosition( ) { return pev->origin + pev->view_ofs; };			// position of eyes
-	virtual Vector EarPosition( ) { return pev->origin + pev->view_ofs; };			// position of ears
-	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ); };		// position to shoot at
-
-	virtual int Illumination( ) { return GETENTITYILLUM( ENT( pev ) ); };
-
-	virtual	BOOL FVisible ( CBaseEntity *pEntity );
-	virtual	BOOL FVisible ( const Vector &vecOrigin );
 
 	//We use this variables to store each ammo count.
 	int ammo_9mm;
@@ -382,6 +395,8 @@ public:
 	int m_fireState;
 } C_BaseEntity; 
 
+
+#if 0
 
 typedef class CBaseEntityCustom
 {
@@ -887,6 +902,8 @@ public:
 	}
 } C_BaseEntityCustom;
 
+#endif
+
 #if 0
 typedef class CBaseEntityCustom
 {
@@ -1267,8 +1284,8 @@ public:
 	virtual int		BloodColor( void ) { return DONT_BLEED; }
 	virtual void	TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType );
 	virtual BOOL    IsTriggered( C_BasePlayer *pActivator ) {return TRUE;}
-	virtual CBaseMonster *MyMonsterPointer( void ) { return NULL;}
-	virtual CSquadMonster *MySquadMonsterPointer( void ) { return NULL;}
+	virtual CBaseCharacter *MyCharacterPointer( void ) { return NULL;}
+	virtual CSquadCharacter *MySquadCharacterPointer( void ) { return NULL;}
 
 	virtual int		Unknown1(void) { return NULL; };
 	virtual int		Unknown2(void) { return NULL; };
@@ -1379,18 +1396,18 @@ public:
 	static C_BasePlayer *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
 	static C_BasePlayer *Instance( int eoffset) { return Instance( ENT( eoffset) ); }
 
-	CBaseMonster *GetMonsterPointer( entvars_t *pevMonster ) 
+	CBaseCharacter *GetMonsterPointer( entvars_t *pevMonster ) 
 	{ 
 		C_BasePlayer *pEntity = Instance( pevMonster );
 		if ( pEntity )
-			return pEntity->MyMonsterPointer();
+			return pEntity->MyCharacterPointer();
 		return NULL;
 	}
-	CBaseMonster *GetMonsterPointer( edict_t *pentMonster ) 
+	CBaseCharacter *GetMonsterPointer( edict_t *pentMonster ) 
 	{ 
 		C_BasePlayer *pEntity = Instance( pentMonster );
 		if ( pEntity )
-			return pEntity->MyMonsterPointer();
+			return pEntity->MyCharacterPointer();
 		return NULL;
 	}
 
@@ -1795,7 +1812,7 @@ public:
 #define GIB_NEVER			1// never gib, no matter how much death damage is done ( freezing, etc )
 #define GIB_ALWAYS			2// always gib ( Houndeye Shock, Barnacle Bite )
 
-class CBaseMonster;
+class CBaseCharacter;
 class CCineMonster;
 class CSound;
 
