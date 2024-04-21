@@ -164,7 +164,7 @@ extern int mm_RegUserMsg(const char *pszName, int iSize);
 
 extern void mm_UnregUserMsgs(void/*const edict_t *pEdict, float flTime*/);
 extern void mm_GetBonePosition(const edict_t *pEdict, int iBone, float *rgflOrigin, float *rgflAngles );
-extern BOOLEAN	mm_GetBoneCoord(edict_t *ed, const char *bone, int unknown, int unknown2);//( int iBone, /*matrix3x4_t INVALID!*/float pBoneToWorld );
+extern BOOLEAN	mm_GetBoneCoord(edict_t *ed, const char *bone, float *rgflOrigin, float *rgflAngles);//( int iBone, /*matrix3x4_t INVALID!*/float pBoneToWorld );
 
 #ifdef HLSDK_3_2_OLD_EIFACE
 extern unsigned long mm_FunctionFromName( const char *pName );

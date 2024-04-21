@@ -310,6 +310,7 @@ void Fix_GameDLL_Bugs()
 	Force_ServerSide_Entities_GameDLL();
 	Fix_AI_TurnSpeed();
 	Fix_LighterSpark();
+	Fix_FirePredictedBullets_GameDLL();
 }
 
 void Fix_ClientDLL_Bugs()
@@ -320,6 +321,8 @@ void Fix_ClientDLL_Bugs()
 	Fix_RainDrop_WaterCollision();
 	Fix_MiniMem_OutOfMemoryMissingNotification();
 	Fix_LighterSpark();
+	Fix_FirePredictedBullets_ClientDLL();
+
 	Force_ServerSide_Entities_ClientDLL();
 }
 

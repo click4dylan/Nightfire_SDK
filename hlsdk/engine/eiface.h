@@ -188,7 +188,7 @@ typedef struct enginefuncs_s
 	int			(*pfnRegUserMsg)			(const char *pszName, int iSize);
 	void		(*pfnUnregUserMsgs)			(void);
 	void		(*pfnGetBonePosition)		(const edict_t* pEdict, int iBone, float *rgflOrigin, float *rgflAngles );
-	BOOLEAN		(*pfnGetBoneCoord)			(edict_t *ed, const char *bone, int unknown, int unknown2);
+	BOOLEAN		(*pfnGetBoneCoord)			(edict_t *ed, const char *bone, float *rgflOrigin, float *rgflAngles);
 	uint32 		(*pfnFunctionFromName)		( const char *pName );
 	const char *(*pfnNameForFunction)		( uint32 function );
 	void		(*pfnClientPrintf)			( edict_t* pEdict, PRINT_TYPE ptype, const char *szMsg ); // JOHN: engine callbacks so game DLL can print messages to individual clients

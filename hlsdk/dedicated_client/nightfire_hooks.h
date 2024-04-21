@@ -3,13 +3,18 @@
 #include <Windows.h>
 
 #include <netchan.h>
+#include <extdll.h>
 
 struct model_s;
 struct netchan_s;
 struct sizebuf_s;
+class CBasePlayer;
 
 namespace nf_hooks
 {
+	extern Vector* __fastcall FirePredictedBullets_ServerHook(CBasePlayer* player, void* edx, Vector* returnval, ULONG cShots, Vector vecSrc, Vector vecDirShooting, float flSpread, float flDistance, int iBulletType);
+	extern Vector* __fastcall FirePredictedBullets_ClientHook(CBasePlayer* player, void* edx, Vector* returnval, ULONG cShots, Vector vecSrc, Vector vecDirShooting, float flSpread, float flDistance, int iBulletType);
+
 	extern model_s* R_StudioSetupPlayerModel(int playerindex);
 	extern bool UTIL_CheckForWater(float startx, float starty, float startz, float endx, float endy, float endz, float* dest);
 

@@ -75,10 +75,6 @@ typedef struct cl_exportfuncs_s
 cl_exportfuncs_t;
 
 extern cl_exportfuncs_s g_oExportFuncs;
-extern struct enginefuncs_s* g_pEngineFuncs;
-extern struct engine_studio_api_s* g_pStudioModelAPI;
-extern class CStudioModelRenderer* g_pStudioAPI;
-extern void* g_pGlobalVariables;
 
 typedef void(*PauseMetaAudioPlaybackFn)();
 typedef void(*ResumeMetaAudioPlaybackFn)();

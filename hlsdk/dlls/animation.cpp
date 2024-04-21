@@ -232,7 +232,7 @@ void SequencePrecache( void *pmodel, const char *pSequenceName )
 
 
 
-void GetSequenceInfo( void *pmodel, entvars_t *pev, float *pflFrameRate, float *pflGroundSpeed )
+void GetSequenceInfo( void *pmodel, entvars_t *pev, float *pflFrameRate, float *pflGroundSpeed, Vector* pVecLinearMovement )
 {
 	studiohdr_t *pstudiohdr;
 	
@@ -256,6 +256,9 @@ void GetSequenceInfo( void *pmodel, entvars_t *pev, float *pflFrameRate, float *
 		*pflFrameRate = 256 * pseqdesc->fps / (pseqdesc->numframes - 1);
 		*pflGroundSpeed = sqrt( pseqdesc->linearmovement[0]*pseqdesc->linearmovement[0]+ pseqdesc->linearmovement[1]*pseqdesc->linearmovement[1]+ pseqdesc->linearmovement[2]*pseqdesc->linearmovement[2] );
 		*pflGroundSpeed = *pflGroundSpeed * pseqdesc->fps / (pseqdesc->numframes - 1);
+		pvecLinearMovement->x = pseqdesc->linearmovement[0];
+		pvecLinearMovement->y = pseqdesc->linearmovement[1];
+		pvecLinearMovement->z = pseqdesc->linearmovement[2];
 	}
 	else
 	{

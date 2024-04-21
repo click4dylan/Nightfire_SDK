@@ -156,6 +156,9 @@
     <ClCompile Include="r_studioint.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
+    <ClCompile Include="gamedll\FirePredictedBullets.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc">

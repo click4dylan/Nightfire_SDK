@@ -366,7 +366,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 			m_fFireOnEmpty = TRUE;
 		}
 
-		SecondaryAttack();
+		SecondaryAttack(1);
 		m_pPlayer->pev->button &= ~IN_ATTACK2;
 	}
 	else if ((m_pPlayer->pev->button & IN_ATTACK) && (m_flNextPrimaryAttack <= 0.0))
@@ -376,7 +376,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 			m_fFireOnEmpty = TRUE;
 		}
 
-		PrimaryAttack();
+		PrimaryAttack(1);
 	}
 	else if ( m_pPlayer->pev->button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload ) 
 	{

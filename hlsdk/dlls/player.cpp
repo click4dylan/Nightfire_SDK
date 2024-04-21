@@ -731,7 +731,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 					break;
 				}
 
-				pPlayerItem = pPlayerItem->m_pNext;
+				pPlayerItem = pPlayerItem->m_pBoxNext;
 			}
 		}
 	}
@@ -828,7 +828,7 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 		m_pActiveItem = m_rgpPlayerItems[i];
 		while (m_pActiveItem)
 		{
-			pPendingItem = m_pActiveItem->m_pNext; 
+			pPendingItem = m_pActiveItem->m_pBoxNext; 
 			m_pActiveItem->Drop( );
 			m_pActiveItem = pPendingItem;
 		}
@@ -1149,9 +1149,10 @@ Vector CBasePlayer::FirePredictedBullets(ULONG cShots, Vector vecSrc, Vector vec
 	ClearMultiDamage();
 	gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;
 
+	entvars_t* pevAttacker = pev;
 	CBaseEntity* shooter = nullptr;
-	if (pev && g_engfuncs.pfnEntOffsetOfPEntity(pev->pContainingEntity))
-		shooter = CBaseEntity::Instance(pev);
+	if (pevAttacker && g_engfuncs.pfnEntOffsetOfPEntity(pevAttacker->pContainingEntity))
+		shooter = CBaseEntity::Instance(pevAttacker);
 
 	if (shooter && shooter->IsPlayer())
 		shooter->IncrementNumShots();
@@ -2884,7 +2885,7 @@ pt_end:
 					
 				}
 
-				pPlayerItem = pPlayerItem->m_pNext;
+				pPlayerItem = pPlayerItem->m_pBoxNext;
 			}
 		}
 	}
@@ -3269,7 +3270,7 @@ void CBasePlayer::SelectNextItem( int iItem )
 	if (pItem == m_pActiveItem)
 	{
 		// select the next one in the chain
-		pItem = m_pActiveItem->m_pNext; 
+		pItem = m_pActiveItem->m_pBoxNext; 
 		if (! pItem)
 		{
 			return;
@@ -3277,12 +3278,12 @@ void CBasePlayer::SelectNextItem( int iItem )
 
 		CBasePlayerItem *pLast;
 		pLast = pItem;
-		while (pLast->m_pNext)
-			pLast = pLast->m_pNext;
+		while (pLast->m_pBoxNext)
+			pLast = pLast->m_pBoxNext;
 
 		// relink chain
-		pLast->m_pNext = m_pActiveItem;
-		m_pActiveItem->m_pNext = NULL;
+		pLast->m_pBoxNext = m_pActiveItem;
+		m_pActiveItem->m_pBoxNext = NULL;
 		m_rgpPlayerItems[ iItem ] = pItem;
 	}
 
@@ -3320,7 +3321,7 @@ void CBasePlayer::SelectItem(const char *pstr)
 			{
 				if (FClassnameIs(pItem->pev, pstr))
 					break;
-				pItem = pItem->m_pNext;
+				pItem = pItem->m_pBoxNext;
 			}
 		}
 
@@ -3902,7 +3903,7 @@ int CBasePlayer::AddPlayerItem( CBasePlayerItem *pItem )
 			}
 			return FALSE;
 		}
-		pInsert = pInsert->m_pNext;
+		pInsert = pInsert->m_pBoxNext;
 	}
 
 
@@ -3911,7 +3912,7 @@ int CBasePlayer::AddPlayerItem( CBasePlayerItem *pItem )
 		g_pGameRules->PlayerGotWeapon ( this, pItem );
 		pItem->CheckRespawn();
 
-		pItem->m_pNext = m_rgpPlayerItems[pItem->iItemSlot()];
+		pItem->m_pBoxNext = m_rgpPlayerItems[pItem->iItemSlot()];
 		m_rgpPlayerItems[pItem->iItemSlot()] = pItem;
 
 		// should we switch to this item?
@@ -3951,18 +3952,18 @@ int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
 
 	if (pPrev == pItem)
 	{
-		m_rgpPlayerItems[pItem->iItemSlot()] = pItem->m_pNext;
+		m_rgpPlayerItems[pItem->iItemSlot()] = pItem->m_pBoxNext;
 		return TRUE;
 	}
 	else
 	{
-		while (pPrev && pPrev->m_pNext != pItem)
+		while (pPrev && pPrev->m_pBoxNext != pItem)
 		{
-			pPrev = pPrev->m_pNext;
+			pPrev = pPrev->m_pBoxNext;
 		}
 		if (pPrev)
 		{
-			pPrev->m_pNext = pItem->m_pNext;
+			pPrev->m_pBoxNext = pItem->m_pBoxNext;
 			return TRUE;
 		}
 	}
@@ -4735,7 +4736,7 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 				}
 			}
 
-			pWeapon = pWeapon->m_pNext; 
+			pWeapon = pWeapon->m_pBoxNext; 
 		}
 
 		
@@ -4798,7 +4799,7 @@ BOOL CBasePlayer::HasPlayerItem( CBasePlayerItem *pCheckItem )
 		{
 			return TRUE;
 		}
-		pItem = pItem->m_pNext;
+		pItem = pItem->m_pBoxNext;
 	}
 
 	return FALSE;
@@ -4822,7 +4823,7 @@ BOOL CBasePlayer::HasNamedPlayerItem( const char *pszItemName )
 			{
 				return TRUE;
 			}
-			pItem = pItem->m_pNext;
+			pItem = pItem->m_pBoxNext;
 		}
 	}
 

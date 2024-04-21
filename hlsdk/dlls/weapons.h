@@ -79,6 +79,9 @@ public:
 #define	WEAPON_SATCHEL			14
 #define	WEAPON_SNARK			15
 
+//nightfire
+#define WEAPON_PDW90 8
+
 #define WEAPON_ALLWEAPONS		(~(1<<WEAPON_SUIT))
 
 #define WEAPON_SUIT				31	// ?????
@@ -120,6 +123,9 @@ public:
 #define HORNET_MAX_CARRY		8
 #define M203_GRENADE_MAX_CARRY	10
 
+//nightfire
+#define _28MM_MAX_CARRY 400
+
 // the maximum amount of ammo each weapon's clip can hold
 #define WEAPON_NOCLIP			-1
 
@@ -138,6 +144,9 @@ public:
 #define SATCHEL_MAX_CLIP		WEAPON_NOCLIP
 #define TRIPMINE_MAX_CLIP		WEAPON_NOCLIP
 #define SNARK_MAX_CLIP			WEAPON_NOCLIP
+
+//nightfire
+#define PD90_MAX_CLIP 50
 
 
 // the default amount of ammo that comes with each gun when it spawns
@@ -209,6 +218,9 @@ typedef struct
 	int		iId;
 	int		iFlags;
 	int		iWeight;// this value used to determine this weapon's importance in autoselection.
+	int iUnknown1;
+	int iUnknown2;
+	int iUnknown3;
 } ItemInfo;
 
 typedef struct
@@ -228,16 +240,22 @@ public:
 	
 	static	TYPEDESCRIPTION m_SaveData[];
 
-	virtual int AddToPlayer( CBasePlayer *pPlayer );	// return TRUE if the item you want the item added to the player inventory
-	virtual int AddDuplicate( CBasePlayerItem *pItem ) { return FALSE; }	// return TRUE if you want your duplicate removed from world
+	virtual void	TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType); //nightfire
+	virtual int		TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) { return 1; }; //nightfire
+	virtual void ActivateXRay(bool enable) {}; //nightfire
+
+
 	void EXPORT DestroyItem( void );
 	void EXPORT DefaultTouch( CBaseEntity *pOther );	// default weapon touch
 	void EXPORT FallThink ( void );// when an item is first spawned, this think is run to determine when the object has hit the ground.
 	void EXPORT Materialize( void );// make a weapon visible and tangible
 	void EXPORT AttemptToMaterialize( void );  // the weapon desires to become visible and tangible, if the game rules allow for it
-	CBaseEntity* Respawn ( void );// copy a weapon
-	void FallInit( void );
-	void CheckRespawn( void );
+
+
+	void FallInit(void);
+	void CheckRespawn(void);
+
+	virtual CBaseEntity* Respawn ( void );// copy a weapon, nightfire vritual
 	virtual int GetItemInfo(ItemInfo *p) { return 0; };	// returns 0 if struct not filled out
 	virtual BOOL CanDeploy( void ) { return TRUE; };
 	virtual BOOL Deploy( )								// returns is deploy was successful
@@ -259,16 +277,24 @@ public:
 
 	virtual int UpdateClientData( CBasePlayer *pPlayer ) { return 0; }
 
+	virtual void IncrementAmmo(CBasePlayer* pPlayer) { } //nightfire
+
 	virtual CBasePlayerItem *GetWeaponPtr( void ) { return NULL; };
+	virtual void ModeSwitch() {}
+	virtual void RetireWeapon() {};
+	virtual BOOL CanDropItem() { return FALSE; }
+	virtual void OnDeathCleanup() { }
+	virtual int iItemSlot(void) { return 0; }			// return 0 to MAX_ITEMS_SLOTS, used in hud
 
 	static ItemInfo ItemInfoArray[ MAX_WEAPONS ];
 	static AmmoInfo AmmoInfoArray[ MAX_AMMO_SLOTS ];
 
-	CBasePlayer	*m_pPlayer;
-	CBasePlayerItem *m_pNext;
-	int		m_iId;												// WEAPON_???
-
-	virtual int iItemSlot( void ) { return 0; }			// return 0 to MAX_ITEMS_SLOTS, used in hud
+	CBasePlayer	*m_pPlayer; //0x94 MAC
+	CBasePlayerItem *m_pBoxNext; //0x98 MAC
+	int		m_iId;						//0x9C MAC						// WEAPON_???
+	int m_nShotsFired; //0xA0 MAC
+	float m_flEndFallTime; //0xA4 MAC
+	bool_nightfire m_fTossing; //0xA8 MAC
 
 	int			iItemPosition( void ) { return ItemInfoArray[ m_iId ].iPosition; }
 	const char	*pszAmmo1( void )	{ return ItemInfoArray[ m_iId ].pszAmmo1; }
@@ -298,6 +324,21 @@ public:
 	virtual int AddToPlayer( CBasePlayer *pPlayer );
 	virtual int AddDuplicate( CBasePlayerItem *pItem );
 
+	virtual BOOL CanDeploy(void);
+	virtual void Holster(int skiplocal = 0);
+	virtual void UpdateItemInfo(void) {};	// updates HUD state
+	virtual void ItemPostFrame(void);	// called each frame by the player PostThink
+
+	virtual int	PrimaryAmmoIndex();  //nightfire virtual
+	virtual int	SecondaryAmmoIndex(); // nightfire virtual
+
+	virtual int UpdateClientData(CBasePlayer* pPlayer);		// sends hud info to client dll, if things have changed
+
+	virtual CBasePlayerItem* GetWeaponPtr(void) { return (CBasePlayerItem*)this; };
+
+
+	virtual void RetireWeapon() {};
+
 	virtual int ExtractAmmo( CBasePlayerWeapon *pWeapon ); //{ return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
 	virtual int ExtractClipAmmo( CBasePlayerWeapon *pWeapon );// { return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
 
@@ -307,59 +348,68 @@ public:
 	BOOL AddPrimaryAmmo( int iCount, char *szName, int iMaxClip, int iMaxCarry );
 	BOOL AddSecondaryAmmo( int iCount, char *szName, int iMaxCarry );
 
-	virtual void UpdateItemInfo( void ) {};	// updates HUD state
 
-	int m_iPlayEmptySound;
-	int m_fFireOnEmpty;		// True when the gun is empty and the player is still holding down the
+
+	int m_iPlayEmptySound; //0xAC MAC
+	int m_fFireOnEmpty;		// True when the gun is empty and the player is still holding down the 0xB0 MAC
 							// attack key(s)
 	virtual BOOL PlayEmptySound( void );
 	virtual void ResetEmptySound( void );
 
-	virtual void SendWeaponAnim( int iAnim, int skiplocal = 1, int body = 0 );  // skiplocal is 1 if client is predicting weapon animations
+	// nightfire has no body arg, also it's unused in HL1
+	virtual void SendWeaponAnim( int iAnim, int skiplocal = 1/*, int body = 0*/);  // skiplocal is 1 if client is predicting weapon animations
 
-	virtual BOOL CanDeploy( void );
+
 	virtual BOOL IsUseable( void );
-	BOOL DefaultDeploy( const char *szViewModel, const char *szWeaponModel, int iAnim, const char *szAnimExt, int skiplocal = 0, int body = 0 );
-	int DefaultReload( int iClipSize, int iAnim, float fDelay, int body = 0 );
 
-	virtual void ItemPostFrame( void );	// called each frame by the player PostThink
+	virtual void WeaponPlayerFrozenThink() {}; //nightfire
+
+	// nightfire missing body params
+	BOOL DefaultDeploy( const char *szViewModel, const char *szWeaponModel, int iAnim, const char *szAnimExt, int skiplocal = 0/*, int body = 0*/);
+	int DefaultReload( int iClipSize, int iAnim, float fDelay/*, int body = 0*/);
+
+
 	// called by CBasePlayerWeapons ItemPostFrame()
-	virtual void PrimaryAttack( void ) { return; }				// do "+ATTACK"
-	virtual void SecondaryAttack( void ) { return; }			// do "+ATTACK2"
+	virtual void PrimaryAttack( int unknown ) { return; }				// do "+ATTACK"
+	virtual void SecondaryAttack( int unknown ) { return; }			// do "+ATTACK2"
 	virtual void Reload( void ) { return; }						// do "+RELOAD"
 	virtual void WeaponIdle( void ) { return; }					// called when no buttons pressed
-	virtual int UpdateClientData( CBasePlayer *pPlayer );		// sends hud info to client dll, if things have changed
-	virtual void RetireWeapon( void );
-	virtual BOOL ShouldWeaponIdle( void ) {return FALSE; };
-	virtual void Holster( int skiplocal = 0 );
-	virtual BOOL UseDecrement( void ) { return FALSE; };
+
 	
-	int	PrimaryAmmoIndex(); 
-	int	SecondaryAmmoIndex(); 
+	virtual BOOL ShouldWeaponIdle( void ) {return FALSE; };
+	virtual BOOL UseDecrement( void ) { return FALSE; };
+
+	virtual void ResumeZoom() {}; //nightfire
+	virtual void Maintenance() {}; //nightfire
+
 
 	void PrintState( void );
 
-	virtual CBasePlayerItem *GetWeaponPtr( void ) { return (CBasePlayerItem *)this; };
-	float GetNextAttackDelay( float delay );
+	//TODO: implement in nightfire
+	//float GetNextAttackDelay( float delay );
 
-	float m_flPumpTime;
-	int		m_fInSpecialReload;									// Are we in the middle of a reload for the shotguns
-	float	m_flNextPrimaryAttack;								// soonest time ItemPostFrame will call PrimaryAttack
-	float	m_flNextSecondaryAttack;							// soonest time ItemPostFrame will call SecondaryAttack
-	float	m_flTimeWeaponIdle;									// soonest time ItemPostFrame will call WeaponIdle
-	int		m_iPrimaryAmmoType;									// "primary" ammo index into players m_rgAmmo[]
-	int		m_iSecondaryAmmoType;								// "secondary" ammo index into players m_rgAmmo[]
-	int		m_iClip;											// number of shots left in the primary weapon clip, -1 it not used
-	int		m_iClientClip;										// the last version of m_iClip sent to hud dll
-	int		m_iClientWeaponState;								// the last version of the weapon state sent to hud dll (is current weapon, is on target)
-	int		m_fInReload;										// Are we in the middle of a reload;
+	float m_flPumpTime; //0xB4 MAC
+	int		m_fInSpecialReload;	//0xB8 MAC								// Are we in the middle of a reload for the shotguns
+	float	m_flNextPrimaryAttack;	//0xBC MAC							// soonest time ItemPostFrame will call PrimaryAttack
+	float	m_flNextSecondaryAttack;	 //0xC0 MAC						// soonest time ItemPostFrame will call SecondaryAttack
+	float	m_flTimeWeaponIdle;	//0xC4 MAC								// soonest time ItemPostFrame will call WeaponIdle
+	int		m_iPrimaryAmmoType;	//0xC8 MAC								// "primary" ammo index into players m_rgAmmo[]
+	int		m_iSecondaryAmmoType; //0xCC MAC								// "secondary" ammo index into players m_rgAmmo[]
+	int		m_iClip;	//0xD0 MAC										// number of shots left in the primary weapon clip, -1 it not used
+	int		m_iClientClip;	//0xD4 MAC									// the last version of m_iClip sent to hud dll
+	int		m_iClientWeaponState; //0xD8 MAC								// the last version of the weapon state sent to hud dll (is current weapon, is on target)
+	int		m_fInReload; //0xDC MAC										// Are we in the middle of a reload;
 
-	int		m_iDefaultAmmo;// how much ammo you get when you pick up this weapon as placed by a level designer.
+	int		m_nWeaponMode; //0xE0 MAC, nightfire
+	int		m_iDefaultAmmo;//0xE4 MAC how much ammo you get when you pick up this weapon as placed by a level designer.
+	int		m_iViewMode; //0xE8 MAC, nightfire
 	
-	// hle time creep vars
-	float	m_flPrevPrimaryAttack;
-	float	m_flLastFireTime;			
+	int m_iUnknownWeaponVar; //0xEC MAC, seems to decrement weapon m_iClip if m_iClip not 0 when some flag (IN_USE)? is set and then sets this value to 0 if m_iClip is 0
 
+	// NIGHTFIRE DOESN'T HAVE THESE, TODO: fixme: implement.. 
+	// hle time creep vars
+	//float	m_flPrevPrimaryAttack;
+	//float	m_flLastFireTime;			
 };
 
 
@@ -479,8 +529,8 @@ public:
 	int iItemSlot( void ) { return 2; }
 	int GetItemInfo(ItemInfo *p);
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack( int unknown );
+	void SecondaryAttack( int unknown );
 	void GlockFire( float flSpread, float flCycleTime, BOOL fUseAutoAim );
 	BOOL Deploy( void );
 	void Reload( void );
@@ -514,7 +564,7 @@ public:
 	void EXPORT Smack( void );
 	int GetItemInfo(ItemInfo *p);
 
-	void PrimaryAttack( void );
+	void PrimaryAttack(int unknown);
 	int Swing( int fFirst );
 	BOOL Deploy( void );
 	void Holster( int skiplocal = 0 );
@@ -541,8 +591,8 @@ public:
 	int iItemSlot( void ) { return 2; }
 	int GetItemInfo(ItemInfo *p);
 	int AddToPlayer( CBasePlayer *pPlayer );
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack(int unknown);
+	void SecondaryAttack(int unknown);
 	BOOL Deploy( void );
 	void Holster( int skiplocal = 0 );
 	void Reload( void );
@@ -572,8 +622,8 @@ public:
 	int GetItemInfo(ItemInfo *p);
 	int AddToPlayer( CBasePlayer *pPlayer );
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack(int unknown);
+	void SecondaryAttack(int unknown);
 	int SecondaryAmmoIndex( void );
 	BOOL Deploy( void );
 	void Reload( void );
@@ -605,8 +655,8 @@ public:
 
 	void FireBolt( void );
 	void FireSniperBolt( void );
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack(int unknown);
+	void SecondaryAttack(int unknown);
 	int AddToPlayer( CBasePlayer *pPlayer );
 	BOOL Deploy( );
 	void Holster( int skiplocal = 0 );
@@ -646,8 +696,8 @@ public:
 	int GetItemInfo(ItemInfo *p);
 	int AddToPlayer( CBasePlayer *pPlayer );
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack(int unknown);
+	void SecondaryAttack(int unknown);
 	BOOL Deploy( );
 	void Reload( void );
 	void WeaponIdle( void );
@@ -704,8 +754,8 @@ public:
 	BOOL CanHolster( void );
 	void Holster( int skiplocal = 0 );
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack(int unknown);
+	void SecondaryAttack(int unknown);
 	void WeaponIdle( void );
 
 	void UpdateSpot( void );
@@ -766,8 +816,8 @@ public:
 	BOOL Deploy( void );
 	void Holster( int skiplocal = 0  );
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack(int unknown);
+	void SecondaryAttack(int unknown);
 	void WeaponIdle( void );
 	
 	void StartFire( void );
@@ -821,7 +871,7 @@ public:
 
 	void EndAttack( void );
 	void Attack( void );
-	void PrimaryAttack( void );
+	void PrimaryAttack(int unknown);
 	void WeaponIdle( void );
 
 	float m_flAmmoUseTime;// since we use < 1 point of ammo per update, we subtract ammo on a timer.
@@ -872,8 +922,8 @@ public:
 	int GetItemInfo(ItemInfo *p);
 	int AddToPlayer( CBasePlayer *pPlayer );
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack(int unknown);
+	void SecondaryAttack(int unknown);
 	BOOL Deploy( void );
 	BOOL IsUseable( void );
 	void Holster( int skiplocal = 0 );
@@ -907,7 +957,7 @@ public:
 	int iItemSlot( void ) { return 5; }
 	int GetItemInfo(ItemInfo *p);
 
-	void PrimaryAttack( void );
+	void PrimaryAttack(int unknown);
 	BOOL Deploy( void );
 	BOOL CanHolster( void );
 	void Holster( int skiplocal = 0 );
@@ -938,8 +988,8 @@ public:
 	int iItemSlot( void ) { return 5; }
 	int GetItemInfo(ItemInfo *p);
 	int AddToPlayer( CBasePlayer *pPlayer );
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack(int unknown);
+	void SecondaryAttack(int unknown);
 	int AddDuplicate( CBasePlayerItem *pOriginal );
 	BOOL CanDeploy( void );
 	BOOL Deploy( void );
@@ -974,7 +1024,7 @@ public:
 		pev->absmax = pev->origin + Vector(16, 16, 28); 
 	}
 
-	void PrimaryAttack( void );
+	void PrimaryAttack(int unknown);
 	BOOL Deploy( void );
 	void Holster( int skiplocal = 0 );
 	void WeaponIdle( void );
@@ -1001,8 +1051,8 @@ public:
 	int iItemSlot( void ) { return 5; }
 	int GetItemInfo(ItemInfo *p);
 
-	void PrimaryAttack( void );
-	void SecondaryAttack( void );
+	void PrimaryAttack(int unknown);
+	void SecondaryAttack(int unknown);
 	BOOL Deploy( void );
 	void Holster( int skiplocal = 0 );
 	void WeaponIdle( void );
@@ -1019,6 +1069,46 @@ public:
 
 private:
 	unsigned short m_usSnarkFire;
+};
+
+// nightfire weapons
+
+class CPDW90 : public CBasePlayerWeapon
+{
+public:
+#ifndef CLIENT_DLL
+	virtual int		Save(CSave& save);
+	virtual int		Restore(CRestore& restore);
+	static	TYPEDESCRIPTION m_SaveData[];
+#endif
+
+	virtual void Spawn(void);
+	virtual void Precache(void);
+	virtual int GetItemInfo(ItemInfo* p);
+	virtual BOOL Deploy(void);
+	virtual void IncrementAmmo(CBasePlayer* pPlayer);
+	virtual BOOL CanDropItem() { return TRUE; }
+	int iItemSlot() { return 8; }
+	virtual void PrimaryAttack(int unknown);
+	virtual void SecondaryAttack(int unknown);
+	virtual void Reload();
+	virtual void WeaponIdle();
+
+	virtual BOOL UseDecrement()
+	{
+#if defined( CLIENT_WEAPONS )
+		return TRUE;
+#else
+		return FALSE;
+#endif
+	}
+
+	int m_iEjectShellModel; //0xF0 MAC
+	int m_iFireMode; //0xF4 MAC
+	int m_iShotsFired; //0xF8 MAC
+	int m_iEvent; //0xFC MAC
+
+	static float m_flNextEffectEvent = 0.0f;
 };
 
 

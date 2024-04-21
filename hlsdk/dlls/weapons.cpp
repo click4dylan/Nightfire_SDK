@@ -458,6 +458,12 @@ TYPEDESCRIPTION	CBasePlayerWeapon::m_SaveData[] =
 
 IMPLEMENT_SAVERESTORE( CBasePlayerWeapon, CBasePlayerItem );
 
+// nightfire specific
+void CBasePlayerItem::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType)
+{
+	UTIL_Sparks(ptr->vecEndPos);
+}
+
 
 void CBasePlayerItem :: SetObjectCollisionBox( void )
 {
@@ -680,7 +686,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		}
 
 		m_pPlayer->TabulateAmmo();
-		PrimaryAttack();
+		PrimaryAttack(1);
 	}
 	else if ( m_pPlayer->pev->button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload ) 
 	{
@@ -863,7 +869,8 @@ int CBasePlayerWeapon::UpdateClientData( CBasePlayer *pPlayer )
 }
 
 
-void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
+// nightfire has no body arg, also it's unused here!
+void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal/*, int body*/)
 {
 	if ( UseDecrement() )
 		skiplocal = 1;
@@ -987,7 +994,7 @@ BOOL CBasePlayerWeapon :: CanDeploy( void )
 	return TRUE;
 }
 
-BOOL CBasePlayerWeapon :: DefaultDeploy( const char *szViewModel, const char *szWeaponModel, int iAnim, const char *szAnimExt, int skiplocal /* = 0 */, int body )
+BOOL CBasePlayerWeapon :: DefaultDeploy( const char *szViewModel, const char *szWeaponModel, int iAnim, const char *szAnimExt, int skiplocal /* = 0 */ /*, int body*/)
 {
 	if (!CanDeploy( ))
 		return FALSE;
@@ -1006,7 +1013,7 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( const char *szViewModel, const char *sz
 }
 
 
-BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay, int body )
+BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay/*, int body*/)
 {
 	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
 		return FALSE;
@@ -1615,3 +1622,123 @@ TYPEDESCRIPTION	CSatchel::m_SaveData[] =
 };
 IMPLEMENT_SAVERESTORE( CSatchel, CBasePlayerWeapon );
 
+
+// nightfire weapons
+
+
+TYPEDESCRIPTION	CPDW90::m_SaveData[] =
+{
+	DEFINE_FIELD(CPDW90, m_iFireMode, FIELD_INTEGER),
+	DEFINE_FIELD(CPDW90, m_iShotsFired, FIELD_INTEGER),
+};
+IMPLEMENT_SAVERESTORE(CPDW90, CBasePlayerWeapon);
+
+
+void CPDW90::Precache()
+{
+	PRECACHE_MODEL("models/v_pdw90.mdl");
+	PRECACHE_MODEL("models/w_pdw90.mdl");
+	PRECACHE_MODEL("models/p_pdw90.mdl");
+	PRECACHE_SOUND("weapons/p90_fire1.wav");
+	PRECACHE_SOUND("weapons/p90_fire2.wav");
+	PRECACHE_SOUND("weapons/p90_fire3.wav");
+	m_iEjectShellModel = PRECACHE_MODEL("models/shell.mdl");
+	m_iEvent = PRECACHE_EVENT(1, "events/pdw90.sc");
+	PRECACHE_MODEL("sprites/wallpuff.spz");
+}
+
+BOOL CPDW90::Deploy(void)
+{
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5f;
+	return DefaultDeploy("models/v_pdw90.mdl", "models/p_pdw90.mdl", 6, "pdw90", 1);
+}
+
+int CPDW90::GetItemInfo(ItemInfo* p)
+{
+	p->pszName = STRING(pev->classname);
+	p->pszAmmo1 = "28mm";
+	p->iMaxAmmo1 = _28MM_MAX_CARRY;
+	p->pszAmmo2 = NULL;
+	p->iMaxAmmo2 = -1;
+	p->iMaxClip = PD90_MAX_CLIP;
+	p->iSlot = 8;
+	p->iPosition = 0;
+	p->iFlags = 0;
+	p->iId = m_iId = WEAPON_PDW90;
+	p->iWeight = -1;
+	p->iUnknown3 = 1;
+	p->iUnknown1 = 1;
+	// what about iUnknown2?
+
+	return 1;
+}
+
+void CPDW90::IncrementAmmo(CBasePlayer* pPlayer)
+{
+	if (pPlayer->GiveAmmo(1, "28mm", _28MM_MAX_CARRY) >= 0)
+	{
+		EMIT_SOUND(pPlayer->edict(), CHAN_STATIC, "ctf/pow_backpack.wav", 0.5, ATTN_NORM);
+
+		if (gpGlobals->time >= pPlayer->m_flNextAmmoChargeTime)
+		{
+			EMIT_SOUND_DYN(ENT(pPlayer->pev), CHAN_STATIC, "ctf/pow_ammo_charge.wav", 1, ATTN_NORM, 0, PITCH_NORM);
+			pPlayer->m_flNextAmmoChargeTime = gpGlobals->time + 2.0f;
+		}
+	}
+}
+
+void CPDW90::Reload()
+{
+	float flDelay;
+
+	if (m_iClip)
+	{
+		if (!DefaultReload(PD90_MAX_CLIP, 5, 2.06f))
+			return;
+
+		flDelay = 1.86f;
+	}
+	else
+	{
+		if (!DefaultReload(PD90_MAX_CLIP, 4, 2.43f))
+			return;
+
+		flDelay = 2.33f;
+	}
+
+	m_flTimeWeaponIdle = m_flNextSecondaryAttack = m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + flDelay;
+}
+
+void CPDW90::Spawn()
+{
+	pev->classname = MAKE_STRING("weapon_pdw90");
+	Precache();
+	SET_MODEL(ENT(pev), "models/w_pdw90.mdl");
+	m_fTossing = 0;
+	m_iId = WEAPON_PDW90;
+	m_iDefaultAmmo = PD90_MAX_CLIP;
+	FallInit();
+	m_iShotsFired = 0;
+}
+
+void CPDW90::WeaponIdle()
+{
+	ResetEmptySound();
+	m_iShotsFired = 0;
+
+	if (m_flTimeWeaponIdle > gpGlobals->time)
+		return;
+
+	SendWeaponAnim(RANDOM_LONG(0, 2), 1);
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + RANDOM_FLOAT(8.0f, 16.0f);
+}
+
+void CPDW90::PrimaryAttack(int unknown)
+{
+	//TODO
+}
+
+void CPDW90::SecondaryAttack(int unknown)
+{
+	//done
+}

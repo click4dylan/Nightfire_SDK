@@ -204,6 +204,8 @@ typedef struct
 	int					nodeflags;		// transition rules
 	
 	int					nextseq;		// auto advancing sequences
+
+	vec3_t				unknown; //nightfire
 } mstudioseqdesc_t;
 //nightfire size: 0xBC, unfinished struct
 

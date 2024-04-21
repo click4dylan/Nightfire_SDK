@@ -125,7 +125,9 @@ public:
 	cl_entity_s** g_rCurrentEntity{};
 	struct playermove_s** g_PlayerMove{};
 	cl_enginefuncs_s* g_pCL_EngineFuncs{};
+	enginefuncs_s* g_pEngineFuncs{};
 	char* DM_PlayerState{};
+	globalvars_t* gpGlobals{};
 	
 	client_s** host_client{};
 

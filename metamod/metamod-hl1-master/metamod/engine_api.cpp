@@ -96,8 +96,8 @@ int	mm_AllocateDecal(const char *name) {
 	META_ENGINE_HANDLE(int, 0, FN_ALLOCATEDECAL, pfnAllocateDecal, (name));
 	RETURN_API()
 }
-BOOLEAN mm_GetBoneCoord ( edict_t *ed, const char *bone, int unknown, int unknown2) {
-	META_ENGINE_HANDLE(BOOLEAN, 0, FN_GETBONECOORD, pfnGetBoneCoord, (ed, bone, unknown, unknown2));
+BOOLEAN mm_GetBoneCoord ( edict_t *ed, const char *bone, float *rgflOrigin, float *rgflAngles) {
+	META_ENGINE_HANDLE(BOOLEAN, 0, FN_GETBONECOORD, pfnGetBoneCoord, (ed, bone, rgflOrigin, rgflAngles));
 	RETURN_API()
 }
 void mm_COM_Log(char *pszFile, char *fmt, ...) {

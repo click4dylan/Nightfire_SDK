@@ -150,7 +150,7 @@ public:
 	// Constructor.  Set engine to use C/C++ callback functions
 	// pointers to engine data
 
-	entvars_t *pev;		// Don't need to save/restore this pointer, the engine resets it
+	entvars_t *pev;		// Don't need to save/restore this pointer, the engine resets it //4
 
 	// path corners
 	CBaseEntity			*m_pGoalEnt;// path corner we are heading towards //0x8, correct
@@ -257,12 +257,12 @@ public:
 	virtual void ItemDropped() { }
 	virtual int DisplayHudInformation(CBaseEntity* other) { return 0; }
 	
-	// fundamental callbacks
-	void (CBaseEntity ::*m_pfnThink)(void); //16 dec on PC/MAC
-	void (CBaseEntity ::*m_pfnTouch)( CBaseEntity *pOther ); //20 dec on PC/MAC
+	// fundamental callbacks, mac has 64 bit values
+	void (CBaseEntity ::*m_pfnThink)(void); //16 dec on PC/MAC 0x10
+	void (CBaseEntity ::*m_pfnTouch)( CBaseEntity *pOther ); //20 dec on PC/MAC 0x18
 	void (CBaseEntity ::*m_pfnUse)( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value ); //24 dec on PC/MAC
 	void (CBaseEntity ::*m_pfnBlocked)( CBaseEntity *pOther ); //28 dec on PC/MAC
-	BOOL (CBaseEntity ::*m_pfnBlockedTest)(CBaseEntity* pOther); //32 dec on PC/MAC
+	BOOL (CBaseEntity ::*m_pfnBlockedTest)(CBaseEntity* pOther); //32 dec on PC/MAC 0x48 on mac
 
 
 	//FIXME todo: dylan: unknown if these are used in Nightfire
@@ -376,23 +376,30 @@ public:
 	EOFFSET eoffset( ) { return OFFSET( pev ); };
 	int	  entindex( ) { return ENTINDEX( edict() ); };
 
-	//We use this variables to store each ammo count.
-	int ammo_9mm;
-	int ammo_357;
-	int ammo_bolts;
-	int ammo_buckshot;
-	int ammo_rockets;
-	int ammo_uranium;
-	int ammo_hornets;
-	int ammo_argrens;
-	//Special stuff for grenades and satchels.
-	float m_flStartThrow;
-	float m_flReleaseThrow;
-	int m_chargeReady;
-	int m_fInAttack;
 
-	enum EGON_FIRESTATE { FIRE_OFF, FIRE_CHARGE };
-	int m_fireState;
+	//Special stuff for grenades and satchels.
+	float m_flStartThrow; //0x38 MAC
+	float m_flReleaseThrow; //0x3C MAC
+
+	//0x40
+	int m_iEntUnknown;
+	int m_iEntUnknown2;
+
+	//We use this variables to store each ammo count.
+	//int ammo_9mm;
+	//int ammo_357;
+	//int ammo_bolts;
+	//int ammo_buckshot;
+	//int ammo_rockets;
+	//int ammo_uranium;
+	//int ammo_hornets;
+	//int ammo_argrens;
+
+	//int m_chargeReady;
+	//int m_fInAttack;
+
+	//enum EGON_FIRESTATE { FIRE_OFF, FIRE_CHARGE };
+	//int m_fireState;
 } C_BaseEntity; 
 
 
@@ -1595,8 +1602,8 @@ public:
 class CBaseDelay : public CBaseEntity
 {
 public:
-	float		m_flDelay;
-	int			m_iszKillTarget;
+	float		m_flDelay; //0x48 MAC
+	int			m_iszKillTarget; //0x4C MAC
 
 	virtual void	KeyValue( KeyValueData* pkvd);
 	virtual int		Save( CSave &save );
@@ -1615,6 +1622,8 @@ public:
 	virtual int		Save( CSave &save );
 	virtual int		Restore( CRestore &restore );
 
+	virtual BOOL CanAnimate() { return TRUE; }
+
 	static	TYPEDESCRIPTION m_SaveData[];
 
 	// Basic Monster Animation functions
@@ -1623,7 +1632,7 @@ public:
 	int  LookupActivity ( int activity );
 	int  LookupActivityHeaviest ( int activity );
 	int  LookupSequence ( const char *label );
-	void ResetSequenceInfo ( );
+	virtual void ResetSequenceInfo ( ); // nightfire's virtual
 	void DispatchAnimEvents ( float flFutureInterval = 0.1 ); // Handle events that have happend since last time called up until X seconds into the future
 	virtual void HandleAnimEvent( MonsterEvent_t *pEvent ) { return; };
 	float SetBoneController ( int iController, float flValue );
@@ -1639,11 +1648,26 @@ public:
 	void SetSequenceBox( void );
 
 	// animation needs
-	float				m_flFrameRate;		// computed FPS for current sequence
-	float				m_flGroundSpeed;	// computed linear movement rate for current sequence
+	float				m_flFrameRate;		// computed FPS for current sequence 0x50 MAC
+	float				m_flGroundSpeed;	// computed linear movement rate for current sequence 0x54 MAC
+
+	Vector m_vecLinearMovement; // nightfire new
+
 	float				m_flLastEventCheck;	// last time the event list was checked
-	BOOL				m_fSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
-	BOOL				m_fSequenceLoops;	// true if the sequence loops
+
+	float m_flLastFrameCheck; //new nightfire
+
+	bool_nightfire				m_fSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
+	bool_nightfire				m_fSequenceLoops;	// true if the sequence loops
+	bool_nightfire m_fLoopFixed; //unknown, nightfire 0x74 MAC
+
+	int m_AnimatingUnknown1;
+	int m_AnimatingUnknown2;
+	int m_AnimatingUnknown3;
+	int m_AnimatingUnknown4;
+	int m_AnimatingUnknown5;
+	int m_AnimatingUnknown6;
+	int m_AnimatingUnknown7;
 };
 
 

@@ -85,7 +85,7 @@ enum sbar_data
 
 #define CHAT_INTERVAL 1.0f
 
-class CBasePlayer : public CBaseMonster
+class CBasePlayer : public CBaseCharacter
 {
 public:
 	
@@ -236,7 +236,7 @@ public:
 	static	TYPEDESCRIPTION m_playerSaveData[];
 
 	// Player is moved across the transition by other means
-	virtual int		ObjectCaps( void ) { return CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual int		ObjectCaps( void ) { return CBaseCharacter :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	virtual void	Precache( void );
 	BOOL			IsOnLadder( void );
 	BOOL			FlashlightIsOn( void );

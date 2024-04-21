@@ -111,12 +111,13 @@ void CBaseAnimating :: ResetSequenceInfo ( )
 {
 	void *pmodel = GET_MODEL_PTR( ENT(pev) );
 
-	GetSequenceInfo( pmodel, pev, &m_flFrameRate, &m_flGroundSpeed );
+	GetSequenceInfo( pmodel, pev, &m_flFrameRate, &m_flGroundSpeed, &m_vecLinearMovement);
 	m_fSequenceLoops = ((GetSequenceFlags() & STUDIO_LOOPING) != 0);
 	pev->animtime = gpGlobals->time;
 	pev->framerate = 1.0;
 	m_fSequenceFinished = FALSE;
 	m_flLastEventCheck = gpGlobals->time;
+	m_flLastFrameCheck = pev->frame;
 }
 
 

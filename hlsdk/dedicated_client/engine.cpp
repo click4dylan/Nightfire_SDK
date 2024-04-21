@@ -153,17 +153,6 @@ void linkEngineDll( const char* name )
 
 	g_pNightfireFileSystem->Init(g_engineDllHinst, g_platformDllHinst);
 
-	DWORD loadthisdll;
-	if (FindMemoryPattern(loadthisdll, g_engineDllHinst, "57 53 FF 15 ? ? ? ? 8B F8 85 FF 75 17", false))
-	{
-		g_pGlobalVariables = (void*)*(DWORD*)(loadthisdll + 0x4D);
-		g_pEngineFuncs = (struct enginefuncs_s*)*(DWORD*)(loadthisdll + 0x52);
-	}
-	DWORD studiomodelapi;
-	if (FindMemoryPattern(studiomodelapi, g_engineDllHinst, "68 ? ? ? ? 68 ? ? ? ? 6A 01 FF D0 83 C4 0C", false))
-	{
-		g_pStudioModelAPI = (struct engine_studio_api_s*)*(DWORD*)(loadthisdll + 1);
-	}
 	RunMetaHook();
 	Fix_Engine_Bugs();
 	Fix_Gamespy();

@@ -24,3 +24,5 @@ extern void Fix_TempEnts();
 extern void Fix_FpsCap();
 extern void Fix_RateDesync();
 extern void Fix_LighterSpark();
+extern void Fix_FirePredictedBullets_GameDLL();
+extern void Fix_FirePredictedBullets_ClientDLL();
