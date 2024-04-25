@@ -248,7 +248,7 @@ struct meta_enginefuncs_t : public enginefuncs_t {
             void             (*_pfnServerCommand)                   (const char*),
             void             (*_pfnServerExecute)                   (void),
             void             (*_pfnClientCommand)                   (edict_t*, const char*, ...),
-            void             (*_pfnParticleEffect)                  (const float*, const float*, float, float, float, float),
+            void             (*_pfnParticleEffect)                  (const float*, const float*, int, int, int, int),
             void             (*_pfnLightStyle)                      (int, const char*),
 			int              (*_pfnAllocateDecal)					(const char *), //added
             int	             (*_pfnDecalIndex)                      (const char*),

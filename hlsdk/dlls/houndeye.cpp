@@ -73,7 +73,7 @@ enum
 #define		HOUND_AE_HOPBACK		6
 #define		HOUND_AE_CLOSE_EYE		7
 
-class CHoundeye : public CSquadMonster
+class CHoundeye : public CSquadCharacter
 {
 public:
 	void Spawn( void );
@@ -120,7 +120,7 @@ TYPEDESCRIPTION	CHoundeye::m_SaveData[] =
 	DEFINE_FIELD( CHoundeye, m_vecPackCenter, FIELD_POSITION_VECTOR ),
 };
 
-IMPLEMENT_SAVERESTORE( CHoundeye, CSquadMonster );
+IMPLEMENT_SAVERESTORE( CHoundeye, CSquadCharacter );
 
 //=========================================================
 // Classify - indicates this monster's place in the 
@@ -166,11 +166,11 @@ BOOL CHoundeye :: FCanActiveIdle ( void )
 {
 	if ( InSquad() )
 	{
-		CSquadMonster *pSquadLeader = MySquadLeader();
+		CSquadCharacter *pSquadLeader = MySquadLeader();
 
 		for (int i = 0; i < MAX_SQUAD_MEMBERS;i++)
 		{
-			CSquadMonster *pMember = pSquadLeader->MySquadMember(i);
+			CSquadCharacter *pMember = pSquadLeader->MySquadMember(i);
 			 
 			if ( pMember != NULL && pMember != this && pMember->m_iHintNode != NO_NODE )
 			{
@@ -266,7 +266,7 @@ void CHoundeye :: SetActivity ( Activity NewActivity )
 	}
 	else
 	{
-		CSquadMonster :: SetActivity ( NewActivity );
+		CSquadCharacter :: SetActivity ( NewActivity );
 	}
 }
 
@@ -320,7 +320,7 @@ void CHoundeye :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			break;
 
 		default:
-			CSquadMonster::HandleAnimEvent( pEvent );
+			CSquadCharacter::HandleAnimEvent( pEvent );
 			break;
 	}
 }
@@ -720,7 +720,7 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 			if ( InSquad() )
 			{
 				// see if there is a battery to connect to. 
-				CSquadMonster *pSquad = m_pSquadLeader;
+				CSquadCharacter *pSquad = m_pSquadLeader;
 
 				while ( pSquad )
 				{
@@ -765,7 +765,7 @@ void CHoundeye :: StartTask ( Task_t *pTask )
 		}
 	default: 
 		{
-			CSquadMonster :: StartTask(pTask);
+			CSquadCharacter :: StartTask(pTask);
 			break;
 		}
 	}
@@ -837,7 +837,7 @@ void CHoundeye :: RunTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CSquadMonster :: RunTask(pTask);
+			CSquadCharacter :: RunTask(pTask);
 			break;
 		}
 	}
@@ -870,7 +870,7 @@ void CHoundeye::PrescheduleThink ( void )
 	// if you are the leader, average the origins of each pack member to get an approximate center.
 	if ( IsLeader() )
 	{
-		CSquadMonster *pSquadMember;
+		CSquadCharacter *pSquadMember;
 		int iSquadCount = 0;
 
 		for (int i = 0; i < MAX_SQUAD_MEMBERS; i++)
@@ -1145,7 +1145,7 @@ DEFINE_CUSTOM_SCHEDULES( CHoundeye )
 	slHoundCombatFailNoPVS,
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CHoundeye, CSquadMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CHoundeye, CSquadCharacter );
 
 //=========================================================
 // GetScheduleOfType 
@@ -1197,7 +1197,7 @@ Schedule_t* CHoundeye :: GetScheduleOfType ( int Type )
 			}
 			else
 			{
-				return CSquadMonster :: GetScheduleOfType( Type );
+				return CSquadCharacter :: GetScheduleOfType( Type );
 			}
 		}
 	case SCHED_RANGE_ATTACK1:
@@ -1245,12 +1245,12 @@ Schedule_t* CHoundeye :: GetScheduleOfType ( int Type )
 			}
 			else
 			{
-				return CSquadMonster :: GetScheduleOfType ( Type );
+				return CSquadCharacter :: GetScheduleOfType ( Type );
 			}
 		}
 	default:
 		{
-			return CSquadMonster :: GetScheduleOfType ( Type );
+			return CSquadCharacter :: GetScheduleOfType ( Type );
 		}
 	}
 }
@@ -1268,7 +1268,7 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseCharacter :: GetSchedule();
 			}
 
 			if ( HasConditions( bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE ) )
@@ -1304,5 +1304,5 @@ Schedule_t *CHoundeye :: GetSchedule( void )
 		break;
 	}
 
-	return CSquadMonster :: GetSchedule();
+	return CSquadCharacter :: GetSchedule();
 }

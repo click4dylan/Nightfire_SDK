@@ -25,7 +25,7 @@
 #define N_SCALE		15
 #define N_SPHERES	20
 
-class CNihilanth : public CBaseMonster
+class CNihilanth : public CBaseCharacter
 {
 public:
 	int		Save( CSave &save );
@@ -167,9 +167,9 @@ TYPEDESCRIPTION	CNihilanth::m_SaveData[] =
 	DEFINE_ARRAY( CNihilanth, m_hFriend, FIELD_EHANDLE, 3 ),
 };
 
-IMPLEMENT_SAVERESTORE( CNihilanth, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CNihilanth, CBaseCharacter );
 
-class CNihilanthHVR : public CBaseMonster
+class CNihilanthHVR : public CBaseCharacter
 {
 public:
 	int		Save( CSave &save );
@@ -227,7 +227,7 @@ TYPEDESCRIPTION	CNihilanthHVR::m_SaveData[] =
 };
 
 
-IMPLEMENT_SAVERESTORE( CNihilanthHVR, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CNihilanthHVR, CBaseCharacter );
 
 
 //=========================================================
@@ -418,7 +418,7 @@ void CNihilanth::StartupThink( void )
 
 void CNihilanth :: Killed( entvars_t *pevAttacker, int iGib )
 {
-	CBaseMonster::Killed( pevAttacker, iGib );
+	CBaseCharacter::Killed( pevAttacker, iGib );
 }
 
 void CNihilanth :: DyingThink( void )
@@ -633,7 +633,7 @@ void CNihilanth :: MakeFriend( Vector vecStart )
 		if (m_hFriend[i] != 0 && !m_hFriend[i]->IsAlive())
 		{
 			if (pev->rendermode == kRenderNormal) // don't do it if they are already fading
-				m_hFriend[i]->MyMonsterPointer()->FadeMonster( );
+				m_hFriend[i]->MyCharacterPointer()->FadeMonster( );
 			m_hFriend[i] = NULL;
 		}
 
@@ -1016,13 +1016,13 @@ BOOL CNihilanth :: EmitSphere( void )
 
 void CNihilanth :: 	TargetSphere( USE_TYPE useType, float value )
 {
-	CBaseMonster *pSphere;
+	CBaseCharacter *pSphere;
 	int i;
 	for (i = 0; i < N_SPHERES; i++)
 	{
 		if (m_hSphere[i] != 0)
 		{
-			pSphere = m_hSphere[i]->MyMonsterPointer();
+			pSphere = m_hSphere[i]->MyCharacterPointer();
 			if (pSphere->m_hEnemy == 0)
 				break;
 		}

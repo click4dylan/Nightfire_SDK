@@ -15,7 +15,7 @@ enum {
 	EngFunc_ChangeYaw,					// void )			(edict_t* ent);
 	EngFunc_ChangePitch,				// void )			(edict_t* ent);
 	EngFunc_FindEntityByString,			// edict)			(edict_t *pEdictStartSearchAfter, const char *pszField, const char *pszValue);
-	EngFunc_GetEntityIllum,				// int	)			(edict_t* pEnt);
+	EngFunc_GetEntityIllum,				// int	)			(edict_t* pEnt, bool isPlayer);
 	EngFunc_FindEntityInSphere,			// edict)			(edict_t *pEdictStartSearchAfter, const float *org, float rad);
 	EngFunc_FindClientInPVS,			// edict)			(edict_t *pEdict);
 	EngFunc_EntitiesInPVS,				// edict)			(edict_t *pplayer);
@@ -39,10 +39,10 @@ enum {
 	EngFunc_TraceTexture,				// const char *)	(edict_t *pTextureEntity, const float *v1, const float *v2 );
 	EngFunc_TraceSphere,				// void )			(const float *v1, const float *v2, int fNoMonsters, float radius, edict_t *pentToSkip, TraceResult *ptr);
 	EngFunc_GetAimVector,				// void )			(edict_t *ent, float speed, float *rgflReturn);
-	EngFunc_ParticleEffect,				// void )			(const float *org, const float *dir, float color, float count);
+	EngFunc_ParticleEffect,				// void )			(const float *org, const float *dir, int red, int green, int blue, int count);
 	EngFunc_LightStyle,					// void )			(int style, char *val);
 	EngFunc_DecalIndex,					// int  )			(const char *name);
-	EngFunc_PointContents,				// int  )			(const float *rgflVector);
+	EngFunc_PointContents,				// int  )			(const float *rgflVector, int brushflags);
 	EngFunc_FreeEntPrivateData,			// void )			(edict_t *pEdict);
 	EngFunc_SzFromIndex,				// const char *)	(int iString);
 	EngFunc_AllocString,				// int  )			(const char *szValue);

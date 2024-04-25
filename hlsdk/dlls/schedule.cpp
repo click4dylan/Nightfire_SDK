@@ -32,7 +32,7 @@ extern CGraph WorldGraph;
 // FHaveSchedule - Returns TRUE if monster's m_pSchedule
 // is anything other than NULL.
 //=========================================================
-BOOL CBaseMonster :: FHaveSchedule( void )
+BOOL CBaseCharacter :: FHaveSchedule( void )
 {
 	if ( m_pSchedule == NULL )
 	{
@@ -46,7 +46,7 @@ BOOL CBaseMonster :: FHaveSchedule( void )
 // ClearSchedule - blanks out the caller's schedule pointer
 // and index.
 //=========================================================
-void CBaseMonster :: ClearSchedule( void )
+void CBaseCharacter :: ClearSchedule( void )
 {
 	m_iTaskStatus = TASKSTATUS_NEW;
 	m_pSchedule = NULL;
@@ -57,7 +57,7 @@ void CBaseMonster :: ClearSchedule( void )
 // FScheduleDone - Returns TRUE if the caller is on the
 // last task in the schedule
 //=========================================================
-BOOL CBaseMonster :: FScheduleDone ( void )
+BOOL CBaseCharacter :: FScheduleDone ( void )
 {
 	ASSERT( m_pSchedule != NULL );
 	
@@ -74,7 +74,7 @@ BOOL CBaseMonster :: FScheduleDone ( void )
 // with the passed pointer, and sets the ScheduleIndex back
 // to 0
 //=========================================================
-void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
+void CBaseCharacter :: ChangeSchedule ( Schedule_t *pNewSchedule )
 {
 	ASSERT( pNewSchedule != NULL );
 
@@ -135,7 +135,7 @@ void CBaseMonster :: ChangeSchedule ( Schedule_t *pNewSchedule )
 //=========================================================
 // NextScheduledTask - increments the ScheduleIndex
 //=========================================================
-void CBaseMonster :: NextScheduledTask ( void )
+void CBaseCharacter :: NextScheduledTask ( void )
 {
 	ASSERT( m_pSchedule != NULL );
 
@@ -155,7 +155,7 @@ void CBaseMonster :: NextScheduledTask ( void )
 // bits that are currently set and also set in the current
 // schedule's Interrupt mask.
 //=========================================================
-int CBaseMonster :: IScheduleFlags ( void )
+int CBaseCharacter :: IScheduleFlags ( void )
 {
 	if( !m_pSchedule )
 	{
@@ -171,7 +171,7 @@ int CBaseMonster :: IScheduleFlags ( void )
 // schedule is still the proper schedule to be executing,
 // taking into account all conditions
 //=========================================================
-BOOL CBaseMonster :: FScheduleValid ( void )
+BOOL CBaseCharacter :: FScheduleValid ( void )
 {
 	if ( m_pSchedule == NULL )
 	{
@@ -205,7 +205,7 @@ BOOL CBaseMonster :: FScheduleValid ( void )
 // ensures that the monster leaves this function with a valid
 // schedule!
 //=========================================================
-void CBaseMonster :: MaintainSchedule ( void )
+void CBaseCharacter :: MaintainSchedule ( void )
 {
 	Schedule_t	*pNewSchedule;
 	int			i;
@@ -258,7 +258,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 			{
 				SetState( m_IdealMonsterState );
 				if ( m_MonsterState == MONSTERSTATE_SCRIPT || m_MonsterState == MONSTERSTATE_DEAD )
-					pNewSchedule = CBaseMonster::GetSchedule();
+					pNewSchedule = CBaseCharacter::GetSchedule();
 				else
 					pNewSchedule = GetSchedule();
 				ChangeSchedule( pNewSchedule );
@@ -302,7 +302,7 @@ void CBaseMonster :: MaintainSchedule ( void )
 //=========================================================
 // RunTask 
 //=========================================================
-void CBaseMonster :: RunTask ( Task_t *pTask )
+void CBaseCharacter :: RunTask ( Task_t *pTask )
 {
 	switch ( pTask->iTask )
 	{
@@ -524,7 +524,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 			if ( m_pCine->m_iDelay <= 0 && gpGlobals->time >= m_pCine->m_startTime )
 			{
 				TaskComplete();
-				m_pCine->StartSequence( (CBaseMonster *)this, m_pCine->m_iszPlay, TRUE );
+				m_pCine->StartSequence( (CBaseCharacter *)this, m_pCine->m_iszPlay, TRUE );
 				if ( m_fSequenceFinished )
 					ClearSchedule();
 				pev->framerate = 1.0;
@@ -548,7 +548,7 @@ void CBaseMonster :: RunTask ( Task_t *pTask )
 // the monster is facing and determines whether or not to
 // select one of the 180 turn animations.
 //=========================================================
-void CBaseMonster :: SetTurnActivity ( void )
+void CBaseCharacter :: SetTurnActivity ( void )
 {
 	float flYD;
 	flYD = FlYawDiff();
@@ -568,7 +568,7 @@ void CBaseMonster :: SetTurnActivity ( void )
 // any necessary calculations to start the next task on the
 // schedule. 
 //=========================================================
-void CBaseMonster :: StartTask ( Task_t *pTask )
+void CBaseCharacter :: StartTask ( Task_t *pTask )
 {
 	switch ( pTask->iTask )
 	{
@@ -1252,7 +1252,7 @@ case TASK_GET_PATH_TO_BESTSCENT:
 		{
 			if (m_pCine->m_iszIdle)
 			{
-				m_pCine->StartSequence( (CBaseMonster *)this, m_pCine->m_iszIdle, FALSE );
+				m_pCine->StartSequence( (CBaseCharacter *)this, m_pCine->m_iszIdle, FALSE );
 				if (FStrEq( STRING(m_pCine->m_iszIdle), STRING(m_pCine->m_iszPlay)))
 				{
 					pev->framerate = 0;
@@ -1301,7 +1301,7 @@ case TASK_GET_PATH_TO_BESTSCENT:
 
 	case TASK_SUGGEST_STATE:
 		{
-			m_IdealMonsterState = (MONSTERSTATE)(int)pTask->flData;
+			m_IdealMonsterState = (CHARACTERSTATE)(int)pTask->flData;
 			TaskComplete();
 			break;
 		}
@@ -1328,7 +1328,7 @@ case TASK_GET_PATH_TO_BESTSCENT:
 // GetTask - returns a pointer to the current 
 // scheduled task. NULL if there's a problem.
 //=========================================================
-Task_t	*CBaseMonster :: GetTask ( void ) 
+Task_t	*CBaseCharacter :: GetTask ( void ) 
 {
 	if ( m_iScheduleIndex < 0 || m_iScheduleIndex >= m_pSchedule->cTasks )
 	{
@@ -1347,7 +1347,7 @@ Task_t	*CBaseMonster :: GetTask ( void )
 // monster's member function to get a pointer to a schedule
 // of the proper type.
 //=========================================================
-Schedule_t *CBaseMonster :: GetSchedule ( void )
+Schedule_t *CBaseCharacter :: GetSchedule ( void )
 {
 	switch	( m_MonsterState )
 	{
@@ -1358,7 +1358,7 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 		}
 	case MONSTERSTATE_NONE:
 		{
-			ALERT ( at_aiconsole, "MONSTERSTATE IS NONE!\n" );
+			ALERT ( at_aiconsole, "CHARACTERSTATE IS NONE!\n" );
 			break;
 		}
 	case MONSTERSTATE_IDLE:
@@ -1497,7 +1497,7 @@ Schedule_t *CBaseMonster :: GetSchedule ( void )
 			if ( !m_pCine )
 			{
 				ALERT( at_aiconsole, "Script failed for %s\n", STRING(pev->classname) );
-				CineCleanup();
+				CineCleanup(true);
 				return GetScheduleOfType( SCHED_IDLE_STAND );
 			}
 

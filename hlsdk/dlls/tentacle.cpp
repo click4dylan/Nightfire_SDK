@@ -33,7 +33,7 @@
 #define ACT_T_STRIKE		1030
 #define ACT_T_REARIDLE	1040
 
-class CTentacle : public CBaseMonster
+class CTentacle : public CBaseCharacter
 {
 public:
 	CTentacle( void );
@@ -47,7 +47,7 @@ public:
 	static	TYPEDESCRIPTION m_SaveData[];
 
 	// Don't allow the tentacle to go across transitions!!!
-	virtual int	ObjectCaps( void ) { return CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual int	ObjectCaps( void ) { return CBaseCharacter :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
 	void SetObjectCollisionBox( void )
 	{
@@ -70,7 +70,7 @@ public:
 	void HandleAnimEvent( MonsterEvent_t *pEvent );
 	void Killed( entvars_t *pevAttacker, int iGib );
 
-	MONSTERSTATE GetIdealState ( void ) { return MONSTERSTATE_IDLE; };
+	CHARACTERSTATE GetIdealState ( void ) { return MONSTERSTATE_IDLE; };
 	int CanPlaySequence( BOOL fDisregardState ) { return TRUE; };
 
 	int Classify( void );
@@ -164,7 +164,7 @@ TYPEDESCRIPTION	CTentacle::m_SaveData[] =
 	DEFINE_FIELD( CTentacle, m_vecPrevSound, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CTentacle, m_flPrevSoundTime, FIELD_TIME ),
 };
-IMPLEMENT_SAVERESTORE( CTentacle, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CTentacle, CBaseCharacter );
 
 
 // animation sequence aliases 
@@ -342,7 +342,7 @@ void CTentacle::KeyValue( KeyValueData *pkvd )
 
 	}
 	else
-		CBaseMonster::KeyValue( pkvd );
+		CBaseCharacter::KeyValue( pkvd );
 }
 
 
@@ -723,7 +723,7 @@ void CTentacle::CommandUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 		if (pActivator)
 		{
 			// ALERT( at_console, "insert sound\n");
-			CSoundEnt::InsertSound ( bits_SOUND_WORLD, pActivator->pev->origin, 1024, 1.0 );
+			CSoundEnt::InsertSound ( bits_SOUND_WORLD, pActivator->pev->origin, pActivator->pev->angles, 1024, 1.0 );
 		}
 		break;
 	case USE_SET:
@@ -917,7 +917,7 @@ void CTentacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 	default:
-		CBaseMonster::HandleAnimEvent( pEvent );
+		CBaseCharacter::HandleAnimEvent( pEvent );
 	}
 }
 
@@ -1009,7 +1009,7 @@ void CTentacle :: Killed( entvars_t *pevAttacker, int iGib )
 
 
 
-class CTentacleMaw : public CBaseMonster
+class CTentacleMaw : public CBaseCharacter
 {
 public:
 	void Spawn( );

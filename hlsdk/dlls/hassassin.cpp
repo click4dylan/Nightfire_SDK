@@ -61,7 +61,7 @@ enum
 
 #define bits_MEMORY_BADJUMP		(bits_MEMORY_CUSTOM1)
 
-class CHAssassin : public CBaseMonster
+class CHAssassin : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -123,7 +123,7 @@ TYPEDESCRIPTION	CHAssassin::m_SaveData[] =
 	DEFINE_FIELD( CHAssassin, m_iFrustration, FIELD_INTEGER ),
 };
 
-IMPLEMENT_SAVERESTORE( CHAssassin, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CHAssassin, CBaseCharacter );
 
 
 //=========================================================
@@ -269,7 +269,7 @@ void CHAssassin :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}
 		return;
 	default:
-		CBaseMonster::HandleAnimEvent( pEvent );
+		CBaseCharacter::HandleAnimEvent( pEvent );
 		break;
 	}
 }
@@ -617,7 +617,7 @@ DEFINE_CUSTOM_SCHEDULES( CHAssassin )
 	slAssassinJumpLand,
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CHAssassin, CBaseMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CHAssassin, CBaseCharacter );
 
 
 //=========================================================
@@ -712,7 +712,7 @@ BOOL CHAssassin :: CheckRangeAttack2 ( float flDot, float flDist )
 //=========================================================
 void CHAssassin :: RunAI( void )
 {
-	CBaseMonster :: RunAI();
+	CBaseCharacter :: RunAI();
 
 	// always visible if moving
 	// always visible is not on hard
@@ -770,13 +770,13 @@ void CHAssassin :: StartTask ( Task_t *pTask )
 		}
 		else
 		{
-			CBaseMonster :: StartTask ( pTask );
+			CBaseCharacter :: StartTask ( pTask );
 		}
 		break;
 	case TASK_ASSASSIN_FALL_TO_GROUND:
 		break;
 	default:
-		CBaseMonster :: StartTask ( pTask );
+		CBaseCharacter :: StartTask ( pTask );
 		break;
 	}
 }
@@ -820,7 +820,7 @@ void CHAssassin :: RunTask ( Task_t *pTask )
 		}
 		break;
 	default: 
-		CBaseMonster :: RunTask ( pTask );
+		CBaseCharacter :: RunTask ( pTask );
 		break;
 	}
 }
@@ -862,7 +862,7 @@ Schedule_t *CHAssassin :: GetSchedule ( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseCharacter :: GetSchedule();
 			}
 
 			// flying?
@@ -958,7 +958,7 @@ Schedule_t *CHAssassin :: GetSchedule ( void )
 		break;
 	}
 
-	return CBaseMonster :: GetSchedule();
+	return CBaseCharacter :: GetSchedule();
 }
 
 //=========================================================
@@ -1011,7 +1011,7 @@ Schedule_t* CHAssassin :: GetScheduleOfType ( int Type )
 		return slAssassinJumpLand;
 	}
 
-	return CBaseMonster :: GetScheduleOfType( Type );
+	return CBaseCharacter :: GetScheduleOfType( Type );
 }
 
 #endif

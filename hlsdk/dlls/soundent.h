@@ -49,6 +49,7 @@ public:
 	void	Reset ( void );
 
 	Vector	m_vecOrigin;	// sound's location in space
+	Vector	m_vecAngles;	// sound's angles in space (nightfire)
 	int		m_iType;		// what type of sound this is
 	int		m_iVolume;		// how loud the sound is
 	float	m_flExpireTime;	// when the sound should be purged from the list

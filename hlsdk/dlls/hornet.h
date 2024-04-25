@@ -30,7 +30,7 @@ extern int iHornetPuff;
 //=========================================================
 // Hornet - this is the projectile that the Alien Grunt fires.
 //=========================================================
-class CHornet : public CBaseMonster
+class CHornet : public CBaseCharacter
 {
 public:
 	void Spawn( void );

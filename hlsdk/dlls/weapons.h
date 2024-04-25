@@ -23,7 +23,7 @@ extern int gmsgWeapPickup;
 void DeactivateSatchels( CBasePlayer *pOwner );
 
 // Contact Grenade / Timed grenade / Satchel Charge
-class CGrenade : public CBaseMonster
+class CGrenade : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -193,7 +193,18 @@ typedef	enum
 	BULLET_PLAYER_COMMANDO,
 	BULLET_PLAYER_PDW90,
 	BULLET_PLAYER_UNKNOWN2,
-	BULLET_PLAYER_MINIGUN
+	BULLET_PLAYER_MINIGUN,
+	
+	BULLET_ENEMY_KOWLOON,
+	BULLET_ENEMY_COMMANDO,
+	BULLET_ENEMY_MP9,
+	BULLET_ENEMY_BUCKSHOT,
+	BULLET_ENEMY_PDW90,
+	BULLET_ENEMY_SNIPER,
+	BULLET_ENEMY_ALERTED,
+	BULLET_ENEMY_UNKNOWN,
+	BULLET_ENEMY_RAPTOR,
+	BULLET_ENEMY_MINIGUN,
 } Bullet;
 
 
@@ -440,7 +451,7 @@ extern void ClearMultiDamage(void);
 extern void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker );
 extern void AddMultiDamage( entvars_t *pevInflictor, CBaseEntity *pEntity, float flDamage, int bitsDamageType);
 
-extern void DecalGunshot( TraceResult *pTrace, int iBulletType );
+//extern void DecalGunshot( TraceResult *pTrace, int iBulletType );
 extern void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage);
 extern int DamageDecal( CBaseEntity *pEntity, int bitsDamageType );
 extern void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType );
@@ -1108,7 +1119,7 @@ public:
 	int m_iShotsFired; //0xF8 MAC
 	int m_iEvent; //0xFC MAC
 
-	static float m_flNextEffectEvent = 0.0f;
+	static float m_flNextEffectEvent;
 };
 
 

@@ -69,7 +69,7 @@
 #endif
 
 
-class CLeech : public CBaseMonster
+class CLeech : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -161,7 +161,7 @@ TYPEDESCRIPTION	CLeech::m_SaveData[] =
 	DEFINE_FIELD( CLeech, m_attackSoundTime, FIELD_TIME ),
 };
 
-IMPLEMENT_SAVERESTORE( CLeech, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CLeech, CBaseCharacter );
 
 
 const char *CLeech::pAttackSounds[] =
@@ -269,7 +269,7 @@ int CLeech::IRelationship( CBaseEntity *pTarget )
 {
 	if ( pTarget->IsPlayer() )
 		return R_DL;
-	return CBaseMonster::IRelationship( pTarget );
+	return CBaseCharacter::IRelationship( pTarget );
 }
 
 
@@ -314,7 +314,7 @@ int CLeech::TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float f
 		pev->velocity = (pev->origin - pevInflictor->origin).Normalize() * 25;
 	}
 
-	return CBaseMonster::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 
@@ -350,7 +350,7 @@ void CLeech::HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 	
 	default:
-		CBaseMonster::HandleAnimEvent( pEvent );
+		CBaseCharacter::HandleAnimEvent( pEvent );
 		break;
 	}
 }

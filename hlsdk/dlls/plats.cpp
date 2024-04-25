@@ -2103,7 +2103,7 @@ void CFuncTrackAuto :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 
 #define FGUNTARGET_START_ON			0x0001
 
-class CGunTarget : public CBaseMonster
+class CGunTarget : public CBaseCharacter
 {
 public:
 	void			Spawn( void );
@@ -2137,7 +2137,7 @@ TYPEDESCRIPTION	CGunTarget::m_SaveData[] =
 	DEFINE_FIELD( CGunTarget, m_on, FIELD_BOOLEAN ),
 };
 
-IMPLEMENT_SAVERESTORE( CGunTarget, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CGunTarget, CBaseCharacter );
 
 
 void CGunTarget::Spawn( void )

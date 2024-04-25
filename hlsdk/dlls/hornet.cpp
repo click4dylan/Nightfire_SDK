@@ -41,7 +41,7 @@ TYPEDESCRIPTION	CHornet::m_SaveData[] =
 	DEFINE_FIELD( CHornet, m_flFlySpeed, FIELD_FLOAT ),
 };
 
-IMPLEMENT_SAVERESTORE( CHornet, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CHornet, CBaseCharacter );
 
 //=========================================================
 // don't let hornets gib, ever.
@@ -52,7 +52,7 @@ int CHornet :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, floa
 	bitsDamageType &= ~ ( DMG_ALWAYSGIB );
 	bitsDamageType |= DMG_NEVERGIB;
 
-	return CBaseMonster :: TakeDamage ( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter :: TakeDamage ( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 //=========================================================
@@ -145,7 +145,7 @@ int CHornet::IRelationship ( CBaseEntity *pTarget )
 		return R_NO;
 	}
 
-	return CBaseMonster :: IRelationship( pTarget );
+	return CBaseCharacter :: IRelationship( pTarget );
 }
 
 //=========================================================

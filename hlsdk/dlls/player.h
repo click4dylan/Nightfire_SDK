@@ -305,24 +305,15 @@ public:
 	void SetCustomDecalFrames( int nFrames );
 	int GetCustomDecalFrames( void );
 
-	void TabulateAmmo( void );
-
 	//Nightfire
 	Vector FirePredictedBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting, float flSpread, float flDistance, int iBulletType);
+	void PlayStepSound(int step, float fvol);
 
 	float m_flStartCharge;
 	float m_flAmmoStartCharge;
 	float m_flPlayAftershock;
 	float m_flNextAmmoBurn;// while charging, when to absorb another unit of player's ammo?
 	
-	//Player ID
-	void InitStatusBar( void );
-	void UpdateStatusBar( void );
-	int m_izSBarState[ SBAR_END ];
-	float m_flNextSBarUpdateTime;
-	float m_flStatusBarDisappearDelay;
-	char m_SbarString0[ SBAR_STRING_SIZE ];
-	char m_SbarString1[ SBAR_STRING_SIZE ];
 	
 	float m_flNextChatTime;
 	

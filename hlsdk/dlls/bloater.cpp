@@ -29,7 +29,7 @@
 #define	BLOATER_AE_ATTACK_MELEE1		0x01
 
 
-class CBloater : public CBaseMonster
+class CBloater : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -82,7 +82,7 @@ void CBloater :: SetYawSpeed ( void )
 int CBloater :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType )
 {
 	PainSound();
-	return CBaseMonster::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 void CBloater :: PainSound( void )
@@ -178,7 +178,7 @@ void CBloater :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 		default:
-			CBaseMonster::HandleAnimEvent( pEvent );
+			CBaseCharacter::HandleAnimEvent( pEvent );
 			break;
 	}
 }

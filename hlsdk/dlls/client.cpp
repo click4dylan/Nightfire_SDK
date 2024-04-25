@@ -53,7 +53,7 @@ extern void CopyToBodyQue(entvars_t* pev);
 extern int giPrecacheGrunt;
 extern int gmsgSayText;
 
-extern cvar_t allow_spectators;
+extern IConsoleVariable allow_spectators;
 
 extern int g_teamplay;
 

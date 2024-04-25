@@ -29,7 +29,7 @@
 #include	"decals.h"
 
 
-class CLegacyCineMonster : public CBaseMonster
+class CLegacyCineMonster : public CBaseCharacter
 {
 public:
 	void CineSpawn( const char *szModel );

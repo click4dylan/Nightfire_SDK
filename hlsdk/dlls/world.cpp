@@ -143,7 +143,7 @@ void CDecal :: TriggerDecal ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 	TraceResult trace;
 	int			entityIndex;
 
-	UTIL_TraceLine( pev->origin - Vector(5,5,5), pev->origin + Vector(5,5,5),  ignore_monsters, ENT(pev), &trace );
+	UTIL_TraceLine( pev->origin - Vector(5,5,5), pev->origin + Vector(5,5,5),  ignore_monsters, 0, ENT(pev), &trace );
 
 	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY);
 		WRITE_BYTE( TE_BSPDECAL );
@@ -167,7 +167,7 @@ void CDecal :: StaticDecal( void )
 	TraceResult trace;
 	int			entityIndex, modelIndex;
 
-	UTIL_TraceLine( pev->origin - Vector(5,5,5), pev->origin + Vector(5,5,5),  ignore_monsters, ENT(pev), &trace );
+	UTIL_TraceLine( pev->origin - Vector(5,5,5), pev->origin + Vector(5,5,5),  ignore_monsters, 0, ENT(pev), &trace );
 
 	entityIndex = (short)ENTINDEX(trace.pHit);
 	if ( entityIndex )
@@ -239,7 +239,7 @@ void CopyToBodyQue(entvars_t *pev)
 	pevHead->model		= pev->model;
 	pevHead->modelindex	= pev->modelindex;
 	pevHead->frame		= pev->frame;
-	pevHead->colormap	= pev->colormap;
+	//pevHead->colormap	= pev->colormap;
 	pevHead->movetype	= MOVETYPE_TOSS;
 	pevHead->velocity	= pev->velocity;
 	pevHead->flags		= 0;

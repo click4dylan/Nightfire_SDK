@@ -81,7 +81,7 @@ void CShower::Touch( CBaseEntity *pOther )
 		pev->speed = 0;
 }
 
-class CEnvExplosion : public CBaseMonster
+class CEnvExplosion : public CBaseCharacter
 {
 public:
 	void Spawn( );
@@ -103,7 +103,7 @@ TYPEDESCRIPTION	CEnvExplosion::m_SaveData[] =
 	DEFINE_FIELD( CEnvExplosion, m_spriteScale, FIELD_INTEGER ),
 };
 
-IMPLEMENT_SAVERESTORE( CEnvExplosion, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CEnvExplosion, CBaseCharacter );
 LINK_ENTITY_TO_CLASS( env_explosion, CEnvExplosion );
 
 void CEnvExplosion::KeyValue( KeyValueData *pkvd )

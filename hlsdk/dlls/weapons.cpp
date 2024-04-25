@@ -37,6 +37,8 @@ extern int gEvilImpulse101;
 
 #define NOT_USED 255
 
+float CPDW90::m_flNextEffectEvent = 0.0f;
+
 DLL_GLOBAL	short	g_sModelIndexLaser;// holds the index for the laser beam
 DLL_GLOBAL  const char *g_pModelNameLaser = "sprites/laserbeam.spr";
 DLL_GLOBAL	short	g_sModelIndexLaserDot;// holds the index for the laser beam dot
@@ -148,6 +150,7 @@ void SpawnBlood(Vector vecSpot, int bloodColor, float flDamage)
 }
 
 
+#if 0
 int DamageDecal( CBaseEntity *pEntity, int bitsDamageType )
 {
 	if ( !pEntity )
@@ -192,6 +195,7 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType )
 		}
 	}
 }
+#endif
 
 
 
@@ -428,7 +432,7 @@ void W_Precache(void)
 TYPEDESCRIPTION	CBasePlayerItem::m_SaveData[] = 
 {
 	DEFINE_FIELD( CBasePlayerItem, m_pPlayer, FIELD_CLASSPTR ),
-	DEFINE_FIELD( CBasePlayerItem, m_pNext, FIELD_CLASSPTR ),
+	DEFINE_FIELD( CBasePlayerItem, m_pBoxNext, FIELD_CLASSPTR ),
 	//DEFINE_FIELD( CBasePlayerItem, m_fKnown, FIELD_INTEGER ),Reset to zero on load
 	DEFINE_FIELD( CBasePlayerItem, m_iId, FIELD_INTEGER ),
 	// DEFINE_FIELD( CBasePlayerItem, m_iIdPrimary, FIELD_INTEGER ),
@@ -675,7 +679,7 @@ void CBasePlayerWeapon::ItemPostFrame( void )
 		}
 
 		m_pPlayer->TabulateAmmo();
-		SecondaryAttack();
+		SecondaryAttack(1);
 		m_pPlayer->pev->button &= ~IN_ATTACK2;
 	}
 	else if ((m_pPlayer->pev->button & IN_ATTACK) && CanAttack( m_flNextPrimaryAttack, gpGlobals->time, UseDecrement() ) )
@@ -1003,7 +1007,7 @@ BOOL CBasePlayerWeapon :: DefaultDeploy( const char *szViewModel, const char *sz
 	m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
 	m_pPlayer->pev->weaponmodel = MAKE_STRING(szWeaponModel);
 	strcpy( m_pPlayer->m_szAnimExtention, szAnimExt );
-	SendWeaponAnim( iAnim, skiplocal, body );
+	SendWeaponAnim( iAnim, skiplocal/*, body*/);
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
@@ -1199,6 +1203,7 @@ void CBasePlayerWeapon::RetireWeapon( void )
 //=========================================================================
 // GetNextAttackDelay - An accurate way of calcualting the next attack time.
 //=========================================================================
+#if 0
 float CBasePlayerWeapon::GetNextAttackDelay( float delay ) 
 {		
 	if(m_flLastFireTime == 0 || m_flNextPrimaryAttack == -1) 
@@ -1226,6 +1231,7 @@ float CBasePlayerWeapon::GetNextAttackDelay( float delay )
 // 	OutputDebugString( szMsg );
 	return flNextAttack;
 }
+#endif
 
 
 //*********************************************************
@@ -1735,7 +1741,23 @@ void CPDW90::WeaponIdle()
 
 void CPDW90::PrimaryAttack(int unknown)
 {
-	//TODO
+	// don't fire underwater
+	if (m_pPlayer->pev->waterlevel == 3)
+	{
+		PlayEmptySound();
+
+		float flNewNextAttack = UTIL_WeaponTimeBase() + 0.15f;
+
+		if (m_flNextPrimaryAttack < flNewNextAttack)
+			m_flNextPrimaryAttack = flNewNextAttack;
+
+		return;
+	}
+
+	if (m_iClip > 0)
+	{
+
+	}
 }
 
 void CPDW90::SecondaryAttack(int unknown)

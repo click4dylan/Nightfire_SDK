@@ -51,7 +51,7 @@ typedef enum
 	TURRET_ANIM_DIE,
 } TURRET_ANIM;
 
-class CBaseTurret : public CBaseMonster
+class CBaseTurret : public CBaseCharacter
 {
 public:
 	void Spawn(void);
@@ -167,7 +167,7 @@ TYPEDESCRIPTION	CBaseTurret::m_SaveData[] =
 	DEFINE_FIELD( CBaseTurret, m_flSpinUpTime, FIELD_TIME ),
 };
 
-IMPLEMENT_SAVERESTORE( CBaseTurret, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CBaseTurret, CBaseCharacter );
 
 class CTurret : public CBaseTurret
 {
@@ -242,7 +242,7 @@ void CBaseTurret::KeyValue( KeyValueData *pkvd )
 			 FStrEq(pkvd->szKeyName, "value3"))
 		pkvd->fHandled = TRUE;
 	else
-		CBaseMonster::KeyValue( pkvd );
+		CBaseCharacter::KeyValue( pkvd );
 }
 
 
@@ -618,7 +618,7 @@ void CBaseTurret::ActiveThink(void)
 
 void CTurret::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 {
-	FireBullets( 1, vecSrc, vecDirToEnemy, TURRET_SPREAD, TURRET_RANGE, BULLET_MONSTER_12MM, 1 );
+	FireBullets( 1, vecSrc, vecDirToEnemy, TURRET_SPREAD, TURRET_RANGE, BULLET_ENEMY_ALERTED, 1 );
 	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "turret/tu_fire1.wav", 1, 0.6);
 	pev->effects = pev->effects | EF_MUZZLEFLASH;
 }
@@ -626,7 +626,7 @@ void CTurret::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 
 void CMiniTurret::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 {
-	FireBullets( 1, vecSrc, vecDirToEnemy, TURRET_SPREAD, TURRET_RANGE, BULLET_MONSTER_9MM, 1 );
+	FireBullets( 1, vecSrc, vecDirToEnemy, TURRET_SPREAD, TURRET_RANGE, BULLET_ENEMY_ALERTED, 1 );
 
 	switch(RANDOM_LONG(0,2))
 	{
@@ -1186,7 +1186,7 @@ void CSentry::Spawn()
 
 void CSentry::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 {
-	FireBullets( 1, vecSrc, vecDirToEnemy, TURRET_SPREAD, TURRET_RANGE, BULLET_MONSTER_MP5, 1 );
+	FireBullets( 1, vecSrc, vecDirToEnemy, TURRET_SPREAD, TURRET_RANGE, BULLET_ENEMY_ALERTED, 1 );
 	
 	switch(RANDOM_LONG(0,2))
 	{

@@ -14,6 +14,9 @@
 ****/
 #ifndef CONST_H
 #define CONST_H
+
+#include <bool_nightfire.h>
+
 //
 // Constants shared by the engine and dlls
 // This header file included by engine files and DLL files.
@@ -81,6 +84,8 @@
 #define MOVETYPE_BOUNCEMISSILE	11		// bounce w/o gravity
 #define MOVETYPE_FOLLOW			12		// track movement of aiment
 #define	MOVETYPE_PUSHSTEP		13		// BSP model that needs physics/world collisions (uses nearest hull for world collision)
+
+#define MOVETYPE_NIGHTFIRE_UNKNOWN 15
 
 // edict->solid values
 // NOTE: Some movetypes will cause collisions independent of SOLID_NOT/SOLID_TRIGGER when the entity moves
@@ -674,6 +679,9 @@
 #define PITCH_LOW		95			// other values are possible - 0-255, where 255 is very high
 #define PITCH_HIGH		120
 
+// someone at gearbox must have been mad that pitch was broken
+#define PITCH_NIGHTFIRE_RANDOM RANDOM_LONG(-100, 100)
+
 // volume values
 #define VOL_NORM		1.0
 
@@ -749,6 +757,7 @@ enum
 	kRenderFxNoDissipation,
 	kRenderFxDistort,			// Distort/scale/translate flicker
 	kRenderFxHologram,			// kRenderFxDistort + distance fade
+	kRenderFxTree,				// nightfire new: spawns leaves around model that fall
 	kRenderFxDeadPlayer,		// kRenderAmt is the player index
 	kRenderFxExplode,			// Scale up really big!
 	kRenderFxGlowShell,			// Glowing Shell
@@ -771,7 +780,7 @@ typedef unsigned short 		word;
 typedef enum {false, true}	qboolean;
 #else 
 //typedef int qboolean;
-typedef BOOLEAN qboolean; //Dylan changed this! it seems like NF does not use int for qboolean
+typedef unsigned char qboolean; //Dylan changed this! it seems like NF does not use int for qboolean
 #endif
 
 typedef struct

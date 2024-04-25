@@ -14,12 +14,13 @@
     <SccProjectName />
     <SccLocalPath />
     <ProjectGuid>{A91CB5FC-EF55-4E3E-B95C-E957863E5FEC}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
-    <PlatformToolset>v110_xp</PlatformToolset>
+    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -170,22 +171,10 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
     <ClCompile Include="..\apache.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\barnacle.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\barney.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\bigmomma.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\bloater.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\bmodels.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\bullsquid.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\buttons.cpp">
@@ -203,12 +192,6 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
     <ClCompile Include="..\controller.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\crossbow.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\crowbar.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\defaultai.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
@@ -216,9 +199,6 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\effects.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\egon.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\explode.cpp">
@@ -239,12 +219,6 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
     <ClCompile Include="..\gamerules.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\gargantua.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\gauss.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\genericmonster.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
@@ -252,9 +226,6 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\globals.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\gman.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\h_ai.cpp">
@@ -275,40 +246,19 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
     <ClCompile Include="..\handgrenade.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\hassassin.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\headcrab.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\healthkit.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\hgrunt.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\wpn_shared\hl_wpn_glock.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\hornet.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\hornetgun.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\houndeye.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\ichthyosaur.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\islave.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\items.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\leech.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\lights.cpp">
@@ -329,13 +279,7 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
     <ClCompile Include="..\mortar.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\mp5.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\multiplay_gamerules.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\nihilanth.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\nodes.cpp">
@@ -368,31 +312,10 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
     <ClCompile Include="..\..\pm_shared\pm_shared.c">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\python.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\rat.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\roach.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\rpg.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\satchel.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\schedule.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\scientist.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\scripted.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\shotgun.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\singleplay_gamerules.cpp">
@@ -413,9 +336,6 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
     <ClCompile Include="..\squadmonster.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
-    <ClCompile Include="..\squeakgrenade.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
     <ClCompile Include="..\subs.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
@@ -426,9 +346,6 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\tempmonster.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\tentacle.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\triggers.cpp">
@@ -453,9 +370,6 @@ call ..\..\filecopy.bat $(TargetDir)$(TargetName).pdb $(ProjectDir)..\..\..\game
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
     <ClCompile Include="..\xen.cpp">
-      <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
-    </ClCompile>
-    <ClCompile Include="..\zombie.cpp">
       <RuntimeTypeInfo Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</RuntimeTypeInfo>
     </ClCompile>
   </ItemGroup>

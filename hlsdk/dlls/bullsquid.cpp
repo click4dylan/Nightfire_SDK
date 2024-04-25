@@ -186,7 +186,7 @@ void CSquidSpit :: Touch ( CBaseEntity *pOther )
 #define		BSQUID_AE_HOP		( 5 )
 #define		BSQUID_AE_THROW		( 6 )
 
-class CBullsquid : public CBaseMonster
+class CBullsquid : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -212,7 +212,7 @@ public:
 	int TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType );
 	int IRelationship ( CBaseEntity *pTarget );
 	int IgnoreConditions ( void );
-	MONSTERSTATE GetIdealState ( void );
+	CHARACTERSTATE GetIdealState ( void );
 
 	int	Save( CSave &save ); 
 	int Restore( CRestore &restore );
@@ -234,14 +234,14 @@ TYPEDESCRIPTION	CBullsquid::m_SaveData[] =
 	DEFINE_FIELD( CBullsquid, m_flNextSpitTime, FIELD_TIME ),
 };
 
-IMPLEMENT_SAVERESTORE( CBullsquid, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CBullsquid, CBaseCharacter );
 
 //=========================================================
 // IgnoreConditions 
 //=========================================================
 int CBullsquid::IgnoreConditions ( void )
 {
-	int iIgnore = CBaseMonster::IgnoreConditions();
+	int iIgnore = CBaseCharacter::IgnoreConditions();
 
 	if ( gpGlobals->time - m_flLastHurtTime <= 20 )
 	{
@@ -275,7 +275,7 @@ int CBullsquid::IRelationship ( CBaseEntity *pTarget )
 		return R_NO;
 	}
 
-	return CBaseMonster :: IRelationship ( pTarget );
+	return CBaseCharacter :: IRelationship ( pTarget );
 }
 
 //=========================================================
@@ -310,7 +310,7 @@ int CBullsquid :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, f
 		m_flLastHurtTime = gpGlobals->time;
 	}
 
-	return CBaseMonster :: TakeDamage ( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter :: TakeDamage ( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 //=========================================================
@@ -659,7 +659,7 @@ void CBullsquid :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 		default:
-			CBaseMonster::HandleAnimEvent( pEvent );
+			CBaseCharacter::HandleAnimEvent( pEvent );
 	}
 }
 
@@ -775,7 +775,7 @@ void CBullsquid :: AttackSound ( void )
 void CBullsquid :: RunAI ( void )
 {
 	// first, do base class stuff
-	CBaseMonster :: RunAI();
+	CBaseCharacter :: RunAI();
 
 	if ( pev->skin != 0 )
 	{
@@ -1014,7 +1014,7 @@ DEFINE_CUSTOM_SCHEDULES( CBullsquid )
 	slSquidWallow
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CBullsquid, CBaseMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CBullsquid, CBaseCharacter );
 
 //=========================================================
 // GetSchedule 
@@ -1064,7 +1064,7 @@ Schedule_t *CBullsquid :: GetSchedule( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseCharacter :: GetSchedule();
 			}
 
 			if ( HasConditions(bits_COND_NEW_ENEMY) )
@@ -1120,7 +1120,7 @@ Schedule_t *CBullsquid :: GetSchedule( void )
 		break;
 	}
 
-	return CBaseMonster :: GetSchedule();
+	return CBaseCharacter :: GetSchedule();
 }
 
 //=========================================================
@@ -1153,7 +1153,7 @@ Schedule_t* CBullsquid :: GetScheduleOfType ( int Type )
 		break;
 	}
 
-	return CBaseMonster :: GetScheduleOfType ( Type );
+	return CBaseCharacter :: GetScheduleOfType ( Type );
 }
 
 //=========================================================
@@ -1184,7 +1184,7 @@ void CBullsquid :: StartTask ( Task_t *pTask )
 				break;
 			}
 
-			CBaseMonster :: StartTask ( pTask );
+			CBaseCharacter :: StartTask ( pTask );
 			break;
 		}
 	case TASK_SQUID_HOPTURN:
@@ -1208,7 +1208,7 @@ void CBullsquid :: StartTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CBaseMonster :: StartTask ( pTask );
+			CBaseCharacter :: StartTask ( pTask );
 			break;
 		}
 	}
@@ -1234,7 +1234,7 @@ void CBullsquid :: RunTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CBaseMonster :: RunTask( pTask );
+			CBaseCharacter :: RunTask( pTask );
 			break;
 		}
 	}
@@ -1246,7 +1246,7 @@ void CBullsquid :: RunTask ( Task_t *pTask )
 // the feature that makes it lose interest in headcrabs for 
 // a while if something injures it. 
 //=========================================================
-MONSTERSTATE CBullsquid :: GetIdealState ( void )
+CHARACTERSTATE CBullsquid :: GetIdealState ( void )
 {
 	int	iConditions;
 
@@ -1272,7 +1272,7 @@ MONSTERSTATE CBullsquid :: GetIdealState ( void )
 		break;
 	}
 
-	m_IdealMonsterState = CBaseMonster :: GetIdealState();
+	m_IdealMonsterState = CBaseCharacter :: GetIdealState();
 
 	return m_IdealMonsterState;
 }

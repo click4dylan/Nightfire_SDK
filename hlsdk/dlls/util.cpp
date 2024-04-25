@@ -143,7 +143,7 @@ void UTIL_ParametricRocket( entvars_t *pev, Vector vecOrigin, Vector vecAngles, 
 	// Trace out line to end pos
 	TraceResult tr;
 	UTIL_MakeVectors( vecAngles );
-	UTIL_TraceLine( pev->startpos, pev->startpos + gpGlobals->v_forward * 8192, ignore_monsters, owner, &tr);
+	UTIL_TraceLine( pev->startpos, pev->startpos + gpGlobals->v_forward * 8192, ignore_monsters, 0, owner, &tr);
 	pev->endpos = tr.vecEndPos;
 
 	// Now compute how long it will take based on current velocity
@@ -277,7 +277,7 @@ TYPEDESCRIPTION	gEntvarsDescription[] =
 	DEFINE_ENTITY_FIELD( spawnflags, FIELD_INTEGER ),
 	DEFINE_ENTITY_FIELD( flags, FIELD_FLOAT ),
 
-	DEFINE_ENTITY_FIELD( colormap, FIELD_INTEGER ),
+	//DEFINE_ENTITY_FIELD( colormap, FIELD_INTEGER ),
 	DEFINE_ENTITY_FIELD( team, FIELD_INTEGER ),
 
 	DEFINE_ENTITY_FIELD( max_health, FIELD_FLOAT ),
@@ -964,14 +964,14 @@ void UTIL_TraceLine( const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTE
 }
 
 
-void UTIL_TraceHull( const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int hullNumber, edict_t *pentIgnore, TraceResult *ptr )
+void UTIL_TraceHull( const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int hullNumber, int brushflags, edict_t *pentIgnore, TraceResult *ptr )
 {
-	TRACE_HULL( vecStart, vecEnd, (igmon == ignore_monsters ? TRUE : FALSE), hullNumber, pentIgnore, ptr );
+	TRACE_HULL( vecStart, vecEnd, (igmon == ignore_monsters ? TRUE : FALSE), hullNumber, brushflags, pentIgnore, ptr );
 }
 
-void UTIL_TraceModel( const Vector &vecStart, const Vector &vecEnd, int hullNumber, edict_t *pentModel, TraceResult *ptr )
+void UTIL_TraceModel( const Vector &vecStart, const Vector &vecEnd, int hullNumber, int brushflags, edict_t *pentModel, TraceResult *ptr )
 {
-	g_engfuncs.pfnTraceModel( vecStart, vecEnd, hullNumber, pentModel, ptr );
+	g_engfuncs.pfnTraceModel( vecStart, vecEnd, hullNumber, brushflags, pentModel, ptr );
 }
 
 
@@ -1012,9 +1012,9 @@ void UTIL_SetOrigin( entvars_t *pev, const Vector &vecOrigin )
 		SET_ORIGIN( ent, vecOrigin );
 }
 
-void UTIL_ParticleEffect( const Vector &vecOrigin, const Vector &vecDirection, ULONG ulColor, ULONG ulCount )
+void UTIL_ParticleEffect( const Vector &vecOrigin, const Vector &vecDirection, UCHAR ulColorR, UCHAR ulColorG, UCHAR ulColorB, ULONG ulCount )
 {
-	PARTICLE_EFFECT( vecOrigin, vecDirection, (float)ulColor, (float)ulCount );
+	PARTICLE_EFFECT( vecOrigin, vecDirection, ulColorR, ulColorG, ulColorB, ulCount );
 }
 
 
@@ -1140,13 +1140,15 @@ BOOL UTIL_ShouldShowBlood( int color )
 	return FALSE;
 }
 
-int UTIL_PointContents(	const Vector &vec )
+int UTIL_PointContents(	const Vector &vec, int brushflags)
 {
-	return POINT_CONTENTS(vec);
+	return POINT_CONTENTS(vec, brushflags);
 }
 
 void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount )
 {
+	// not in nightfire
+#if 0
 	if ( !UTIL_ShouldShowBlood( color ) )
 		return;
 
@@ -1165,10 +1167,13 @@ void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color,
 		WRITE_BYTE( color );
 		WRITE_BYTE( min( amount, 255 ) );
 	MESSAGE_END();
+#endif
 }				
 
 void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, int amount )
 {
+	// not in nightfire
+#if 0
 	if ( !UTIL_ShouldShowBlood( color ) )
 		return;
 
@@ -1197,6 +1202,7 @@ void UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, 
 		WRITE_BYTE( color );								// color index into host_basepal
 		WRITE_BYTE( min( max( 3, amount / 10 ), 16 ) );		// size
 	MESSAGE_END();
+#endif
 }				
 
 Vector UTIL_RandomBloodVector( void )
@@ -1292,6 +1298,8 @@ if the custom can't be loaded.
 */
 void UTIL_PlayerDecalTrace( TraceResult *pTrace, int playernum, int decalNumber, BOOL bIsCustom )
 {
+	// not in nightfire
+#if 0
 	int index;
 	
 	if (!bIsCustom)
@@ -1318,10 +1326,13 @@ void UTIL_PlayerDecalTrace( TraceResult *pTrace, int playernum, int decalNumber,
 		WRITE_SHORT( (short)ENTINDEX(pTrace->pHit) );
 		WRITE_BYTE( index );
 	MESSAGE_END();
+#endif
 }
 
 void UTIL_GunshotDecalTrace( TraceResult *pTrace, int decalNumber )
 {
+	// not in nightfire
+#if 0
 	if ( decalNumber < 0 )
 		return;
 
@@ -1340,6 +1351,7 @@ void UTIL_GunshotDecalTrace( TraceResult *pTrace, int decalNumber )
 		WRITE_SHORT( (short)ENTINDEX(pTrace->pHit) );
 		WRITE_BYTE( index );
 	MESSAGE_END();
+#endif
 }
 
 

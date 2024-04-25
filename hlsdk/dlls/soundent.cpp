@@ -17,6 +17,7 @@
 #include	"cbase.h"
 #include	"monsters.h"
 #include	"soundent.h"
+#include "gamerules.h"
 
 
 LINK_ENTITY_TO_CLASS( soundent, CSoundEnt );
@@ -197,7 +198,7 @@ int CSoundEnt :: IAllocSound( void )
 // InsertSound - Allocates a free sound and fills it with 
 // sound info.
 //=========================================================
-void CSoundEnt :: InsertSound ( int iType, const Vector &vecOrigin, int iVolume, float flDuration )
+void CSoundEnt :: InsertSound ( int iType, const Vector &vecOrigin, const Vector& vecAngles, int iVolume, float flDuration )
 {
 	int	iThisSound;
 
@@ -206,6 +207,10 @@ void CSoundEnt :: InsertSound ( int iType, const Vector &vecOrigin, int iVolume,
 		// no sound ent!
 		return;
 	}
+
+	// nightfire
+	if (g_pGameRules->IsMultiplayer())
+		return;
 
 	iThisSound = pSoundEnt->IAllocSound();
 
@@ -216,6 +221,7 @@ void CSoundEnt :: InsertSound ( int iType, const Vector &vecOrigin, int iVolume,
 	}
 
 	pSoundEnt->m_SoundPool[ iThisSound ].m_vecOrigin = vecOrigin;
+	pSoundEnt->m_SoundPool[ iThisSound ].m_vecAngles = vecAngles;
 	pSoundEnt->m_SoundPool[ iThisSound ].m_iType = iType;
 	pSoundEnt->m_SoundPool[ iThisSound ].m_iVolume = iVolume;
 	pSoundEnt->m_SoundPool[ iThisSound ].m_flExpireTime = gpGlobals->time + flDuration;

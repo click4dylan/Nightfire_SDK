@@ -26,7 +26,7 @@
 // Monster's Anim Events Go Here
 //=========================================================
 
-class CGMan : public CBaseMonster
+class CGMan : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -59,7 +59,7 @@ TYPEDESCRIPTION	CGMan::m_SaveData[] =
 	DEFINE_FIELD( CGMan, m_hTalkTarget, FIELD_EHANDLE ),
 	DEFINE_FIELD( CGMan, m_flTalkTime, FIELD_TIME ),
 };
-IMPLEMENT_SAVERESTORE( CGMan, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CGMan, CBaseCharacter );
 
 
 //=========================================================
@@ -99,7 +99,7 @@ void CGMan :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	{
 	case 0:
 	default:
-		CBaseMonster::HandleAnimEvent( pEvent );
+		CBaseCharacter::HandleAnimEvent( pEvent );
 		break;
 	}
 }
@@ -157,7 +157,7 @@ void CGMan :: StartTask( Task_t *pTask )
 		}
 		break;
 	}
-	CBaseMonster::StartTask( pTask );
+	CBaseCharacter::StartTask( pTask );
 }
 
 void CGMan :: RunTask( Task_t *pTask )
@@ -191,11 +191,11 @@ void CGMan :: RunTask( Task_t *pTask )
 		{
 			SetBoneController( 0, 0 );
 		}
-		CBaseMonster::RunTask( pTask );
+		CBaseCharacter::RunTask( pTask );
 		break;
 	default:
 		SetBoneController( 0, 0 );
-		CBaseMonster::RunTask( pTask );
+		CBaseCharacter::RunTask( pTask );
 		break;
 	}
 }
@@ -230,7 +230,7 @@ void CGMan::TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir, 
 
 void CGMan::PlayScriptedSentence( const char *pszSentence, float duration, float volume, float attenuation, BOOL bConcurrent, CBaseEntity *pListener )
 {
-	CBaseMonster::PlayScriptedSentence( pszSentence, duration, volume, attenuation, bConcurrent, pListener );
+	CBaseCharacter::PlayScriptedSentence( pszSentence, duration, volume, attenuation, bConcurrent, pListener );
 
 	m_flTalkTime = gpGlobals->time + duration;
 	m_hTalkTarget = pListener;

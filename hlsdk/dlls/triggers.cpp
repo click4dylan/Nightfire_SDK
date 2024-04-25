@@ -2126,7 +2126,7 @@ void CTriggerChangeTarget::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 	if (pTarget)
 	{
 		pTarget->pev->target = m_iszNewTarget;
-		CBaseMonster *pMonster = pTarget->MyMonsterPointer( );
+		CBaseCharacter *pMonster = pTarget->MyCharacterPointer( );
 		if (pMonster)
 		{
 			pMonster->m_pGoalEnt = NULL;

@@ -26,7 +26,7 @@
 // Monster's Anim Events Go Here
 //=========================================================
 
-class CRat : public CBaseMonster
+class CRat : public CBaseCharacter
 {
 public:
 	void Spawn( void );

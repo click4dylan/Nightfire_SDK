@@ -978,7 +978,7 @@ Schedule_t	slTakeCoverFromEnemy[] =
 	},
 };
 
-Schedule_t *CBaseMonster::m_scheduleList[] = 
+Schedule_t *CBaseCharacter::m_scheduleList[] = 
 {
 	slIdleStand,
 	slIdleTrigger,
@@ -1020,13 +1020,13 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slFail
 };
 
-Schedule_t *CBaseMonster::ScheduleFromName( const char *pName )
+Schedule_t *CBaseCharacter::ScheduleFromName( const char *pName )
 {
 	return ScheduleInList( pName, m_scheduleList, ARRAYSIZE(m_scheduleList) );
 }
 
 
-Schedule_t *CBaseMonster :: ScheduleInList( const char *pName, Schedule_t **pList, int listCount )
+Schedule_t *CBaseCharacter :: ScheduleInList( const char *pName, Schedule_t **pList, int listCount )
 {
 	int i;
 	
@@ -1054,7 +1054,7 @@ Schedule_t *CBaseMonster :: ScheduleInList( const char *pName, Schedule_t **pLis
 // GetScheduleOfType - returns a pointer to one of the 
 // monster's available schedules of the indicated type.
 //=========================================================
-Schedule_t* CBaseMonster :: GetScheduleOfType ( int Type ) 
+Schedule_t* CBaseCharacter :: GetScheduleOfType ( int Type ) 
 {
 //	ALERT ( at_console, "Sched Type:%d\n", Type );
 	switch	( Type )

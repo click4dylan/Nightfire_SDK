@@ -31,7 +31,7 @@
 //=========================================================
 // MonsterMaker - this ent creates monsters during the game.
 //=========================================================
-class CMonsterMaker : public CBaseMonster
+class CMonsterMaker : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -76,7 +76,7 @@ TYPEDESCRIPTION	CMonsterMaker::m_SaveData[] =
 };
 
 
-IMPLEMENT_SAVERESTORE( CMonsterMaker, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CMonsterMaker, CBaseCharacter );
 
 void CMonsterMaker :: KeyValue( KeyValueData *pkvd )
 {
@@ -97,7 +97,7 @@ void CMonsterMaker :: KeyValue( KeyValueData *pkvd )
 		pkvd->fHandled = TRUE;
 	}
 	else
-		CBaseMonster::KeyValue( pkvd );
+		CBaseCharacter::KeyValue( pkvd );
 }
 
 
@@ -150,7 +150,7 @@ void CMonsterMaker :: Spawn( )
 
 void CMonsterMaker :: Precache( void )
 {
-	CBaseMonster::Precache();
+	CBaseCharacter::Precache();
 
 	UTIL_PrecacheOther( STRING( m_iszMonsterClassname ) );
 }

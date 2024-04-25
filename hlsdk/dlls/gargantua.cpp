@@ -197,7 +197,7 @@ void StreakSplash( const Vector &origin, const Vector &direction, int color, int
 }
 
 
-class CGargantua : public CBaseMonster
+class CGargantua : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -287,7 +287,7 @@ TYPEDESCRIPTION	CGargantua::m_SaveData[] =
 	DEFINE_FIELD( CGargantua, m_flameY, FIELD_FLOAT ),
 };
 
-IMPLEMENT_SAVERESTORE( CGargantua, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CGargantua, CBaseCharacter );
 
 const char *CGargantua::pAttackHitSounds[] = 
 {
@@ -440,7 +440,7 @@ DEFINE_CUSTOM_SCHEDULES( CGargantua )
 	slGargSwipe,
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CGargantua, CBaseMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CGargantua, CBaseCharacter );
 
 
 void CGargantua::EyeOn( int level )
@@ -828,7 +828,7 @@ void CGargantua::TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vec
 
 	if ( !IsAlive() )
 	{
-		CBaseMonster::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
+		CBaseCharacter::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
 		return;
 	}
 
@@ -856,7 +856,7 @@ void CGargantua::TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vec
 		flDamage = 0;
 	}
 
-	CBaseMonster::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
+	CBaseCharacter::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
 
 }
 
@@ -874,7 +874,7 @@ int CGargantua::TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, flo
 			SetConditions( bits_COND_LIGHT_DAMAGE );
 	}
 
-	return CBaseMonster::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 
@@ -908,7 +908,7 @@ void CGargantua::Killed( entvars_t *pevAttacker, int iGib )
 	EyeOff();
 	UTIL_Remove( m_pEyeGlow );
 	m_pEyeGlow = NULL;
-	CBaseMonster::Killed( pevAttacker, GIB_NEVER );
+	CBaseCharacter::Killed( pevAttacker, GIB_NEVER );
 }
 
 //=========================================================
@@ -1018,7 +1018,7 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 		break;
 
 	default:
-		CBaseMonster::HandleAnimEvent(pEvent);
+		CBaseCharacter::HandleAnimEvent(pEvent);
 		break;
 	}
 }
@@ -1077,7 +1077,7 @@ Schedule_t *CGargantua::GetScheduleOfType( int Type )
 		break;
 	}
 
-	return CBaseMonster::GetScheduleOfType( Type );
+	return CBaseCharacter::GetScheduleOfType( Type );
 }
 
 
@@ -1104,7 +1104,7 @@ void CGargantua::StartTask( Task_t *pTask )
 		DeathEffect();
 		// FALL THROUGH
 	default: 
-		CBaseMonster::StartTask( pTask );
+		CBaseCharacter::StartTask( pTask );
 		break;
 	}
 }
@@ -1184,7 +1184,7 @@ void CGargantua::RunTask( Task_t *pTask )
 			return;
 		}
 		else
-			CBaseMonster::RunTask(pTask);
+			CBaseCharacter::RunTask(pTask);
 		break;
 
 	case TASK_FLAME_SWEEP:
@@ -1229,7 +1229,7 @@ void CGargantua::RunTask( Task_t *pTask )
 		break;
 
 	default:
-		CBaseMonster::RunTask( pTask );
+		CBaseCharacter::RunTask( pTask );
 		break;
 	}
 }

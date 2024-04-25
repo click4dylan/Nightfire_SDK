@@ -63,7 +63,7 @@ void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType )
 		pev->origin = pTrace->vecEndPos + (pTrace->vecPlaneNormal * (pev->dmg - 24) * 0.6);
 	}
 
-	int iContents = UTIL_PointContents ( pev->origin );
+	int iContents = UTIL_PointContents ( pev->origin, 0 );
 	
 	MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, pev->origin );
 		WRITE_BYTE( TE_EXPLOSION );		// This makes a dynamic light and the explosion sprites/sound

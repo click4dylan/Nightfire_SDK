@@ -43,7 +43,7 @@ enum SS_INTERRUPT
 #define SCRIPT_FINISHSCHED_DEFAULT	0
 #define SCRIPT_FINISHSCHED_AMBUSH	1
 
-class CCineMonster : public CBaseMonster
+class CCineCharacter : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -51,7 +51,7 @@ public:
 	virtual void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	virtual void Blocked( CBaseEntity *pOther );
 	virtual void Touch( CBaseEntity *pOther );
-	virtual int	 ObjectCaps( void ) { return (CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }
+	virtual int	 ObjectCaps( void ) { return (CBaseCharacter :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION); }
 	virtual void Activate( void );
 
 	virtual int		Save( CSave &save );
@@ -67,12 +67,12 @@ public:
 	BOOL FindEntity( void );
 	virtual void PossessEntity( void );
 
-	void ReleaseEntity( CBaseMonster *pEntity );
+	void ReleaseEntity( CBaseCharacter *pEntity );
 	void CancelScript( void );
-	virtual BOOL StartSequence( CBaseMonster *pTarget, int iszSeq, BOOL completeOnEmpty );
+	virtual BOOL StartSequence( CBaseCharacter *pTarget, int iszSeq, BOOL completeOnEmpty );
 	virtual BOOL FCanOverrideState ( void );
-	void SequenceDone ( CBaseMonster *pMonster );
-	virtual void FixScriptMonsterSchedule( CBaseMonster *pMonster );
+	void SequenceDone ( CBaseCharacter *pMonster );
+	virtual void FixScriptMonsterSchedule( CBaseCharacter *pMonster );
 	BOOL	CanInterrupt( void );
 	void	AllowInterrupt( BOOL fAllow );
 	int		IgnoreConditions( void );
@@ -95,12 +95,12 @@ public:
 	BOOL m_interruptable;
 };
 
-class CCineAI : public CCineMonster
+class CCineAI : public CCineCharacter
 {
-	BOOL StartSequence( CBaseMonster *pTarget, int iszSeq, BOOL completeOnEmpty );
+	BOOL StartSequence( CBaseCharacter *pTarget, int iszSeq, BOOL completeOnEmpty );
 	void PossessEntity( void );
 	BOOL FCanOverrideState ( void );
-	virtual void FixScriptMonsterSchedule( CBaseMonster *pMonster );
+	virtual void FixScriptMonsterSchedule( CBaseCharacter *pMonster );
 };
 
 

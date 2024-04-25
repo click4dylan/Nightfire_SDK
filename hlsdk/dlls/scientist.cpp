@@ -63,7 +63,7 @@ enum
 // Scientist
 //=======================================================
 
-class CScientist : public CTalkMonster
+class CScientist : public CTalkCharacter
 {
 public:
 	void Spawn( void );
@@ -74,7 +74,7 @@ public:
 	void HandleAnimEvent( MonsterEvent_t *pEvent );
 	void RunTask( Task_t *pTask );
 	void StartTask( Task_t *pTask );
-	int	ObjectCaps( void ) { return CTalkMonster :: ObjectCaps() | FCAP_IMPULSE_USE; }
+	int	ObjectCaps( void ) { return CTalkCharacter :: ObjectCaps() | FCAP_IMPULSE_USE; }
 	int TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType);
 	virtual int FriendNumber( int arrayNumber );
 	void SetActivity ( Activity newActivity );
@@ -92,7 +92,7 @@ public:
 	// Override these to set behavior
 	Schedule_t *GetScheduleOfType ( int Type );
 	Schedule_t *GetSchedule ( void );
-	MONSTERSTATE GetIdealState ( void );
+	CHARACTERSTATE GetIdealState ( void );
 
 	void DeathSound( void );
 	void PainSound( void );
@@ -122,7 +122,7 @@ TYPEDESCRIPTION	CScientist::m_SaveData[] =
 	DEFINE_FIELD( CScientist, m_fearTime, FIELD_TIME ),
 };
 
-IMPLEMENT_SAVERESTORE( CScientist, CTalkMonster );
+IMPLEMENT_SAVERESTORE( CScientist, CTalkCharacter );
 
 //=========================================================
 // AI Schedules Specific to this monster
@@ -421,7 +421,7 @@ DEFINE_CUSTOM_SCHEDULES( CScientist )
 };
 
 
-IMPLEMENT_CUSTOM_SCHEDULES( CScientist, CTalkMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CScientist, CTalkCharacter );
 
 
 void CScientist::DeclineFollowing( void )
@@ -447,7 +447,7 @@ Activity CScientist::GetStoppedActivity( void )
 { 
 	if ( m_hEnemy != 0 ) 
 		return ACT_EXCITED;
-	return CTalkMonster::GetStoppedActivity();
+	return CTalkCharacter::GetStoppedActivity();
 }
 
 
@@ -510,7 +510,7 @@ void CScientist :: StartTask( Task_t *pTask )
 		break;
 
 	default:
-		CTalkMonster::StartTask( pTask );
+		CTalkCharacter::StartTask( pTask );
 		break;
 	}
 }
@@ -577,7 +577,7 @@ void CScientist :: RunTask( Task_t *pTask )
 		}
 		break;
 	default:
-		CTalkMonster::RunTask( pTask );
+		CTalkCharacter::RunTask( pTask );
 		break;
 	}
 }
@@ -649,7 +649,7 @@ void CScientist :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 	default:
-		CTalkMonster::HandleAnimEvent( pEvent );
+		CTalkCharacter::HandleAnimEvent( pEvent );
 	}
 }
 
@@ -707,14 +707,14 @@ void CScientist :: Precache( void )
 	// when a level is loaded, nobody will talk (time is reset to 0)
 	TalkInit();
 
-	CTalkMonster::Precache();
+	CTalkCharacter::Precache();
 }	
 
 // Init talk data
 void CScientist :: TalkInit()
 {
 	
-	CTalkMonster::TalkInit();
+	CTalkCharacter::TalkInit();
 
 	// scientist will try to talk to friends in this order:
 
@@ -767,7 +767,7 @@ int CScientist :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, f
 	}
 
 	// make sure friends talk about it if player hurts scientist...
-	return CTalkMonster::TakeDamage(pevInflictor, pevAttacker, flDamage, bitsDamageType);
+	return CTalkCharacter::TakeDamage(pevInflictor, pevAttacker, flDamage, bitsDamageType);
 }
 
 
@@ -816,7 +816,7 @@ void CScientist :: DeathSound ( void )
 void CScientist::Killed( entvars_t *pevAttacker, int iGib )
 {
 	SetUse( NULL );	
-	CTalkMonster::Killed( pevAttacker, iGib );
+	CTalkCharacter::Killed( pevAttacker, iGib );
 }
 
 
@@ -829,7 +829,7 @@ void CScientist :: SetActivity ( Activity newActivity )
 	// Set to the desired anim, or default anim if the desired is not present
 	if ( iSequence == ACTIVITY_NOT_AVAILABLE )
 		newActivity = ACT_IDLE;
-	CTalkMonster::SetActivity( newActivity );
+	CTalkCharacter::SetActivity( newActivity );
 }
 
 
@@ -843,7 +843,7 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 	case SCHED_TARGET_FACE:
 		// call base class default so that scientist will talk
 		// when 'used' 
-		psched = CTalkMonster::GetScheduleOfType(Type);
+		psched = CTalkCharacter::GetScheduleOfType(Type);
 
 		if (psched == slIdleStand)
 			return slFaceTarget;	// override this for different target face behavior
@@ -868,7 +868,7 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 	case SCHED_IDLE_STAND:
 		// call base class default so that scientist will talk
 		// when standing during idle
-		psched = CTalkMonster::GetScheduleOfType(Type);
+		psched = CTalkCharacter::GetScheduleOfType(Type);
 
 		if (psched == slIdleStand)
 			return slIdleSciStand;
@@ -885,7 +885,7 @@ Schedule_t* CScientist :: GetScheduleOfType ( int Type )
 		return slFear;
 	}
 
-	return CTalkMonster::GetScheduleOfType( Type );
+	return CTalkCharacter::GetScheduleOfType( Type );
 }
 
 Schedule_t *CScientist :: GetSchedule ( void )
@@ -1002,10 +1002,10 @@ Schedule_t *CScientist :: GetSchedule ( void )
 		break;
 	}
 	
-	return CTalkMonster::GetSchedule();
+	return CTalkCharacter::GetSchedule();
 }
 
-MONSTERSTATE CScientist :: GetIdealState ( void )
+CHARACTERSTATE CScientist :: GetIdealState ( void )
 {
 	switch ( m_MonsterState )
 	{
@@ -1067,7 +1067,7 @@ MONSTERSTATE CScientist :: GetIdealState ( void )
 		break;
 	}
 
-	return CTalkMonster::GetIdealState();
+	return CTalkCharacter::GetIdealState();
 }
 
 
@@ -1105,7 +1105,7 @@ int CScientist::FriendNumber( int arrayNumber )
 //=========================================================
 // Dead Scientist PROP
 //=========================================================
-class CDeadScientist : public CBaseMonster
+class CDeadScientist : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -1125,7 +1125,7 @@ void CDeadScientist::KeyValue( KeyValueData *pkvd )
 		pkvd->fHandled = TRUE;
 	}
 	else
-		CBaseMonster::KeyValue( pkvd );
+		CBaseCharacter::KeyValue( pkvd );
 }
 LINK_ENTITY_TO_CLASS( monster_scientist_dead, CDeadScientist );
 
@@ -1169,7 +1169,7 @@ void CDeadScientist :: Spawn( )
 // Sitting Scientist PROP
 //=========================================================
 
-class CSittingScientist : public CScientist // kdb: changed from public CBaseMonster so he can speak
+class CSittingScientist : public CScientist // kdb: changed from public CBaseCharacter so he can speak
 {
 public:
 	void Spawn( void );
@@ -1181,7 +1181,7 @@ public:
 	virtual int		Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
 
-	virtual void SetAnswerQuestion( CTalkMonster *pSpeaker );
+	virtual void SetAnswerQuestion( CTalkCharacter *pSpeaker );
 	int FriendNumber( int arrayNumber );
 
 	int FIdleSpeak ( void );
@@ -1379,10 +1379,10 @@ void CSittingScientist :: SittingThink( void )
 }
 
 // prepare sitting scientist to answer a question
-void CSittingScientist :: SetAnswerQuestion( CTalkMonster *pSpeaker )
+void CSittingScientist :: SetAnswerQuestion( CTalkCharacter *pSpeaker )
 {
 	m_flResponseDelay = gpGlobals->time + RANDOM_FLOAT(3, 4);
-	m_hTalkTarget = (CBaseMonster *)pSpeaker;
+	m_hTalkTarget = (CBaseCharacter *)pSpeaker;
 }
 
 
@@ -1399,7 +1399,7 @@ int CSittingScientist :: FIdleSpeak ( void )
 		return FALSE;
 
 	// set global min delay for next conversation
-	CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(4.8, 5.2);
+	CTalkCharacter::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(4.8, 5.2);
 
 	pitch = GetVoicePitch();
 		
@@ -1410,13 +1410,13 @@ int CSittingScientist :: FIdleSpeak ( void )
 
 	if (pentFriend && RANDOM_LONG(0,1))
 	{
-		CTalkMonster *pTalkMonster = GetClassPtr((CTalkMonster *)pentFriend->pev);
+		CTalkCharacter *pTalkMonster = GetClassPtr((CTalkCharacter *)pentFriend->pev);
 		pTalkMonster->SetAnswerQuestion( this );
 		
 		IdleHeadTurn(pentFriend->pev->origin);
 		SENTENCEG_PlayRndSz( ENT(pev), m_szGrp[TLK_PQUESTION], 1.0, ATTN_IDLE, 0, pitch );
 		// set global min delay for next conversation
-		CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(4.8, 5.2);
+		CTalkCharacter::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(4.8, 5.2);
 		return TRUE;
 	}
 
@@ -1425,11 +1425,11 @@ int CSittingScientist :: FIdleSpeak ( void )
 	{
 		SENTENCEG_PlayRndSz( ENT(pev), m_szGrp[TLK_PIDLE], 1.0, ATTN_IDLE, 0, pitch );
 		// set global min delay for next conversation
-		CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(4.8, 5.2);
+		CTalkCharacter::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(4.8, 5.2);
 		return TRUE;
 	}
 
 	// never spoke
-	CTalkMonster::g_talkWaitTime = 0;
+	CTalkCharacter::g_talkWaitTime = 0;
 	return FALSE;
 }

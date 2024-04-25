@@ -12,12 +12,12 @@
 *   use or distribution of this code by or to any unlicensed person is illegal.
 *
 ****/
-// Base class for flying monsters.  This overrides the movement test & execution code from CBaseMonster
+// Base class for flying monsters.  This overrides the movement test & execution code from CBaseCharacter
 
 #ifndef FLYINGMONSTER_H
 #define FLYINGMONSTER_H
 
-class CFlyingMonster : public CBaseMonster
+class CFlyingMonster : public CBaseCharacter
 {
 public:
 	int 		CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space

@@ -241,7 +241,7 @@ public:
 	virtual Vector EarPosition() { return pev->origin + pev->view_ofs; };			// position of ears
 	virtual Vector BodyTarget(const Vector& posSrc) { return Center(); };		// position to shoot at
 
-	virtual int Illumination() { return GETENTITYILLUM(ENT(pev)); };
+	virtual int Illumination() { return GETENTITYILLUM(ENT(pev), false); };
 
 	virtual	BOOL FVisible(CBaseEntity* pEntity);
 	virtual	BOOL FVisible(const Vector& vecOrigin);
@@ -308,7 +308,17 @@ public:
 		return pEnt; 
 	}
 
-	static CBaseEntity *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
+	//static CBaseEntity *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
+
+	// fix nullptr crash when pev is null! note: nightfire's is the original, above broken one
+	static CBaseEntity* Instance(entvars_t* pev) 
+	{ 
+		if (!pev)
+			return Instance(ENT(0));
+
+		return Instance(ENT(pev)); 
+	}
+
 	static CBaseEntity *Instance( int eoffset) { return Instance( ENT( eoffset) ); }
 
 	CBaseCharacter *GetCharacterPointer( entvars_t *pevMonster ) 
@@ -328,8 +338,6 @@ public:
 
 
 	// Ugly code to lookup all functions to make sure they are exported when set.
-	//Dylan commented
-	/*
 #ifdef _DEBUG
 	void FunctionCheck( void *pFunction, char *name ) 
 	{ 
@@ -363,7 +371,6 @@ public:
 	}
 
 #endif
-	*/
 
 	// virtual functions used by a few classes
 	
@@ -460,8 +467,8 @@ public:
 	virtual int		BloodColor(void) { return DONT_BLEED; }
 	virtual void	TraceBleed(float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType) { return; }
 	virtual BOOL    IsTriggered(CBaseEntityCustom *pActivator) { return TRUE; }
-	virtual CBaseMonster *MyMonsterPointer(void) { return NULL; }
-	virtual CSquadMonster *MySquadMonsterPointer(void) { return NULL; }
+	virtual CBaseCharacter *MyCharacterPointer(void) { return NULL; }
+	virtual CSquadCharacter *MySquadCharacterPointer(void) { return NULL; }
 	virtual	int		GetToggleState(void) { return TS_AT_TOP; }
 	virtual int     Unknown1(void) { 
 		return 0; 
@@ -662,18 +669,18 @@ public:
 	static CBaseEntityCustom *Instance(entvars_t *pev) { return Instance(ENT(pev)); }
 	static CBaseEntityCustom *Instance(int eoffset) { return Instance(ENT(eoffset)); }
 
-	CBaseMonster *GetMonsterPointer(entvars_t *pevMonster)
+	CBaseCharacter *GetCharacterPointer(entvars_t *pevMonster)
 	{
 		CBaseEntityCustom *pEntity = Instance(pevMonster);
 		if (pEntity)
-			return pEntity->MyMonsterPointer();
+			return pEntity->MyCharacterPointer();
 		return NULL;
 	}
-	CBaseMonster *GetMonsterPointer(edict_t *pentMonster)
+	CBaseCharacter *GetCharacterPointer(edict_t *pentMonster)
 	{
 		CBaseEntityCustom *pEntity = Instance(pentMonster);
 		if (pEntity)
-			return pEntity->MyMonsterPointer();
+			return pEntity->MyCharacterPointer();
 		return NULL;
 	}
 
@@ -952,8 +959,8 @@ public:
 	virtual int		BloodColor( void ) { return DONT_BLEED; }
 	//virtual void	TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType );
 	virtual BOOL    IsTriggered( CBaseEntityCustom *pActivator ) {return TRUE;}
-	virtual CBaseMonster *MyMonsterPointer( void ) { return NULL;}
-	virtual CSquadMonster *MySquadMonsterPointer( void ) { return NULL;}
+	virtual CBaseCharacter *MyCharacterPointer( void ) { return NULL;}
+	virtual CSquadCharacter *MySquadCharacterPointer( void ) { return NULL;}
 	virtual	int		GetToggleState( void ) { return TS_AT_TOP; }
 	virtual void	AddPoints( int score, BOOL bAllowNegativeScore ) {}
 	virtual void	AddPointsToTeam( int score, BOOL bAllowNegativeScore ) {}
@@ -1050,18 +1057,18 @@ public:
 	static CBaseEntityCustom *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
 	static CBaseEntityCustom *Instance( int eoffset) { return Instance( ENT( eoffset) ); }
 
-	CBaseMonster *GetMonsterPointer( entvars_t *pevMonster ) 
+	CBaseCharacter *GetCharacterPointer( entvars_t *pevMonster ) 
 	{ 
 		CBaseEntityCustom *pEntity = Instance( pevMonster );
 		if ( pEntity )
-			return pEntity->MyMonsterPointer();
+			return pEntity->MyCharacterPointer();
 		return NULL;
 	}
-	CBaseMonster *GetMonsterPointer( edict_t *pentMonster ) 
+	CBaseCharacter *GetCharacterPointer( edict_t *pentMonster ) 
 	{ 
 		CBaseEntityCustom *pEntity = Instance( pentMonster );
 		if ( pEntity )
-			return pEntity->MyMonsterPointer();
+			return pEntity->MyCharacterPointer();
 		return NULL;
 	}
 
@@ -1250,6 +1257,7 @@ public:
 
 };*/
 
+#if 0
 class C_BasePlayer //: public CBaseCharacter //Dylan added
 {
 public:
@@ -1403,14 +1411,14 @@ public:
 	static C_BasePlayer *Instance( entvars_t *pev ) { return Instance( ENT( pev ) ); }
 	static C_BasePlayer *Instance( int eoffset) { return Instance( ENT( eoffset) ); }
 
-	CBaseCharacter *GetMonsterPointer( entvars_t *pevMonster ) 
+	CBaseCharacter *GetCharacterPointer( entvars_t *pevMonster ) 
 	{ 
 		C_BasePlayer *pEntity = Instance( pevMonster );
 		if ( pEntity )
 			return pEntity->MyCharacterPointer();
 		return NULL;
 	}
-	CBaseCharacter *GetMonsterPointer( edict_t *pentMonster ) 
+	CBaseCharacter *GetCharacterPointer( edict_t *pentMonster ) 
 	{ 
 		C_BasePlayer *pEntity = Instance( pentMonster );
 		if ( pEntity )
@@ -1420,8 +1428,6 @@ public:
 
 
 	// Ugly code to lookup all functions to make sure they are exported when set.
-	//Dylan commented
-	/*
 #ifdef _DEBUG
 	void FunctionCheck( void *pFunction, char *name ) 
 	{ 
@@ -1455,7 +1461,6 @@ public:
 	}
 
 #endif
-	*/
 
 	// virtual functions used by a few classes
 	
@@ -1511,7 +1516,7 @@ public:
 	unsigned char unknownPlayertableEntries3[196];
 	bool IsOddjob;
 }; //Dylan added C_BasePlayer
-
+#endif
 
 
 // Ugly technique to override base member functions
@@ -1661,13 +1666,13 @@ public:
 	bool_nightfire				m_fSequenceLoops;	// true if the sequence loops
 	bool_nightfire m_fLoopFixed; //unknown, nightfire 0x74 MAC
 
-	int m_AnimatingUnknown1;
-	int m_AnimatingUnknown2;
-	int m_AnimatingUnknown3;
-	int m_AnimatingUnknown4;
-	int m_AnimatingUnknown5;
-	int m_AnimatingUnknown6;
-	int m_AnimatingUnknown7;
+	int m_AnimatingUnknown1; //0x78 MAC
+	int m_AnimatingUnknown2; //0x7C MAC
+	int m_AnimatingUnknown3; //0x80 MAC
+	int m_AnimatingUnknown4; //0x84 MAC
+	int m_AnimatingUnknown5; //0x88 MAC
+	int m_AnimatingUnknown6; //0x8C MAC
+	int m_AnimatingUnknown7; //0x90 MAC
 };
 
 
@@ -1679,29 +1684,29 @@ public:
 class CBaseToggle : public CBaseAnimating
 {
 public:
-	void				KeyValue( KeyValueData *pkvd );
+	virtual void				KeyValue( KeyValueData *pkvd );
 
-	TOGGLE_STATE		m_toggle_state;
-	float				m_flActivateFinished;//like attack_finished, but for doors
-	float				m_flMoveDistance;// how far a door should slide or rotate
-	float				m_flWait;
-	float				m_flLip;
-	float				m_flTWidth;// for plats
-	float				m_flTLength;// for plats
+	TOGGLE_STATE		m_toggle_state; //0x94 MAC
+	float				m_flActivateFinished;//like attack_finished, but for doors //0x98 MAC
+	float				m_flMoveDistance;// how far a door should slide or rotate //0x9C MAC
+	float				m_flWait; //0xA0 MAC
+	float				m_flLip; //0xA4 MAC
+	float				m_flTWidth;// for plats //0xA8 MAC
+	float				m_flTLength;// for plats //0xAC MAC
 
-	Vector				m_vecPosition1;
-	Vector				m_vecPosition2;
-	Vector				m_vecAngle1;
-	Vector				m_vecAngle2;
+	Vector				m_vecPosition1; //0xB0 MAC
+	Vector				m_vecPosition2; //0xBC MAC
+	Vector				m_vecAngle1; //0xC8 MAC
+	Vector				m_vecAngle2; //0xD4 MAC
 
-	int					m_cTriggersLeft;		// trigger_counter only, # of activations remaining
-	float				m_flHeight;
-	EHANDLE				m_hActivator;
-	void (CBaseToggle::*m_pfnCallWhenMoveDone)(void);
-	Vector				m_vecFinalDest;
-	Vector				m_vecFinalAngle;
+	int					m_cTriggersLeft;		// trigger_counter only, # of activations remaining //0xE0 MAC
+	float				m_flHeight; //0xE4 MAC
+	EHANDLE				m_hActivator; //0xE8 MAC
+	void (CBaseToggle::*m_pfnCallWhenMoveDone)(void); //0xF0 MAC
+	Vector				m_vecFinalDest; //0xF8 MAC
+	Vector				m_vecFinalAngle; //0x104 MAC
 
-	int					m_bitsDamageInflict;	// DMG_ damage type that the door or tigger does
+	int					m_bitsDamageInflict; //0x110 MAC	// DMG_ damage type that the door or tigger does
 
 	virtual int		Save( CSave &save );
 	virtual int		Restore( CRestore &restore );
@@ -1722,7 +1727,7 @@ public:
 	static void			AxisDir( entvars_t *pev );
 	static float		AxisDelta( int flags, const Vector &angle1, const Vector &angle2 );
 
-	string_t m_sMaster;		// If this button has a master switch, this is the targetname.
+	string_t m_sMaster;	//0x114 MAC	// If this button has a master switch, this is the targetname.
 							// A master switch must be of the multisource type. If all 
 							// of the switches in the multisource have been triggered, then
 							// the button will be allowed to operate. Otherwise, it will be
@@ -1837,7 +1842,7 @@ public:
 #define GIB_ALWAYS			2// always gib ( Houndeye Shock, Barnacle Bite )
 
 class CBaseCharacter;
-class CCineMonster;
+class CCineCharacter;
 class CSound;
 
 #include "basemonster.h"

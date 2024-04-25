@@ -68,7 +68,7 @@ int iAgruntMuzzleFlash;
 
 #define		AGRUNT_MELEE_DIST	100
 
-class CAGrunt : public CSquadMonster
+class CAGrunt : public CSquadCharacter
 {
 public:
 	void Spawn( void );
@@ -134,7 +134,7 @@ TYPEDESCRIPTION	CAGrunt::m_SaveData[] =
 	DEFINE_FIELD( CAGrunt, m_iLastWord, FIELD_INTEGER ),
 };
 
-IMPLEMENT_SAVERESTORE( CAGrunt, CSquadMonster );
+IMPLEMENT_SAVERESTORE( CAGrunt, CSquadCharacter );
 
 const char *CAGrunt::pAttackHitSounds[] = 
 {
@@ -199,7 +199,7 @@ int CAGrunt::IRelationship ( CBaseEntity *pTarget )
 		return R_NM;
 	}
 
-	return CSquadMonster :: IRelationship( pTarget );
+	return CSquadCharacter :: IRelationship( pTarget );
 }
 
 //=========================================================
@@ -477,7 +477,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				case 2:	EMIT_SOUND_DYN ( ENT(pev), CHAN_WEAPON, "agrunt/ag_fire3.wav", 1.0, ATTN_NORM, 0, 100 );	break;
 			}
 
-			CBaseMonster *pHornetMonster = pHornet->MyMonsterPointer();
+			CBaseCharacter *pHornetMonster = pHornet->MyCharacterPointer();
 
 			if ( pHornetMonster )
 			{
@@ -564,7 +564,7 @@ void CAGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 	default:
-		CSquadMonster::HandleAnimEvent( pEvent );
+		CSquadCharacter::HandleAnimEvent( pEvent );
 		break;
 	}
 }
@@ -884,7 +884,7 @@ DEFINE_CUSTOM_SCHEDULES( CAGrunt )
 	slAGruntThreatDisplay,
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CAGrunt, CSquadMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CAGrunt, CSquadCharacter );
 
 //=========================================================
 // FCanCheckAttacks - this is overridden for alien grunts
@@ -982,9 +982,9 @@ void CAGrunt :: StartTask ( Task_t *pTask )
 		// try to find a spot to throw that gives the smart weapon a good chance of finding the enemy.
 		// ideally, this spot is along a line that is perpendicular to a line drawn from the agrunt to the enemy.
 
-		CBaseMonster	*pEnemyMonsterPtr;
+		CBaseCharacter	*pEnemyMonsterPtr;
 
-		pEnemyMonsterPtr = m_hEnemy->MyMonsterPointer();
+		pEnemyMonsterPtr = m_hEnemy->MyCharacterPointer();
 
 		if ( pEnemyMonsterPtr )
 		{
@@ -1051,7 +1051,7 @@ void CAGrunt :: StartTask ( Task_t *pTask )
 		break;
 
 	default:
-		CSquadMonster :: StartTask ( pTask );
+		CSquadCharacter :: StartTask ( pTask );
 		break;
 	}
 }
@@ -1085,7 +1085,7 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseCharacter :: GetSchedule();
 			}
 
 			if ( HasConditions(bits_COND_NEW_ENEMY) )
@@ -1122,7 +1122,7 @@ Schedule_t *CAGrunt :: GetSchedule ( void )
 		break;
 	}
 
-	return CSquadMonster :: GetSchedule();
+	return CSquadCharacter :: GetSchedule();
 }
 
 //=========================================================
@@ -1183,6 +1183,6 @@ Schedule_t* CAGrunt :: GetScheduleOfType ( int Type )
 
 	}
 
-	return CSquadMonster :: GetScheduleOfType( Type );
+	return CSquadCharacter :: GetScheduleOfType( Type );
 }
 

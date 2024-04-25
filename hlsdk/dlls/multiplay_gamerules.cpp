@@ -71,7 +71,7 @@ static CMultiplayGameMgrHelper g_GameMgrHelper;
 // Rules for the half-life multiplayer game.
 //*********************************************************
 
-CHalfLifeMultiplay :: CHalfLifeMultiplay()
+CBondMultiplay :: CBondMultiplay()
 {
 	g_VoiceGameMgr.Init(&g_GameMgrHelper, gpGlobals->maxClients);
 
@@ -108,7 +108,7 @@ CHalfLifeMultiplay :: CHalfLifeMultiplay()
 	}
 }
 
-BOOL CHalfLifeMultiplay::ClientCommand( CBasePlayer *pPlayer, const char *pcmd )
+BOOL CBondMultiplay::ClientCommand( CBasePlayer *pPlayer, const char *pcmd )
 {
 	if(g_VoiceGameMgr.ClientCommand(pPlayer, pcmd))
 		return TRUE;
@@ -118,7 +118,7 @@ BOOL CHalfLifeMultiplay::ClientCommand( CBasePlayer *pPlayer, const char *pcmd )
 
 //=========================================================
 //=========================================================
-void CHalfLifeMultiplay::RefreshSkillData( void )
+void CBondMultiplay::RefreshSkillData( void )
 {
 // load all default values
 	CGameRules::RefreshSkillData();
@@ -172,13 +172,13 @@ void CHalfLifeMultiplay::RefreshSkillData( void )
 // longest the intermission can last, in seconds
 #define MAX_INTERMISSION_TIME		120
 
-extern cvar_t timeleft, fragsleft;
+extern IConsoleVariable timeleft, fragsleft;
 
-extern cvar_t mp_chattime;
+extern IConsoleVariable mp_chattime;
 
 //=========================================================
 //=========================================================
-void CHalfLifeMultiplay :: Think ( void )
+void CBondMultiplay :: Think ( void )
 {
 	g_VoiceGameMgr.Update(gpGlobals->frametime);
 
@@ -271,28 +271,28 @@ void CHalfLifeMultiplay :: Think ( void )
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::IsMultiplayer( void )
+BOOL CBondMultiplay::IsMultiplayer( void )
 {
 	return TRUE;
 }
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::IsDeathmatch( void )
+BOOL CBondMultiplay::IsDeathmatch( void )
 {
 	return TRUE;
 }
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::IsCoOp( void )
+BOOL CBondMultiplay::IsCoOp( void )
 {
 	return static_cast<BOOL>(gpGlobals->coop);
 }
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon )
+BOOL CBondMultiplay::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon )
 {
 	if ( !pWeapon->CanDeploy() )
 	{
@@ -320,7 +320,7 @@ BOOL CHalfLifeMultiplay::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBasePlayerI
 	return FALSE;
 }
 
-BOOL CHalfLifeMultiplay :: GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pCurrentWeapon )
+BOOL CBondMultiplay :: GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pCurrentWeapon )
 {
 
 	CBasePlayerItem *pCheck;
@@ -389,7 +389,7 @@ BOOL CHalfLifeMultiplay :: GetNextBestWeapon( CBasePlayer *pPlayer, CBasePlayerI
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay :: ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ] )
+BOOL CBondMultiplay :: ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ] )
 {
 	g_VoiceGameMgr.ClientConnected(pEntity);
 	return TRUE;
@@ -398,14 +398,14 @@ BOOL CHalfLifeMultiplay :: ClientConnected( edict_t *pEntity, const char *pszNam
 extern int gmsgSayText;
 extern int gmsgGameMode;
 
-void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
+void CBondMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 {
 	MESSAGE_BEGIN( MSG_ONE, gmsgGameMode, NULL, pPlayer->edict() );
 		WRITE_BYTE( 0 );  // game mode none
 	MESSAGE_END();
 }
 
-void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
+void CBondMultiplay :: InitHUD( CBasePlayer *pl )
 {
 	// notify other clients of player joining the game
 	UTIL_ClientPrintAll( HUD_PRINTNOTIFY, UTIL_VarArgs( "%s has joined the game\n", 
@@ -470,7 +470,7 @@ void CHalfLifeMultiplay :: InitHUD( CBasePlayer *pl )
 
 //=========================================================
 //=========================================================
-void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
+void CBondMultiplay :: ClientDisconnected( edict_t *pClient )
 {
 	if ( pClient )
 	{
@@ -505,7 +505,7 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 
 //=========================================================
 //=========================================================
-float CHalfLifeMultiplay :: FlPlayerFallDamage( CBasePlayer *pPlayer )
+float CBondMultiplay :: FlPlayerFallDamage( CBasePlayer *pPlayer )
 {
 	int iFallDamage = (int)falldamage.value;
 
@@ -524,14 +524,14 @@ float CHalfLifeMultiplay :: FlPlayerFallDamage( CBasePlayer *pPlayer )
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
+BOOL CBondMultiplay::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
 {
 	return TRUE;
 }
 
 //=========================================================
 //=========================================================
-void CHalfLifeMultiplay :: PlayerThink( CBasePlayer *pPlayer )
+void CBondMultiplay :: PlayerThink( CBasePlayer *pPlayer )
 {
 	if ( g_fGameOver )
 	{
@@ -548,7 +548,7 @@ void CHalfLifeMultiplay :: PlayerThink( CBasePlayer *pPlayer )
 
 //=========================================================
 //=========================================================
-void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
+void CBondMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 {
 	BOOL		addDefault;
 	CBaseEntity	*pWeaponEntity = NULL;
@@ -573,19 +573,19 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay :: FPlayerCanRespawn( CBasePlayer *pPlayer )
+BOOL CBondMultiplay :: FPlayerCanRespawn( CBasePlayer *pPlayer )
 {
 	return TRUE;
 }
 
 //=========================================================
 //=========================================================
-float CHalfLifeMultiplay :: FlPlayerSpawnTime( CBasePlayer *pPlayer )
+float CBondMultiplay :: FlPlayerSpawnTime( CBasePlayer *pPlayer )
 {
 	return gpGlobals->time;//now!
 }
 
-BOOL CHalfLifeMultiplay :: AllowAutoTargetCrosshair( void )
+BOOL CBondMultiplay :: AllowAutoTargetCrosshair( void )
 {
 	return ( aimcrosshair.value != 0 );
 }
@@ -594,7 +594,7 @@ BOOL CHalfLifeMultiplay :: AllowAutoTargetCrosshair( void )
 // IPointsForKill - how many points awarded to anyone
 // that kills this player?
 //=========================================================
-int CHalfLifeMultiplay :: IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled )
+int CBondMultiplay :: IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled )
 {
 	return 1;
 }
@@ -603,7 +603,7 @@ int CHalfLifeMultiplay :: IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *p
 //=========================================================
 // PlayerKilled - someone/something killed this player
 //=========================================================
-void CHalfLifeMultiplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor )
+void CBondMultiplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor )
 {
 	DeathNotice( pVictim, pKiller, pInflictor );
 
@@ -670,7 +670,7 @@ void CHalfLifeMultiplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKille
 //=========================================================
 // Deathnotice. 
 //=========================================================
-void CHalfLifeMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pevInflictor )
+void CBondMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pevInflictor )
 {
 	// Work out what killed the player, and send a message to all clients about it
 	CBaseEntity::Instance( pKiller );
@@ -873,7 +873,7 @@ void CHalfLifeMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, 
 // PlayerGotWeapon - player has grabbed a weapon that was
 // sitting in the world
 //=========================================================
-void CHalfLifeMultiplay :: PlayerGotWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon )
+void CBondMultiplay :: PlayerGotWeapon( CBasePlayer *pPlayer, CBasePlayerItem *pWeapon )
 {
 }
 
@@ -881,7 +881,7 @@ void CHalfLifeMultiplay :: PlayerGotWeapon( CBasePlayer *pPlayer, CBasePlayerIte
 // FlWeaponRespawnTime - what is the time in the future
 // at which this weapon may spawn?
 //=========================================================
-float CHalfLifeMultiplay :: FlWeaponRespawnTime( CBasePlayerItem *pWeapon )
+float CBondMultiplay :: FlWeaponRespawnTime( CBasePlayerItem *pWeapon )
 {
 	if ( weaponstay.value > 0 )
 	{
@@ -904,7 +904,7 @@ float CHalfLifeMultiplay :: FlWeaponRespawnTime( CBasePlayerItem *pWeapon )
 // now,  otherwise it returns the time at which it can try
 // to spawn again.
 //=========================================================
-float CHalfLifeMultiplay :: FlWeaponTryRespawn( CBasePlayerItem *pWeapon )
+float CBondMultiplay :: FlWeaponTryRespawn( CBasePlayerItem *pWeapon )
 {
 	if ( pWeapon && pWeapon->m_iId && (pWeapon->iFlags() & ITEM_FLAG_LIMITINWORLD) )
 	{
@@ -922,7 +922,7 @@ float CHalfLifeMultiplay :: FlWeaponTryRespawn( CBasePlayerItem *pWeapon )
 // VecWeaponRespawnSpot - where should this weapon spawn?
 // Some game variations may choose to randomize spawn locations
 //=========================================================
-Vector CHalfLifeMultiplay :: VecWeaponRespawnSpot( CBasePlayerItem *pWeapon )
+Vector CBondMultiplay :: VecWeaponRespawnSpot( CBasePlayerItem *pWeapon )
 {
 	return pWeapon->pev->origin;
 }
@@ -931,7 +931,7 @@ Vector CHalfLifeMultiplay :: VecWeaponRespawnSpot( CBasePlayerItem *pWeapon )
 // WeaponShouldRespawn - any conditions inhibiting the
 // respawning of this weapon?
 //=========================================================
-int CHalfLifeMultiplay :: WeaponShouldRespawn( CBasePlayerItem *pWeapon )
+int CBondMultiplay :: WeaponShouldRespawn( CBasePlayerItem *pWeapon )
 {
 	if ( pWeapon->pev->spawnflags & SF_NORESPAWN )
 	{
@@ -945,7 +945,7 @@ int CHalfLifeMultiplay :: WeaponShouldRespawn( CBasePlayerItem *pWeapon )
 // CanHaveWeapon - returns FALSE if the player is not allowed
 // to pick up this weapon
 //=========================================================
-BOOL CHalfLifeMultiplay::CanHavePlayerItem( CBasePlayer *pPlayer, CBasePlayerItem *pItem )
+BOOL CBondMultiplay::CanHavePlayerItem( CBasePlayer *pPlayer, CBasePlayerItem *pItem )
 {
 	if ( weaponstay.value > 0 )
 	{
@@ -974,20 +974,20 @@ BOOL CHalfLifeMultiplay::CanHavePlayerItem( CBasePlayer *pPlayer, CBasePlayerIte
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::CanHaveItem( CBasePlayer *pPlayer, CItem *pItem )
+BOOL CBondMultiplay::CanHaveItem( CBasePlayer *pPlayer, CItem *pItem )
 {
 	return TRUE;
 }
 
 //=========================================================
 //=========================================================
-void CHalfLifeMultiplay::PlayerGotItem( CBasePlayer *pPlayer, CItem *pItem )
+void CBondMultiplay::PlayerGotItem( CBasePlayer *pPlayer, CItem *pItem )
 {
 }
 
 //=========================================================
 //=========================================================
-int CHalfLifeMultiplay::ItemShouldRespawn( CItem *pItem )
+int CBondMultiplay::ItemShouldRespawn( CItem *pItem )
 {
 	if ( pItem->pev->spawnflags & SF_NORESPAWN )
 	{
@@ -1001,7 +1001,7 @@ int CHalfLifeMultiplay::ItemShouldRespawn( CItem *pItem )
 //=========================================================
 // At what time in the future may this Item respawn?
 //=========================================================
-float CHalfLifeMultiplay::FlItemRespawnTime( CItem *pItem )
+float CBondMultiplay::FlItemRespawnTime( CItem *pItem )
 {
 	return gpGlobals->time + ITEM_RESPAWN_TIME;
 }
@@ -1010,20 +1010,20 @@ float CHalfLifeMultiplay::FlItemRespawnTime( CItem *pItem )
 // Where should this item respawn?
 // Some game variations may choose to randomize spawn locations
 //=========================================================
-Vector CHalfLifeMultiplay::VecItemRespawnSpot( CItem *pItem )
+Vector CBondMultiplay::VecItemRespawnSpot( CItem *pItem )
 {
 	return pItem->pev->origin;
 }
 
 //=========================================================
 //=========================================================
-void CHalfLifeMultiplay::PlayerGotAmmo( CBasePlayer *pPlayer, char *szName, int iCount )
+void CBondMultiplay::PlayerGotAmmo( CBasePlayer *pPlayer, char *szName, int iCount )
 {
 }
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::IsAllowedToSpawn( CBaseEntity *pEntity )
+BOOL CBondMultiplay::IsAllowedToSpawn( CBaseEntity *pEntity )
 {
 //	if ( pEntity->pev->flags & FL_MONSTER )
 //		return FALSE;
@@ -1033,7 +1033,7 @@ BOOL CHalfLifeMultiplay::IsAllowedToSpawn( CBaseEntity *pEntity )
 
 //=========================================================
 //=========================================================
-int CHalfLifeMultiplay::AmmoShouldRespawn( CBasePlayerAmmo *pAmmo )
+int CBondMultiplay::AmmoShouldRespawn( CBasePlayerAmmo *pAmmo )
 {
 	if ( pAmmo->pev->spawnflags & SF_NORESPAWN )
 	{
@@ -1045,46 +1045,46 @@ int CHalfLifeMultiplay::AmmoShouldRespawn( CBasePlayerAmmo *pAmmo )
 
 //=========================================================
 //=========================================================
-float CHalfLifeMultiplay::FlAmmoRespawnTime( CBasePlayerAmmo *pAmmo )
+float CBondMultiplay::FlAmmoRespawnTime( CBasePlayerAmmo *pAmmo )
 {
 	return gpGlobals->time + AMMO_RESPAWN_TIME;
 }
 
 //=========================================================
 //=========================================================
-Vector CHalfLifeMultiplay::VecAmmoRespawnSpot( CBasePlayerAmmo *pAmmo )
+Vector CBondMultiplay::VecAmmoRespawnSpot( CBasePlayerAmmo *pAmmo )
 {
 	return pAmmo->pev->origin;
 }
 
 //=========================================================
 //=========================================================
-float CHalfLifeMultiplay::FlHealthChargerRechargeTime( void )
+float CBondMultiplay::FlHealthChargerRechargeTime( void )
 {
 	return 60;
 }
 
 
-float CHalfLifeMultiplay::FlHEVChargerRechargeTime( void )
+float CBondMultiplay::FlHEVChargerRechargeTime( void )
 {
 	return 30;
 }
 
 //=========================================================
 //=========================================================
-int CHalfLifeMultiplay::DeadPlayerWeapons( CBasePlayer *pPlayer )
+int CBondMultiplay::DeadPlayerWeapons( CBasePlayer *pPlayer )
 {
 	return GR_PLR_DROP_GUN_ACTIVE;
 }
 
 //=========================================================
 //=========================================================
-int CHalfLifeMultiplay::DeadPlayerAmmo( CBasePlayer *pPlayer )
+int CBondMultiplay::DeadPlayerAmmo( CBasePlayer *pPlayer )
 {
 	return GR_PLR_DROP_AMMO_ACTIVE;
 }
 
-edict_t *CHalfLifeMultiplay::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
+edict_t *CBondMultiplay::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 {
 	edict_t *pentSpawnSpot = CGameRules::GetPlayerSpawnSpot( pPlayer );	
 	if ( IsMultiplayer() && pentSpawnSpot->v.target )
@@ -1098,15 +1098,15 @@ edict_t *CHalfLifeMultiplay::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 
 //=========================================================
 //=========================================================
-int CHalfLifeMultiplay::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
+int CBondMultiplay::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 {
 	// half life deathmatch has only enemies
 	return GR_NOTTEAMMATE;
 }
 
-BOOL CHalfLifeMultiplay :: PlayFootstepSounds( CBasePlayer *pl, float fvol )
+BOOL CBondMultiplay :: PlayFootstepSounds( CBasePlayer *pl, float fvol )
 {
-	if ( g_footsteps && g_footsteps->value == 0 )
+	if ( g_psv_footsteps && g_psv_footsteps->value == 0 )
 		return FALSE;
 
 	if ( pl->IsOnLadder() || pl->pev->velocity.Length2D() > 220 )
@@ -1115,23 +1115,23 @@ BOOL CHalfLifeMultiplay :: PlayFootstepSounds( CBasePlayer *pl, float fvol )
 	return FALSE;
 }
 
-BOOL CHalfLifeMultiplay :: FAllowFlashlight( void ) 
+BOOL CBondMultiplay :: FAllowFlashlight( void ) 
 { 
 	return flashlight.value != 0; 
 }
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay :: FAllowMonsters( void )
+BOOL CBondMultiplay :: FAllowMonsters( void )
 {
-	return ( allowmonsters.value != 0 );
+	return ( allowcharacters.value != 0 );
 }
 
 //=========================================================
-//======== CHalfLifeMultiplay private functions ===========
+//======== CBondMultiplay private functions ===========
 #define INTERMISSION_TIME		6
 
-void CHalfLifeMultiplay :: GoToIntermission( void )
+void CBondMultiplay :: GoToIntermission( void )
 {
 	if ( g_fGameOver )
 		return;  // intermission has already been triggered, so ignore.
@@ -1515,7 +1515,7 @@ ChangeLevel
 Server is changing to a new level, check mapcycle.txt for map name and setup info
 ==============
 */
-void CHalfLifeMultiplay :: ChangeLevel( void )
+void CBondMultiplay :: ChangeLevel( void )
 {
 	static char szPreviousMapCycleFile[ 256 ];
 	static mapcycle_t mapcycle;
@@ -1645,7 +1645,7 @@ void CHalfLifeMultiplay :: ChangeLevel( void )
 #define MAX_MOTD_CHUNK	  60
 #define MAX_MOTD_LENGTH   1536 // (MAX_MOTD_CHUNK * 4)
 
-void CHalfLifeMultiplay :: SendMOTDToClient( edict_t *client )
+void CBondMultiplay :: SendMOTDToClient( edict_t *client )
 {
 	// read from the MOTD.txt file
 	int length, char_count = 0;

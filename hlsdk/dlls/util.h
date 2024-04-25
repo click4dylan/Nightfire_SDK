@@ -206,7 +206,7 @@ typedef enum
 	MONSTERSTATE_PLAYDEAD,
 	MONSTERSTATE_DEAD
 
-} MONSTERSTATE;
+} CHARACTERSTATE;
 
 
 
@@ -264,7 +264,7 @@ extern void			UTIL_MakeInvVectors		( const Vector &vec, globalvars_t *pgv );
 
 extern void			UTIL_SetOrigin			( entvars_t* pev, const Vector &vecOrigin );
 extern void			UTIL_EmitAmbientSound	( edict_t *entity, const Vector &vecOrigin, const char *samp, float vol, float attenuation, int fFlags, int pitch );
-extern void			UTIL_ParticleEffect		( const Vector &vecOrigin, const Vector &vecDirection, ULONG ulColor, ULONG ulCount );
+extern void			UTIL_ParticleEffect		( const Vector &vecOrigin, const Vector &vecDirection, UCHAR ulColorR, UCHAR ulColorG, UCHAR ulColorB, ULONG ulCount);
 extern void			UTIL_ScreenShake		( const Vector &center, float amplitude, float frequency, float duration, float radius );
 extern void			UTIL_ScreenShakeAll		( const Vector &center, float amplitude, float frequency, float duration );
 extern void			UTIL_ShowMessage		( const char *pString, CBaseEntity *pPlayer );
@@ -275,13 +275,13 @@ extern void			UTIL_ScreenFade			( CBaseEntity *pEntity, const Vector &color, flo
 typedef enum { ignore_monsters=1, dont_ignore_monsters=0, missile=2 } IGNORE_MONSTERS;
 typedef enum { ignore_glass=1, dont_ignore_glass=0 } IGNORE_GLASS;
 extern void			UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int brushflags, edict_t *pentIgnore, TraceResult *ptr);
-extern void			UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, IGNORE_GLASS ignoreGlass, edict_t *pentIgnore, TraceResult *ptr);
+extern void			UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, IGNORE_GLASS ignoreGlass, int brushflags, edict_t *pentIgnore, TraceResult *ptr);
 typedef enum { point_hull=0, human_hull=1, large_hull=2, head_hull=3 } HULL_TYPE;
-extern void			UTIL_TraceHull			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int hullNumber, edict_t *pentIgnore, TraceResult *ptr);
+extern void			UTIL_TraceHull			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int hullNumber, int brushflags, edict_t *pentIgnore, TraceResult *ptr);
 extern TraceResult	UTIL_GetGlobalTrace		(void);
-extern void			UTIL_TraceModel			(const Vector &vecStart, const Vector &vecEnd, int hullNumber, edict_t *pentModel, TraceResult *ptr);
+extern void			UTIL_TraceModel			(const Vector &vecStart, const Vector &vecEnd, int hullNumber, int brushflags, edict_t *pentModel, TraceResult *ptr);
 extern Vector		UTIL_GetAimVector		(edict_t* pent, float flSpeed);
-extern BYTE			UTIL_PointContents		(const Vector &vec);
+extern int			UTIL_PointContents		(const Vector &vec, int brushflags = 0);
 
 extern int			UTIL_IsMasterTriggered	(string_t sMaster, CBaseEntity *pActivator);
 extern void			UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount );

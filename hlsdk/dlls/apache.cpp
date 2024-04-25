@@ -27,7 +27,7 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 #define SF_WAITFORTRIGGER	(0x04 | 0x40) // UNDONE: Fix!
 #define SF_NOWRECKAGE		0x08
 
-class CApache : public CBaseMonster
+class CApache : public CBaseCharacter
 {
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
@@ -111,7 +111,7 @@ TYPEDESCRIPTION	CApache::m_SaveData[] =
 	DEFINE_FIELD( CApache, m_flGoalSpeed, FIELD_FLOAT ),
 	DEFINE_FIELD( CApache, m_iDoSmokePuff, FIELD_INTEGER ),
 };
-IMPLEMENT_SAVERESTORE( CApache, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CApache, CBaseCharacter );
 
 
 void CApache :: Spawn( void )
@@ -127,7 +127,7 @@ void CApache :: Spawn( void )
 
 	pev->flags |= FL_MONSTER;
 	pev->takedamage		= DAMAGE_AIM;
-	pev->health			= gSkillData.apacheHealth;
+	pev->health			= gSkillData.helicopterHealth;
 
 	m_flFieldOfView = -0.707; // 270 degrees
 

@@ -32,7 +32,7 @@
 
 //=========================================================
 //=========================================================
-class CFlockingFlyerFlock : public CBaseMonster
+class CFlockingFlyerFlock : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -57,11 +57,11 @@ TYPEDESCRIPTION	CFlockingFlyerFlock::m_SaveData[] =
 	DEFINE_FIELD( CFlockingFlyerFlock, m_flFlockRadius, FIELD_FLOAT ),
 };
 
-IMPLEMENT_SAVERESTORE( CFlockingFlyerFlock, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CFlockingFlyerFlock, CBaseCharacter );
 
 //=========================================================
 //=========================================================
-class CFlockingFlyer : public CBaseMonster
+class CFlockingFlyer : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -127,7 +127,7 @@ TYPEDESCRIPTION	CFlockingFlyer::m_SaveData[] =
 //	DEFINE_FIELD( CFlockingFlyer, m_flFlockNextSoundTime, FIELD_TIME ),	// don't need to save
 };
 
-IMPLEMENT_SAVERESTORE( CFlockingFlyer, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CFlockingFlyer, CBaseCharacter );
 
 //=========================================================
 //=========================================================
@@ -426,7 +426,7 @@ void CFlockingFlyer :: FormFlock( void )
 		
 		while ((pEntity = UTIL_FindEntityInSphere( pEntity, pev->origin, AFLOCK_MAX_RECRUIT_RADIUS )) != NULL)
 		{
-			CBaseMonster *pRecruit = pEntity->MyMonsterPointer( );
+			CBaseCharacter *pRecruit = pEntity->MyCharacterPointer( );
 
 			if ( pRecruit && pRecruit != this && pRecruit->IsAlive() && !pRecruit->m_pCine )
 			{
@@ -520,7 +520,7 @@ BOOL CFlockingFlyer :: FPathBlocked( )
 	fBlocked = FALSE;// assume the way ahead is clear
 
 	// check for obstacle ahead
-	UTIL_TraceLine(pev->origin, pev->origin + gpGlobals->v_forward * AFLOCK_CHECK_DIST, ignore_monsters, ENT(pev), &tr);
+	UTIL_TraceLine(pev->origin, pev->origin + gpGlobals->v_forward * AFLOCK_CHECK_DIST, ignore_monsters, 0, ENT(pev), &tr);
 	if (tr.flFraction != 1.0)
 	{
 		m_flLastBlockedTime = gpGlobals->time;
@@ -528,14 +528,14 @@ BOOL CFlockingFlyer :: FPathBlocked( )
 	}
 
 	// extra wide checks
-	UTIL_TraceLine(pev->origin + gpGlobals->v_right * 12, pev->origin + gpGlobals->v_right * 12 + gpGlobals->v_forward * AFLOCK_CHECK_DIST, ignore_monsters, ENT(pev), &tr);
+	UTIL_TraceLine(pev->origin + gpGlobals->v_right * 12, pev->origin + gpGlobals->v_right * 12 + gpGlobals->v_forward * AFLOCK_CHECK_DIST, ignore_monsters, 0, ENT(pev), &tr);
 	if (tr.flFraction != 1.0)
 	{
 		m_flLastBlockedTime = gpGlobals->time;
 		fBlocked = TRUE;
 	}
 
-	UTIL_TraceLine(pev->origin - gpGlobals->v_right * 12, pev->origin - gpGlobals->v_right * 12 + gpGlobals->v_forward * AFLOCK_CHECK_DIST, ignore_monsters, ENT(pev), &tr);
+	UTIL_TraceLine(pev->origin - gpGlobals->v_right * 12, pev->origin - gpGlobals->v_right * 12 + gpGlobals->v_forward * AFLOCK_CHECK_DIST, ignore_monsters, 0, ENT(pev), &tr);
 	if (tr.flFraction != 1.0)
 	{
 		m_flLastBlockedTime = gpGlobals->time;

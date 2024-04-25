@@ -34,7 +34,7 @@
 //=========================================================
 // Monster's Anim Events Go Here
 //=========================================================
-class CRoach : public CBaseMonster
+class CRoach : public CBaseCharacter
 {
 public:
 	void Spawn( void );

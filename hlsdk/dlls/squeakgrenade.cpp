@@ -187,7 +187,7 @@ void CSqueakGrenade :: Killed( entvars_t *pevAttacker, int iGib )
 	if (m_hOwner != 0)
 		pev->owner = m_hOwner->edict();
 
-	CBaseMonster :: Killed( pevAttacker, GIB_ALWAYS );
+	CBaseCharacter :: Killed( pevAttacker, GIB_ALWAYS );
 }
 
 void CSqueakGrenade :: GibMonster( void )
@@ -261,7 +261,7 @@ void CSqueakGrenade::HuntThink( void )
 	if ((m_flDie - gpGlobals->time <= 0.5) && (m_flDie - gpGlobals->time >= 0.3))
 	{
 		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_die1.wav", 1, ATTN_NORM, 0, 100 + RANDOM_LONG(0,0x3F));
-		CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, 256, 0.25 );
+		CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, pev->angles, 256, 0.25 );
 	}
 
 	// higher pitch as squeeker gets closer to detonation time
@@ -395,12 +395,12 @@ void CSqueakGrenade::SuperBounceTouch( CBaseEntity *pOther )
 			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt2.wav", 1, ATTN_NORM, 0, (int)flpitch);
 		else 
 			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt3.wav", 1, ATTN_NORM, 0, (int)flpitch);
-		CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, 256, 0.25 );
+		CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, pev->angles, 256, 0.25 );
 	}
 	else
 	{
 		// skittering sound
-		CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, 100, 0.1 );
+		CSoundEnt::InsertSound ( bits_SOUND_COMBAT, pev->origin, pev->angles, 100, 0.1 );
 	}
 
 	m_flNextBounceSoundTime = gpGlobals->time + 0.5;// half second.
@@ -492,7 +492,7 @@ void CSqueak::Holster( int skiplocal /* = 0 */ )
 }
 
 
-void CSqueak::PrimaryAttack()
+void CSqueak::PrimaryAttack(int unknown)
 {
 	if ( m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] )
 	{
@@ -509,7 +509,7 @@ void CSqueak::PrimaryAttack()
 		}
 
 		// find place to toss monster
-		UTIL_TraceLine( trace_origin + gpGlobals->v_forward * 20, trace_origin + gpGlobals->v_forward * 64, dont_ignore_monsters, NULL, &tr );
+		UTIL_TraceLine( trace_origin + gpGlobals->v_forward * 20, trace_origin + gpGlobals->v_forward * 64, dont_ignore_monsters, 0, NULL, &tr );
 
 	int flags;
 #ifdef CLIENT_WEAPONS
@@ -544,7 +544,7 @@ void CSqueak::PrimaryAttack()
 
 			m_fJustThrown = 1;
 
-			m_flNextPrimaryAttack = GetNextAttackDelay(0.3);
+			m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.3f;//GetNextAttackDelay(0.3);
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
 		}
 	}

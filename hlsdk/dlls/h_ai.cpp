@@ -36,14 +36,14 @@ DLL_GLOBAL	BOOL	g_fDrawLines = FALSE;
 // 
 // AI UTILITY FUNCTIONS
 //
-// !!!UNDONE - move CBaseMonster functions to monsters.cpp
+// !!!UNDONE - move CBaseCharacter functions to monsters.cpp
 //=========================================================
 
 //=========================================================
 // FBoxVisible - a more accurate ( and slower ) version
 // of FVisible. 
 //
-// !!!UNDONE - make this CBaseMonster?
+// !!!UNDONE - make this CBaseCharacter?
 //=========================================================
 BOOL FBoxVisible ( entvars_t *pevLooker, entvars_t *pevTarget, Vector &vecTargetOrigin, float flSize )
 {

@@ -38,7 +38,7 @@
 
 #define CONTROLLER_FLINCH_DELAY			2		// at most one flinch every n secs
 
-class CController : public CSquadMonster
+class CController : public CSquadCharacter
 {
 public:
 	virtual int		Save( CSave &save );
@@ -111,7 +111,7 @@ TYPEDESCRIPTION	CController::m_SaveData[] =
 	DEFINE_ARRAY( CController, m_iBallCurrent, FIELD_INTEGER, 2 ),
 	DEFINE_FIELD( CController, m_vecEstVelocity, FIELD_VECTOR ),
 };
-IMPLEMENT_SAVERESTORE( CController, CSquadMonster );
+IMPLEMENT_SAVERESTORE( CController, CSquadCharacter );
 
 
 const char *CController::pAttackSounds[] = 
@@ -184,7 +184,7 @@ int CController :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, 
 	// HACK HACK -- until we fix this.
 	if ( IsAlive() )
 		PainSound();
-	return CBaseMonster::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 
@@ -210,7 +210,7 @@ void CController::Killed( entvars_t *pevAttacker, int iGib )
 		m_pBall[1] = NULL;
 	}
 
-	CSquadMonster::Killed( pevAttacker, iGib );
+	CSquadCharacter::Killed( pevAttacker, iGib );
 }
 
 
@@ -227,7 +227,7 @@ void CController::GibMonster( void )
 		UTIL_Remove( m_pBall[1] );
 		m_pBall[1] = NULL;
 	}
-	CSquadMonster::GibMonster( );
+	CSquadCharacter::GibMonster( );
 }
 
 
@@ -315,7 +315,7 @@ void CController :: HandleAnimEvent( MonsterEvent_t *pEvent )
 				WRITE_COORD( 32 ); // decay
 			MESSAGE_END();
 
-			CBaseMonster *pBall = (CBaseMonster*)Create( "controller_head_ball", vecStart, pev->angles, edict() );
+			CBaseCharacter *pBall = (CBaseCharacter*)Create( "controller_head_ball", vecStart, pev->angles, edict() );
 
 			pBall->pev->velocity = Vector( 0, 0, 32 );
 			pBall->m_hEnemy = m_hEnemy;
@@ -349,7 +349,7 @@ void CController :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}
 		break;
 		default:
-			CBaseMonster::HandleAnimEvent( pEvent );
+			CBaseCharacter::HandleAnimEvent( pEvent );
 			break;
 	}
 }
@@ -491,7 +491,7 @@ DEFINE_CUSTOM_SCHEDULES( CController )
 	slControllerFail,
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CController, CSquadMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CController, CSquadCharacter );
 
 
 
@@ -503,7 +503,7 @@ void CController :: StartTask ( Task_t *pTask )
 	switch ( pTask->iTask )
 	{
 	case TASK_RANGE_ATTACK1:
-		CSquadMonster :: StartTask ( pTask );
+		CSquadCharacter :: StartTask ( pTask );
 		break;
 	case TASK_GET_PATH_TO_ENEMY_LKP:
 		{
@@ -542,7 +542,7 @@ void CController :: StartTask ( Task_t *pTask )
 			break;
 		}
 	default:
-		CSquadMonster :: StartTask ( pTask );
+		CSquadCharacter :: StartTask ( pTask );
 		break;
 	}
 }
@@ -654,7 +654,7 @@ void CController :: RunTask ( Task_t *pTask )
 				vecDir = vecDir + Vector( RANDOM_FLOAT( -delta, delta ), RANDOM_FLOAT( -delta, delta ), RANDOM_FLOAT( -delta, delta ) ) * gSkillData.controllerSpeedBall;
 
 				vecSrc = vecSrc + vecDir * (gpGlobals->time - m_flShootTime);
-				CBaseMonster *pBall = (CBaseMonster*)Create( "controller_energy_ball", vecSrc, pev->angles, edict() );
+				CBaseCharacter *pBall = (CBaseCharacter*)Create( "controller_energy_ball", vecSrc, pev->angles, edict() );
 				pBall->pev->velocity = vecDir;
 			}
 			m_flShootTime += 0.2;
@@ -684,7 +684,7 @@ void CController :: RunTask ( Task_t *pTask )
 			m_fInCombat = FALSE;
 		}
 
-		CSquadMonster :: RunTask ( pTask );
+		CSquadCharacter :: RunTask ( pTask );
 
 		if (!m_fInCombat)
 		{
@@ -715,7 +715,7 @@ void CController :: RunTask ( Task_t *pTask )
 		}
 		break;
 	default: 
-		CSquadMonster :: RunTask ( pTask );
+		CSquadCharacter :: RunTask ( pTask );
 		break;
 	}
 }
@@ -756,7 +756,7 @@ Schedule_t *CController :: GetSchedule ( void )
 		break;
 	}
 
-	return CSquadMonster :: GetSchedule();
+	return CSquadCharacter :: GetSchedule();
 }
 
 
@@ -781,7 +781,7 @@ Schedule_t* CController :: GetScheduleOfType ( int Type )
 		return slControllerFail;
 	}
 
-	return CBaseMonster :: GetScheduleOfType( Type );
+	return CBaseCharacter :: GetScheduleOfType( Type );
 }
 
 
@@ -820,7 +820,7 @@ BOOL CController :: CheckMeleeAttack1 ( float flDot, float flDist )
 
 void CController :: SetActivity ( Activity NewActivity )
 {
-	CBaseMonster::SetActivity( NewActivity );
+	CBaseCharacter::SetActivity( NewActivity );
 
 	switch ( m_Activity)
 	{
@@ -840,7 +840,7 @@ void CController :: SetActivity ( Activity NewActivity )
 //=========================================================
 void CController :: RunAI( void )
 {
-	CBaseMonster :: RunAI();
+	CBaseCharacter :: RunAI();
 	Vector vecStart, angleGun;
 
 	if ( HasMemory( bits_MEMORY_KILLED ) )
@@ -1136,7 +1136,7 @@ void CController::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, fl
 //=========================================================
 // Controller bouncy ball attack
 //=========================================================
-class CControllerHeadBall : public CBaseMonster
+class CControllerHeadBall : public CBaseCharacter
 {
 	void Spawn( void );
 	void Precache( void );
@@ -1335,7 +1335,7 @@ void CControllerHeadBall::BounceTouch( CBaseEntity *pOther )
 
 
 
-class CControllerZapBall : public CBaseMonster
+class CControllerZapBall : public CBaseCharacter
 {
 	void Spawn( void );
 	void Precache( void );

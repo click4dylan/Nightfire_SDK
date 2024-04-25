@@ -32,7 +32,7 @@
 #define TEMP_FOR_SCREEN_SHOTS
 #ifdef TEMP_FOR_SCREEN_SHOTS //===================================================
 
-class CCycler : public CBaseMonster
+class CCycler : public CBaseCharacter
 {
 public:
 	void GenericCyclerSpawn(const char *szModel, Vector vecMin, Vector vecMax);
@@ -58,7 +58,7 @@ TYPEDESCRIPTION	CCycler::m_SaveData[] =
 	DEFINE_FIELD( CCycler, m_animate, FIELD_INTEGER ),
 };
 
-IMPLEMENT_SAVERESTORE( CCycler, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CCycler, CBaseCharacter );
 
 
 //
@@ -388,7 +388,7 @@ void CWeaponCycler::SecondaryAttack( void )
 
 
 // Flaming Wreakage
-class CWreckage : public CBaseMonster
+class CWreckage : public CBaseCharacter
 {
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
@@ -404,7 +404,7 @@ TYPEDESCRIPTION	CWreckage::m_SaveData[] =
 {
 	DEFINE_FIELD( CWreckage, m_flStartTime, FIELD_TIME ),
 };
-IMPLEMENT_SAVERESTORE( CWreckage, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CWreckage, CBaseCharacter );
 
 
 LINK_ENTITY_TO_CLASS( cycler_wreckage, CWreckage );

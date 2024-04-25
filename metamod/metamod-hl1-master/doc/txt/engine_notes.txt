@@ -348,7 +348,7 @@ comments:
 GetEntityIllum
 
 from engine/eiface.h:
-int GetEntityIllum(edict_t *pEnt);
+int GetEntityIllum(edict_t *pEnt, bool isPlayer);
 GETENTITYILLUM()
 
 comments:
@@ -681,8 +681,7 @@ comments:
 ParticleEffect
 
 from engine/eiface.h:
-void ParticleEffect(const float *org, const float *dir, float color, float
-count);
+void ParticleEffect(const float *org, const float *dir, int red, int green, int blue, int count);
 PARTICLE_EFFECT()
 
 comments:
@@ -718,7 +717,7 @@ comments:
 PointContents
 
 from engine/eiface.h:
-int PointContents(const float *rgflVector);
+int PointContents(const float *rgflVector, int brushflags);
 POINT_CONTENTS()
 
 comments:

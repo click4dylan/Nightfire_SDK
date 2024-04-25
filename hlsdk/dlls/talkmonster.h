@@ -95,7 +95,7 @@ enum
 	LAST_TALKMONSTER_TASK,			// MUST be last
 };
 
-class CTalkMonster : public CBaseMonster
+class CTalkCharacter : public CBaseCharacter
 {
 public:
 	void			TalkInit( void );				
@@ -147,7 +147,7 @@ public:
 
 	void EXPORT		FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	
-	virtual void	SetAnswerQuestion( CTalkMonster *pSpeaker );
+	virtual void	SetAnswerQuestion( CTalkCharacter *pSpeaker );
 	virtual int		FriendNumber( int arrayNumber )	{ return arrayNumber; }
 
 	virtual int		Save( CSave &save );

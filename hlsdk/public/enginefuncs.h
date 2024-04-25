@@ -23,7 +23,7 @@ typedef struct enginefuncs_s
 	void		(*pfnChangeYaw)				(struct edict_t* ent);
 	void		(*pfnChangePitch)			(struct edict_t* ent);
 	edict_t*	(*pfnFindEntityByString)	(struct edict_t *pEdictStartSearchAfter, const char *pszField, const char *pszValue);
-	int			(*pfnGetEntityIllum)		(struct edict_t* pEnt, bool unknown);
+	int			(*pfnGetEntityIllum)		(struct edict_t* pEnt, bool isPlayer);
 	int			(*pfnGetPointIllum)			(const float* rgflVector); //added, used in CTempEnts::Sprite_Spray
 	edict_t*	(*pfnFindEntityInSphere)	(struct edict_t *pEdictStartSearchAfter, const float* org, float rad);
 	edict_t*	(*pfnFindClientInPVS)		(struct edict_t *pEdict);

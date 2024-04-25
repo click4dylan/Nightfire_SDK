@@ -13,7 +13,7 @@
 *
 ****/
 //=========================================================
-// CSquadMonster - all the extra data for monsters that
+// CSquadCharacter - all the extra data for monsters that
 // form squads.
 //=========================================================
 
@@ -51,9 +51,9 @@
 #define	MAX_SQUAD_MEMBERS	5
 
 //=========================================================
-// CSquadMonster - for any monster that forms squads.
+// CSquadCharacter - for any monster that forms squads.
 //=========================================================
-class CSquadMonster : public CBaseMonster 
+class CSquadCharacter : public CBaseCharacter 
 {
 public:
 	// squad leader info
@@ -67,7 +67,7 @@ public:
 	int		m_iMySlot;// this is the behaviour slot that the monster currently holds in the squad. 
 
 	int  CheckEnemy ( CBaseEntity *pEnemy );
-	void StartMonster ( void );
+	void StartCharacter ( void );
 	void VacateSlot( void );
 	void ScheduleChange( void );
 	void Killed( entvars_t *pevAttacker, int iGib );
@@ -75,28 +75,28 @@ public:
 	BOOL NoFriendlyFire( void );
 
 	// squad functions still left in base class
-	CSquadMonster *MySquadLeader( ) 
+	CSquadCharacter *MySquadLeader( ) 
 	{ 
-		CSquadMonster *pSquadLeader = (CSquadMonster *)((CBaseEntity *)m_hSquadLeader); 
+		CSquadCharacter *pSquadLeader = (CSquadCharacter *)((CBaseEntity *)m_hSquadLeader); 
 		if (pSquadLeader != NULL)
 			return pSquadLeader;
 		return this;
 	}
-	CSquadMonster *MySquadMember( int i ) 
+	CSquadCharacter *MySquadMember( int i ) 
 	{ 
 		if (i >= MAX_SQUAD_MEMBERS-1)
 			return this;
 		else
-			return (CSquadMonster *)((CBaseEntity *)m_hSquadMember[i]); 
+			return (CSquadCharacter *)((CBaseEntity *)m_hSquadMember[i]); 
 	}
 	int InSquad ( void ) { return m_hSquadLeader != 0; }
 	int IsLeader ( void ) { return m_hSquadLeader == this; }
 	int SquadJoin ( int searchRadius );
 	int SquadRecruit ( int searchRadius, int maxMembers );
 	int SquadCount( void );
-	void SquadRemove( CSquadMonster *pRemove );
+	void SquadRemove( CSquadCharacter *pRemove );
 	void SquadUnlink( void );
-	BOOL SquadAdd( CSquadMonster *pAdd );
+	BOOL SquadAdd( CSquadCharacter *pAdd );
 	void SquadDisband( void );
 	void SquadAddConditions ( int iConditions );
 	void SquadMakeEnemy ( CBaseEntity *pEnemy );
@@ -105,7 +105,7 @@ public:
 	BOOL SquadEnemySplit ( void );
 	BOOL SquadMemberInRange( const Vector &vecLocation, float flDist );
 
-	virtual CSquadMonster *MySquadMonsterPointer( void ) { return this; }
+	virtual CSquadCharacter *MySquadCharacterPointer( void ) { return this; }
 
 	static TYPEDESCRIPTION m_SaveData[];
 
@@ -114,7 +114,7 @@ public:
 
 	BOOL FValidateCover ( const Vector &vecCoverLocation );
 
-	MONSTERSTATE GetIdealState ( void );
+	CHARACTERSTATE GetIdealState ( void );
 	Schedule_t	*GetScheduleOfType ( int iType );
 };
 

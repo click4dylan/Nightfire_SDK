@@ -21,37 +21,78 @@
 
 #define TEAMPLAY_TEAMLISTLENGTH		MAX_TEAMS*MAX_TEAMNAME_LENGTH
 
-class CHalfLifeTeamplay : public CHalfLifeMultiplay
+//=========================================================
+// CBondTeamplay - rules for the basic half life multiplayer teamplay
+// competition
+//=========================================================
+class CBondTeamplay : public CBondMultiplay
 {
 public:
-	CHalfLifeTeamplay();
+	CBondTeamplay();
 
-	virtual BOOL ClientCommand( CBasePlayer *pPlayer, const char *pcmd );
-	virtual void ClientUserInfoChanged( CBasePlayer *pPlayer, char *infobuffer );
-	virtual BOOL IsTeamplay( void );
-	virtual BOOL FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker );
-	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
-	virtual const char *GetTeamID( CBaseEntity *pEntity );
-	virtual BOOL ShouldAutoAim( CBasePlayer *pPlayer, edict_t *target );
-	virtual int IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled );
-	virtual void InitHUD( CBasePlayer *pl );
-	virtual void DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pevInflictor );
-	virtual const char *GetGameDescription( void ) { return "HL Teamplay"; }  // this is the game name that gets seen in the server browser
-	virtual void UpdateGameMode( CBasePlayer *pPlayer );  // the client needs to be informed of the current game mode
-	virtual void PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor );
-	virtual void Think ( void );
-	virtual int GetTeamIndex( const char *pTeamName );
-	virtual const char *GetIndexedTeamName( int teamIndex );
-	virtual BOOL IsValidTeam( const char *pTeamName );
-	const char *SetDefaultPlayerTeam( CBasePlayer *pPlayer );
-	virtual void ChangePlayerTeam( CBasePlayer *pPlayer, const char *pTeamName, BOOL bKill, BOOL bGib );
+	// GR_Think
+	virtual void Think(void);
+
+	// Functions to verify the single/multiplayer status of a game
+	virtual BOOL IsTeamplay(void) { return TRUE; };// is this deathmatch game being played with team rules?
+	virtual BOOL IsCTF(void) { return FALSE; }
+	virtual const char* GetGameDescription(void) { return "HL Teamplay"; }  // this is the game name that gets seen in the server browser
+
+	// Client connection/disconnection
+		// If ClientConnected returns FALSE, the connection is rejected and the user is provided the reason specified in
+		//  svRejectReason
+		// Only the client's name and remote address are provided to the dll for verification.
+	virtual void InitHUD(CBasePlayer* pl);		// the client dll is ready for updating
+	virtual void UpdateGameMode(CBasePlayer* pPlayer);  // the client needs to be informed of the current game mode
+
+// Client damage rules
+	virtual BOOL  FPlayerCanTakeDamage(CBasePlayer* pPlayer, CBaseEntity* pAttacker);
+	virtual BOOL ShouldAutoAim(CBasePlayer* pPlayer, edict_t* target);
+
+	// Client spawn/respawn control
+
+	virtual BOOL ClientCommand(CBasePlayer* pPlayer, const char* pcmd, unsigned int numargs, const char** args);  // handles the user commands;  returns TRUE if command handled properly
+	virtual void ClientUserInfoChanged(CBasePlayer* pPlayer, char* infobuffer);		// the player has changed userinfo;  can change it now
+
+	// Client kills/scoring
+	virtual int IPointsForKill(CBasePlayer* pAttacker, CBasePlayer* pKilled);
+	virtual void PlayerKilled(CBasePlayer* pVictim, entvars_t* pKiller, entvars_t* pInflictor);
+	virtual void DeathNotice(CBasePlayer* pVictim, entvars_t* pKiller, entvars_t* pInflictor);
+
+	// Weapon retrieval
+
+// Weapon spawn/respawn control
+
+	// Item retrieval
+
+	// Item spawn/respawn control
+
+	// Ammo retrieval
+
+	// Ammo spawn/respawn control
+
+	// Healthcharger respawn control
+
+	// What happens to a dead player's weapons
+
+	// What happens to a dead player's ammo	
+
+	// Teamplay stuff	
+	virtual const char* GetTeamID(CBaseEntity* pEntity);
+	virtual int PlayerRelationship(CBaseEntity* pPlayer, CBaseEntity* pTarget);
+	virtual int GetTeamIndex(const char* pTeamName);
+	virtual const char* GetIndexedTeamName(int teamIndex);
+	virtual BOOL IsValidTeam(const char* pTeamName);
+	virtual void ChangePlayerTeam(CBasePlayer* pPlayer, const char* pTeamName, BOOL bKill, BOOL bGib);
+	virtual const char* SetDefaultPlayerTeam(CBasePlayer* pPlayer);
+
+	virtual const char* TeamWithFewestPlayers();
 
 private:
-	void RecountTeams( bool bResendInfo = FALSE );
-	const char *TeamWithFewestPlayers( void );
+	void RecountTeams(bool bResendInfo = FALSE);
 
-	BOOL m_DisableDeathMessages;
-	BOOL m_DisableDeathPenalty;
-	BOOL m_teamLimit;				// This means the server set only some teams as valid
-	char m_szTeamList[TEAMPLAY_TEAMLISTLENGTH];
+	bool_nightfire m_DisableDeathMessages;
+	bool_nightfire m_DisableDeathPenalty;
+	bool_nightfire m_teamLimit;				// This means the server set only some teams as valid
+	char m_szTeamList[TEAMPLAY_TEAMLISTLENGTH]; //512
 };

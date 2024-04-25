@@ -31,7 +31,7 @@
 //=========================================================
 #define	BARNACLE_AE_PUKEGIB	2
 
-class CBarnacle : public CBaseMonster
+class CBarnacle : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -66,7 +66,7 @@ TYPEDESCRIPTION	CBarnacle::m_SaveData[] =
 	DEFINE_FIELD( CBarnacle, m_flTongueAdj, FIELD_FLOAT ),
 };
 
-IMPLEMENT_SAVERESTORE( CBarnacle, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CBarnacle, CBaseCharacter );
 
 
 //=========================================================
@@ -92,7 +92,7 @@ void CBarnacle :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		CGib::SpawnRandomGibs( pev, 1, 1 );	
 		break;
 	default:
-		CBaseMonster::HandleAnimEvent( pEvent );
+		CBaseCharacter::HandleAnimEvent( pEvent );
 		break;
 	}
 }
@@ -137,7 +137,7 @@ int CBarnacle::TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, floa
 		flDamage = pev->health;
 	}
 
-	return CBaseMonster::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 //=========================================================
@@ -145,7 +145,7 @@ int CBarnacle::TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, floa
 void CBarnacle :: BarnacleThink ( void )
 {
 	CBaseEntity *pTouchEnt;
-	CBaseMonster *pVictim;
+	CBaseCharacter *pVictim;
 	float flLength;
 
 	pev->nextthink = gpGlobals->time + 0.1;
@@ -191,7 +191,7 @@ void CBarnacle :: BarnacleThink ( void )
 
 				EMIT_SOUND( ENT(pev), CHAN_WEAPON, "barnacle/bcl_bite3.wav", 1, ATTN_NORM );	
 
-				pVictim = m_hEnemy->MyMonsterPointer();
+				pVictim = m_hEnemy->MyCharacterPointer();
 
 				m_flKillVictimTime = gpGlobals->time + 10;// now that the victim is in place, the killing bite will be administered in 10 seconds.
 
@@ -208,7 +208,7 @@ void CBarnacle :: BarnacleThink ( void )
 		{
 	// prey is lifted fully into feeding position and is dangling there.
 
-			pVictim = m_hEnemy->MyMonsterPointer();
+			pVictim = m_hEnemy->MyCharacterPointer();
 
 			if ( m_flKillVictimTime != -1 && gpGlobals->time > m_flKillVictimTime )
 			{
@@ -320,14 +320,14 @@ void CBarnacle :: BarnacleThink ( void )
 //=========================================================
 void CBarnacle :: Killed( entvars_t *pevAttacker, int iGib )
 {
-	CBaseMonster *pVictim;
+	CBaseCharacter *pVictim;
 
 	pev->solid = SOLID_NOT;
 	pev->takedamage = DAMAGE_NO;
 
 	if ( m_hEnemy != 0 )
 	{
-		pVictim = m_hEnemy->MyMonsterPointer();
+		pVictim = m_hEnemy->MyCharacterPointer();
 
 		if ( pVictim )
 		{

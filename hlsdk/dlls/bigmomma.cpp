@@ -172,7 +172,7 @@ void MortarSpray( const Vector &position, const Vector &direction, int spriteMod
 //
 #define BIG_CHILDCLASS		"monster_babycrab"
 
-class CBigMomma : public CBaseMonster
+class CBigMomma : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -323,7 +323,7 @@ TYPEDESCRIPTION	CBigMomma::m_SaveData[] =
 	DEFINE_FIELD( CBigMomma, m_crabCount, FIELD_INTEGER ),
 };
 
-IMPLEMENT_SAVERESTORE( CBigMomma, CBaseMonster );
+IMPLEMENT_SAVERESTORE( CBigMomma, CBaseCharacter );
 
 const char *CBigMomma::pChildDieSounds[] = 
 {
@@ -397,7 +397,7 @@ void CBigMomma :: KeyValue( KeyValueData *pkvd )
 	}
 	else
 #endif
-		CBaseMonster::KeyValue( pkvd );
+		CBaseCharacter::KeyValue( pkvd );
 }
 
 //=========================================================
@@ -550,7 +550,7 @@ void CBigMomma :: HandleAnimEvent( MonsterEvent_t *pEvent )
 			break;
 
 		default:
-			CBaseMonster::HandleAnimEvent( pEvent );
+			CBaseCharacter::HandleAnimEvent( pEvent );
 			break;
 	}
 }
@@ -576,7 +576,7 @@ void CBigMomma :: TraceAttack( entvars_t *pevAttacker, float flDamage, Vector ve
 	}
 
 
-	CBaseMonster::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
+	CBaseCharacter::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
 }
 
 
@@ -596,7 +596,7 @@ int CBigMomma :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, fl
 		}
 	}
 
-	return CBaseMonster::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 void CBigMomma :: LayHeadcrab( void )
@@ -873,7 +873,7 @@ DEFINE_CUSTOM_SCHEDULES( CBigMomma )
 	slNodeFail,
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CBigMomma, CBaseMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CBigMomma, CBaseCharacter );
 
 
 
@@ -891,7 +891,7 @@ Schedule_t *CBigMomma::GetScheduleOfType( int Type )
 		break;
 	}
 
-	return CBaseMonster::GetScheduleOfType( Type );
+	return CBaseCharacter::GetScheduleOfType( Type );
 }
 
 
@@ -914,7 +914,7 @@ Schedule_t *CBigMomma::GetSchedule( void )
 		return GetScheduleOfType( SCHED_BIG_NODE );
 	}
 
-	return CBaseMonster::GetSchedule();
+	return CBaseCharacter::GetSchedule();
 }
 
 
@@ -1018,11 +1018,11 @@ void CBigMomma::StartTask( Task_t *pTask )
 	case TASK_MELEE_ATTACK1:
 		// Play an attack sound here
 		EMIT_SOUND_DYN( ENT(pev), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, PITCH_NORM );
-		CBaseMonster::StartTask( pTask );
+		CBaseCharacter::StartTask( pTask );
 		break;
 
 	default: 
-		CBaseMonster::StartTask( pTask );
+		CBaseCharacter::StartTask( pTask );
 		break;
 	}
 }
@@ -1075,7 +1075,7 @@ void CBigMomma::RunTask( Task_t *pTask )
 		break;
 
 	default:
-		CBaseMonster::RunTask( pTask );
+		CBaseCharacter::RunTask( pTask );
 		break;
 	}
 }

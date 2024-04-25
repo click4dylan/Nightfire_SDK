@@ -28,11 +28,11 @@
 
 TYPEDESCRIPTION	CBaseAnimating::m_SaveData[] = 
 {
-	DEFINE_FIELD( CBaseMonster, m_flFrameRate, FIELD_FLOAT ),
-	DEFINE_FIELD( CBaseMonster, m_flGroundSpeed, FIELD_FLOAT ),
-	DEFINE_FIELD( CBaseMonster, m_flLastEventCheck, FIELD_TIME ),
-	DEFINE_FIELD( CBaseMonster, m_fSequenceFinished, FIELD_BOOLEAN ),
-	DEFINE_FIELD( CBaseMonster, m_fSequenceLoops, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CBaseCharacter, m_flFrameRate, FIELD_FLOAT ),
+	DEFINE_FIELD( CBaseCharacter, m_flGroundSpeed, FIELD_FLOAT ),
+	DEFINE_FIELD( CBaseCharacter, m_flLastEventCheck, FIELD_TIME ),
+	DEFINE_FIELD( CBaseCharacter, m_fSequenceFinished, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CBaseCharacter, m_fSequenceLoops, FIELD_BOOLEAN ),
 };
 
 IMPLEMENT_SAVERESTORE( CBaseAnimating, CBaseDelay );

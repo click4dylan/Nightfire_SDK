@@ -114,7 +114,7 @@ edict_t *FindEntityByString(edict_t *pEdictStartSearchAfter, const char *pszFiel
 				ed ? STRING(ed->v.classname) : "nil", pszField, pszValue));
 	RETURN_META_VALUE(MRES_IGNORED, NULL);
 }
-int GetEntityIllum(edict_t *pEnt) {
+int GetEntityIllum(edict_t *pEnt, bool isPlayer) {
 	ENGINE_TRACE(pfnGetEntityIllum, P_PRE, (""));
 	RETURN_META_VALUE(MRES_IGNORED, 0);
 }
@@ -241,7 +241,7 @@ void engClientCommand(edict_t *pEdict, const char *szFmt, ...) {
 	RETURN_META(MRES_IGNORED);
 }
 
-void ParticleEffect(const float *org, const float *dir, float color, float count) {
+void ParticleEffect(const float *org, const float *dir, int red, int green, int blue, int count) {
 	ENGINE_TRACE(pfnParticleEffect, P_PRE, (""));
 	RETURN_META(MRES_IGNORED);
 }
@@ -253,7 +253,7 @@ int DecalIndex(const char *name) {
 	ENGINE_TRACE(pfnDecalIndex, P_PRE, (""));
 	RETURN_META_VALUE(MRES_IGNORED, 0);
 }
-int PointContents(const float *rgflVector) {
+int PointContents(const float *rgflVector, int brushflags) {
 	ENGINE_TRACE(pfnPointContents, P_PRE, (""));
 	RETURN_META_VALUE(MRES_IGNORED, 0);
 }

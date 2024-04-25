@@ -60,7 +60,7 @@ int CFlyingMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vec
 
 BOOL CFlyingMonster :: FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex )
 {
-	return CBaseMonster::FTriangulate( vecStart, vecEnd, flDist, pTargetEnt, pApex );
+	return CBaseCharacter::FTriangulate( vecStart, vecEnd, flDist, pTargetEnt, pApex );
 }
 
 
@@ -103,7 +103,7 @@ float CFlyingMonster :: ChangeYaw( int speed )
 		}
 		pev->angles.z = UTIL_Approach( target, pev->angles.z, 220.0 * gpGlobals->frametime );
 	}
-	return CBaseMonster::ChangeYaw( speed );
+	return CBaseCharacter::ChangeYaw( speed );
 }
 
 
@@ -113,7 +113,7 @@ void CFlyingMonster :: Killed( entvars_t *pevAttacker, int iGib )
 	ClearBits( pev->flags, FL_ONGROUND );
 	pev->angles.z = 0;
 	pev->angles.x = 0;
-	CBaseMonster::Killed( pevAttacker, iGib );
+	CBaseCharacter::Killed( pevAttacker, iGib );
 }
 
 
@@ -131,7 +131,7 @@ void CFlyingMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 	default:
-		CBaseMonster::HandleAnimEvent( pEvent );
+		CBaseCharacter::HandleAnimEvent( pEvent );
 		break;
 	}
 }
@@ -141,7 +141,7 @@ void CFlyingMonster :: Move( float flInterval )
 {
 	if ( pev->movetype == MOVETYPE_FLY )
 		m_flGroundSpeed = m_flightSpeed;
-	CBaseMonster::Move( flInterval );
+	CBaseCharacter::Move( flInterval );
 }
 
 
@@ -195,7 +195,7 @@ void CFlyingMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir,
 		}
 	}
 	else
-		CBaseMonster::MoveExecute( pTargetEnt, vecDir, flInterval );
+		CBaseCharacter::MoveExecute( pTargetEnt, vecDir, flInterval );
 }
 
 

@@ -110,7 +110,7 @@ void CHandGrenade::Holster( int skiplocal /* = 0 */ )
 	EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_NORM);
 }
 
-void CHandGrenade::PrimaryAttack()
+void CHandGrenade::PrimaryAttack(int unknown)
 {
 	if ( !m_flStartThrow && m_pPlayer->m_rgAmmo[ m_iPrimaryAmmoType ] > 0 )
 	{

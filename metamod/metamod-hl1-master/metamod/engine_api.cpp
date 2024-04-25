@@ -203,8 +203,8 @@ edict_t *mm_FindEntityByString(edict_t *pEdictStartSearchAfter, const char *pszF
 	META_ENGINE_HANDLE(edict_t *, NULL, FN_FINDENTITYBYSTRING, pfnFindEntityByString, (pEdictStartSearchAfter, pszField, pszValue));
 	RETURN_API()
 }
-int mm_GetEntityIllum(edict_t *pEnt, bool unknown) {
-	META_ENGINE_HANDLE(int, 0, FN_GETENTITYILLUM, pfnGetEntityIllum, (pEnt, unknown));
+int mm_GetEntityIllum(edict_t *pEnt, bool isPlayer) {
+	META_ENGINE_HANDLE(int, 0, FN_GETENTITYILLUM, pfnGetEntityIllum, (pEnt, isPlayer));
 	RETURN_API()
 }
 int mm_GetPointIllum(const float* pPos) {
@@ -323,7 +323,7 @@ void mm_engClientCommand(edict_t *pEdict, const char *szFmt, ...) {
 	RETURN_API_void()
 }
 
-void mm_ParticleEffect(const float *org, const float *dir, float r, float g, float b, float count) {
+void mm_ParticleEffect(const float *org, const float *dir, int red, int green, int blue, int count) {
 	META_ENGINE_HANDLE_void(FN_PARTICLEEFFECT, pfnParticleEffect, (org, dir, r, g, b, count));
 	RETURN_API_void()
 }

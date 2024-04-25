@@ -81,7 +81,7 @@ extern void mm_ChangeYaw(edict_t *ent);
 extern void mm_ChangePitch(edict_t *ent);
 
 extern edict_t *mm_FindEntityByString(edict_t *pEdictStartSearchAfter, const char *pszField, const char *pszValue);
-extern int mm_GetEntityIllum(edict_t *pEnt, bool unknown);
+extern int mm_GetEntityIllum(edict_t *pEnt, bool isPlayer);
 extern int	mm_GetPointIllum(const float* pPos);
 extern edict_t *mm_FindClientInPVS(edict_t *pEdict);
 extern edict_t *mm_EntitiesInPVS(edict_t *pplayer);
@@ -115,7 +115,7 @@ extern void mm_ServerCommand(const char *str);
 extern void mm_ServerExecute(void);
 extern void mm_engClientCommand(edict_t *pEdict, const char *szFmt, ...);
 
-extern void mm_ParticleEffect(const float *org, const float *dir, float r, float g, float b, float count);
+extern void mm_ParticleEffect(const float *org, const float *dir, int red, int green, int blue, int count);
 extern void mm_LightStyle(int style, const char *val);
 extern int mm_AllocateDecal(const char *name);
 extern int mm_DecalIndex(const char *name);

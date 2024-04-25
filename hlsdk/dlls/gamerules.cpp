@@ -115,7 +115,9 @@ void CGameRules::RefreshSkillData ( void )
 	int	iSkill;
 
 	iSkill = (int)CVAR_GET_FLOAT("skill");
-	g_iSkillLevel = iSkill;
+	
+	// NIGHTFIRE BUG: THIS ISN'T SET HERE!!!
+	//g_iSkillLevel = iSkill;
 
 	if ( iSkill < 1 )
 	{
@@ -135,7 +137,7 @@ void CGameRules::RefreshSkillData ( void )
 	gSkillData.agruntDmgPunch = GetSkillCvar( "sk_agrunt_dmg_punch");
 
 	// Apache 
-	gSkillData.apacheHealth = GetSkillCvar( "sk_apache_health");
+	gSkillData.helicopterHealth = GetSkillCvar( "sk_apache_health");
 
 	// Barney
 	gSkillData.barneyHealth = GetSkillCvar( "sk_barney_health");
@@ -290,11 +292,11 @@ void CGameRules::RefreshSkillData ( void )
 	gSkillData.scientistHeal = GetSkillCvar ( "sk_scientist_heal" );
 
 	// monster damage adj
-	gSkillData.monHead = GetSkillCvar( "sk_monster_head" );
-	gSkillData.monChest = GetSkillCvar( "sk_monster_chest" );
-	gSkillData.monStomach = GetSkillCvar( "sk_monster_stomach" );
-	gSkillData.monLeg = GetSkillCvar( "sk_monster_leg" );
-	gSkillData.monArm = GetSkillCvar( "sk_monster_arm" );
+	gSkillData.characterHead = GetSkillCvar( "sk_monster_head" );
+	gSkillData.characterChest = GetSkillCvar( "sk_monster_chest" );
+	gSkillData.characterStomach = GetSkillCvar( "sk_monster_stomach" );
+	gSkillData.characterLeg = GetSkillCvar( "sk_monster_leg" );
+	gSkillData.characterArm = GetSkillCvar( "sk_monster_arm" );
 
 	// player damage adj
 	gSkillData.plrHead = GetSkillCvar( "sk_player_head" );
@@ -317,7 +319,7 @@ CGameRules *InstallGameRules( void )
 	{
 		// generic half-life
 		g_teamplay = 0;
-		return new CHalfLifeRules;
+		return new CBondRules;
 	}
 	else
 	{
@@ -326,19 +328,19 @@ CGameRules *InstallGameRules( void )
 			// teamplay
 
 			g_teamplay = 1;
-			return new CHalfLifeTeamplay;
+			return new CBondTeamplay;
 		}
 		if ((int)gpGlobals->deathmatch == 1)
 		{
 			// vanilla deathmatch
 			g_teamplay = 0;
-			return new CHalfLifeMultiplay;
+			return new CBondMultiplay;
 		}
 		else
 		{
 			// vanilla deathmatch??
 			g_teamplay = 0;
-			return new CHalfLifeMultiplay;
+			return new CBondMultiplay;
 		}
 	}
 }

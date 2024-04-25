@@ -397,7 +397,7 @@ void CIchthyosaur :: SetYawSpeed ( void )
 //
 void CIchthyosaur :: Killed( entvars_t *pevAttacker, int iGib )
 {
-	CBaseMonster::Killed( pevAttacker, iGib );
+	CBaseCharacter::Killed( pevAttacker, iGib );
 	pev->velocity = Vector( 0, 0, 0 );
 }
 
@@ -588,7 +588,7 @@ Schedule_t* CIchthyosaur :: GetScheduleOfType ( int Type )
 		AttackSound( );
 	}
 
-	return CBaseMonster :: GetScheduleOfType( Type );
+	return CBaseCharacter :: GetScheduleOfType( Type );
 }
 
 

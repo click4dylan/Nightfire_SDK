@@ -59,7 +59,7 @@ extern void ChangeYaw_Post(edict_t *ent);
 extern void ChangePitch_Post(edict_t *ent);
 
 extern edict_t *FindEntityByString_Post(edict_t *pEdictStartSearchAfter, const char *pszField, const char *pszValue);
-extern int GetEntityIllum_Post(edict_t *pEnt);
+extern int GetEntityIllum_Post(edict_t *pEnt, bool isPlayer);
 extern edict_t *FindEntityInSphere_Post(edict_t *pEdictStartSearchAfter, const float *org, float rad);
 extern edict_t *FindClientInPVS_Post(edict_t *pEdict);
 extern edict_t *EntitiesInPVS_Post(edict_t *pplayer);
@@ -94,10 +94,10 @@ extern void ServerCommand_Post(char *str);
 extern void ServerExecute_Post(void);
 extern void ClientCommand_Post(edict_t *pEdict, char *szFmt, ...);
 
-extern void ParticleEffect_Post(const float *org, const float *dir, float color, float count);
+extern void ParticleEffect_Post(const float *org, const float *dir, int red, int green, int blue, int count);
 extern void LightStyle_Post(int style, char *val);
 extern int DecalIndex_Post(const char *name);
-extern int PointContents_Post(const float *rgflVector);
+extern int PointContents_Post(const float *rgflVector, int brushflags);
 
 extern void MessageBegin_Post(int msg_dest, int msg_type, const float *pOrigin, edict_t *ed);
 extern void MessageEnd_Post(void);

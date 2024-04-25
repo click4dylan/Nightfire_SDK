@@ -39,7 +39,7 @@ extern DLL_GLOBAL int		g_iSkillLevel;
 
 #define		ISLAVE_MAX_BEAMS	8
 
-class CISlave : public CSquadMonster
+class CISlave : public CSquadCharacter
 {
 public:
 	void Spawn( void );
@@ -111,7 +111,7 @@ TYPEDESCRIPTION	CISlave::m_SaveData[] =
 
 };
 
-IMPLEMENT_SAVERESTORE( CISlave, CSquadMonster );
+IMPLEMENT_SAVERESTORE( CISlave, CSquadCharacter );
 
 
 
@@ -156,7 +156,7 @@ int CISlave::IRelationship( CBaseEntity *pTarget )
 	if ( (pTarget->IsPlayer()) )
 		if ( (pev->spawnflags & SF_MONSTER_WAIT_UNTIL_PROVOKED ) && ! (m_afMemory & bits_MEMORY_PROVOKED ))
 			return R_NO;
-	return CBaseMonster::IRelationship( pTarget );
+	return CBaseCharacter::IRelationship( pTarget );
 }
 
 
@@ -175,7 +175,7 @@ void CISlave :: CallForHelp( const char *szClassname, float flDist, EHANDLE hEne
 		float d = (pev->origin - pEntity->pev->origin).Length();
 		if (d < flDist)
 		{
-			CBaseMonster *pMonster = pEntity->MyMonsterPointer( );
+			CBaseCharacter *pMonster = pEntity->MyCharacterPointer( );
 			if (pMonster)
 			{
 				pMonster->m_afMemory |= bits_MEMORY_PROVOKED;
@@ -271,7 +271,7 @@ int CISlave :: ISoundMask ( void)
 void CISlave::Killed( entvars_t *pevAttacker, int iGib )
 {
 	ClearBeams( );
-	CSquadMonster::Killed( pevAttacker, iGib );
+	CSquadCharacter::Killed( pevAttacker, iGib );
 }
 
 //=========================================================
@@ -443,7 +443,7 @@ void CISlave :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 		default:
-			CSquadMonster::HandleAnimEvent( pEvent );
+			CSquadCharacter::HandleAnimEvent( pEvent );
 			break;
 	}
 }
@@ -458,7 +458,7 @@ BOOL CISlave :: CheckRangeAttack1 ( float flDot, float flDist )
 		return FALSE;
 	}
 
-	return CSquadMonster::CheckRangeAttack1( flDot, flDist );
+	return CSquadCharacter::CheckRangeAttack1( flDot, flDist );
 }
 
 //=========================================================
@@ -514,7 +514,7 @@ void CISlave :: StartTask ( Task_t *pTask )
 {
 	ClearBeams( );
 
-	CSquadMonster :: StartTask ( pTask );
+	CSquadCharacter :: StartTask ( pTask );
 }
 
 
@@ -587,7 +587,7 @@ int CISlave :: TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, floa
 		return 0;
 
 	m_afMemory |= bits_MEMORY_PROVOKED;
-	return CSquadMonster::TakeDamage(pevInflictor, pevAttacker, flDamage, bitsDamageType);
+	return CSquadCharacter::TakeDamage(pevInflictor, pevAttacker, flDamage, bitsDamageType);
 }
 
 
@@ -596,7 +596,7 @@ void CISlave::TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir
 	if (bitsDamageType & DMG_SHOCK)
 		return;
 
-	CSquadMonster::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
+	CSquadCharacter::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
 }
 
 
@@ -634,7 +634,7 @@ DEFINE_CUSTOM_SCHEDULES( CISlave )
 	slSlaveAttack1,
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CISlave, CSquadMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CISlave, CSquadCharacter );
 
 
 //=========================================================
@@ -671,7 +671,7 @@ Schedule_t *CISlave :: GetSchedule( void )
 		if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 		{
 			// call base class, all code to handle dead enemies is centralized there.
-			return CBaseMonster :: GetSchedule();
+			return CBaseCharacter :: GetSchedule();
 		}
 
 		if (pev->health < 20 || m_iBravery < 0)
@@ -694,7 +694,7 @@ Schedule_t *CISlave :: GetSchedule( void )
 	default:
 		break;
 	}
-	return CSquadMonster::GetSchedule( );
+	return CSquadCharacter::GetSchedule( );
 }
 
 
@@ -705,7 +705,7 @@ Schedule_t *CISlave :: GetScheduleOfType ( int Type )
 	case SCHED_FAIL:
 		if (HasConditions( bits_COND_CAN_MELEE_ATTACK1 ))
 		{
-			return CSquadMonster :: GetScheduleOfType( SCHED_MELEE_ATTACK1 ); ;
+			return CSquadCharacter :: GetScheduleOfType( SCHED_MELEE_ATTACK1 ); ;
 		}
 		break;
 	case SCHED_RANGE_ATTACK1:
@@ -713,7 +713,7 @@ Schedule_t *CISlave :: GetScheduleOfType ( int Type )
 	case SCHED_RANGE_ATTACK2:
 		return slSlaveAttack1;
 	}
-	return CSquadMonster :: GetScheduleOfType( Type );
+	return CSquadCharacter :: GetScheduleOfType( Type );
 }
 
 

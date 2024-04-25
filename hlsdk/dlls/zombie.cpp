@@ -34,7 +34,7 @@
 
 #define ZOMBIE_FLINCH_DELAY			2		// at most one flinch every n secs
 
-class CZombie : public CBaseMonster
+class CZombie : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -149,7 +149,7 @@ int CZombie :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, floa
 	// HACK HACK -- until we fix this.
 	if ( IsAlive() )
 		PainSound();
-	return CBaseMonster::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 void CZombie :: PainSound( void )
@@ -257,7 +257,7 @@ void CZombie :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 		default:
-			CBaseMonster::HandleAnimEvent( pEvent );
+			CBaseCharacter::HandleAnimEvent( pEvent );
 			break;
 	}
 }
@@ -281,7 +281,7 @@ void CZombie :: Spawn()
 	m_MonsterState		= MONSTERSTATE_NONE;
 	m_afCapability		= bits_CAP_DOORS_GROUP;
 
-	MonsterInit();
+	CharacterInit();
 }
 
 //=========================================================
@@ -320,7 +320,7 @@ void CZombie :: Precache()
 
 int CZombie::IgnoreConditions ( void )
 {
-	int iIgnore = CBaseMonster::IgnoreConditions();
+	int iIgnore = CBaseCharacter::IgnoreConditions();
 
 	if ((m_Activity == ACT_MELEE_ATTACK1) || (m_Activity == ACT_MELEE_ATTACK1))
 	{

@@ -28,7 +28,7 @@
 // Monster's Anim Events Go Here
 //=========================================================
 
-class CGenericMonster : public CBaseMonster
+class CGenericMonster : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -77,7 +77,7 @@ void CGenericMonster :: HandleAnimEvent( MonsterEvent_t *pEvent )
 	{
 	case 0:
 	default:
-		CBaseMonster::HandleAnimEvent( pEvent );
+		CBaseCharacter::HandleAnimEvent( pEvent );
 		break;
 	}
 }

@@ -1,3 +1,7 @@
+// no voice in nightfire
+
+#if 0
+
 //========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
 //
 // Purpose: 
@@ -32,11 +36,11 @@ CPlayerBitVec	g_SentGameRulesMasks[VOICE_MAX_PLAYERS];	// These store the masks 
 CPlayerBitVec	g_SentBanMasks[VOICE_MAX_PLAYERS];			// we need to resend them.
 CPlayerBitVec	g_bWantModEnable;
 
-cvar_t voice_serverdebug = {"voice_serverdebug", "0"};
+IConsoleVariable voice_serverdebug = {"voice_serverdebug", "0"};
 
 // Set game rules to allow all clients to talk to each other.
 // Muted players still can't talk to each other.
-cvar_t sv_alltalk = {"sv_alltalk", "0", FCVAR_SERVER};
+IConsoleVariable sv_alltalk = {"sv_alltalk", "0", FCVAR_SERVER};
 
 // ------------------------------------------------------------------------ //
 // Static helpers.
@@ -274,3 +278,5 @@ void CVoiceGameMgr::UpdateMasks()
 		}
 	}
 }
+
+#endif

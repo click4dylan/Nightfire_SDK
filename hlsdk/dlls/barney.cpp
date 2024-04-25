@@ -40,7 +40,7 @@
 #define	BARNEY_BODY_GUNDRAWN		1
 #define BARNEY_BODY_GUNGONE			2
 
-class CBarney : public CTalkMonster
+class CBarney : public CTalkCharacter
 {
 public:
 	void Spawn( void );
@@ -54,7 +54,7 @@ public:
 	
 	void RunTask( Task_t *pTask );
 	void StartTask( Task_t *pTask );
-	virtual int	ObjectCaps( void ) { return CTalkMonster :: ObjectCaps() | FCAP_IMPULSE_USE; }
+	virtual int	ObjectCaps( void ) { return CTalkCharacter :: ObjectCaps() | FCAP_IMPULSE_USE; }
 	int TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType);
 	BOOL CheckRangeAttack1 ( float flDot, float flDist );
 	
@@ -63,7 +63,7 @@ public:
 	// Override these to set behavior
 	Schedule_t *GetScheduleOfType ( int Type );
 	Schedule_t *GetSchedule ( void );
-	MONSTERSTATE GetIdealState ( void );
+	CHARACTERSTATE GetIdealState ( void );
 
 	void DeathSound( void );
 	void PainSound( void );
@@ -99,7 +99,7 @@ TYPEDESCRIPTION	CBarney::m_SaveData[] =
 	DEFINE_FIELD( CBarney, m_flPlayerDamage, FIELD_FLOAT ),
 };
 
-IMPLEMENT_SAVERESTORE( CBarney, CTalkMonster );
+IMPLEMENT_SAVERESTORE( CBarney, CTalkCharacter );
 
 //=========================================================
 // AI Schedules Specific to this monster
@@ -213,11 +213,11 @@ DEFINE_CUSTOM_SCHEDULES( CBarney )
 };
 
 
-IMPLEMENT_CUSTOM_SCHEDULES( CBarney, CTalkMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CBarney, CTalkCharacter );
 
 void CBarney :: StartTask( Task_t *pTask )
 {
-	CTalkMonster::StartTask( pTask );	
+	CTalkCharacter::StartTask( pTask );	
 }
 
 void CBarney :: RunTask( Task_t *pTask )
@@ -229,10 +229,10 @@ void CBarney :: RunTask( Task_t *pTask )
 		{
 			pev->framerate = 1.5;
 		}
-		CTalkMonster::RunTask( pTask );
+		CTalkCharacter::RunTask( pTask );
 		break;
 	default:
-		CTalkMonster::RunTask( pTask );
+		CTalkCharacter::RunTask( pTask );
 		break;
 	}
 }
@@ -396,7 +396,7 @@ void CBarney :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 	default:
-		CTalkMonster::HandleAnimEvent( pEvent );
+		CTalkCharacter::HandleAnimEvent( pEvent );
 	}
 }
 
@@ -448,14 +448,14 @@ void CBarney :: Precache()
 	// every new barney must call this, otherwise
 	// when a level is loaded, nobody will talk (time is reset to 0)
 	TalkInit();
-	CTalkMonster::Precache();
+	CTalkCharacter::Precache();
 }	
 
 // Init talk data
 void CBarney :: TalkInit()
 {
 	
-	CTalkMonster::TalkInit();
+	CTalkCharacter::TalkInit();
 
 	// scientists speach group names (group names are in sentences.txt)
 
@@ -509,7 +509,7 @@ static BOOL IsFacing( entvars_t *pevTest, const Vector &reference )
 int CBarney :: TakeDamage( entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
 {
 	// make sure friends talk about it if player hurts talkmonsters...
-	int ret = CTalkMonster::TakeDamage(pevInflictor, pevAttacker, flDamage, bitsDamageType);
+	int ret = CTalkCharacter::TakeDamage(pevInflictor, pevAttacker, flDamage, bitsDamageType);
 	if ( !IsAlive() || pev->deadflag == DEAD_DYING )
 		return ret;
 
@@ -605,7 +605,7 @@ void CBarney::TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir
 		break;
 	}
 
-	CTalkMonster::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
+	CTalkCharacter::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
 }
 
 
@@ -624,7 +624,7 @@ void CBarney::Killed( entvars_t *pevAttacker, int iGib )
 	}
 
 	SetUse( NULL );	
-	CTalkMonster::Killed( pevAttacker, iGib );
+	CTalkCharacter::Killed( pevAttacker, iGib );
 }
 
 //=========================================================
@@ -649,7 +649,7 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 	case SCHED_TARGET_FACE:
 		// call base class default so that barney will talk
 		// when 'used' 
-		psched = CTalkMonster::GetScheduleOfType(Type);
+		psched = CTalkCharacter::GetScheduleOfType(Type);
 
 		if (psched == slIdleStand)
 			return slBaFaceTarget;	// override this for different target face behavior
@@ -662,7 +662,7 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 	case SCHED_IDLE_STAND:
 		// call base class default so that scientist will talk
 		// when standing during idle
-		psched = CTalkMonster::GetScheduleOfType(Type);
+		psched = CTalkCharacter::GetScheduleOfType(Type);
 
 		if (psched == slIdleStand)
 		{
@@ -673,7 +673,7 @@ Schedule_t* CBarney :: GetScheduleOfType ( int Type )
 			return psched;	
 	}
 
-	return CTalkMonster::GetScheduleOfType( Type );
+	return CTalkCharacter::GetScheduleOfType( Type );
 }
 
 //=========================================================
@@ -706,7 +706,7 @@ Schedule_t *CBarney :: GetSchedule ( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseCharacter :: GetSchedule();
 			}
 
 			// always act surprized with a new enemy
@@ -760,12 +760,12 @@ Schedule_t *CBarney :: GetSchedule ( void )
 		break;
 	}
 	
-	return CTalkMonster::GetSchedule();
+	return CTalkCharacter::GetSchedule();
 }
 
-MONSTERSTATE CBarney :: GetIdealState ( void )
+CHARACTERSTATE CBarney :: GetIdealState ( void )
 {
-	return CTalkMonster::GetIdealState();
+	return CTalkCharacter::GetIdealState();
 }
 
 
@@ -789,7 +789,7 @@ void CBarney::DeclineFollowing( void )
 // the m_iFirstPose properly!
 //
 //=========================================================
-class CDeadBarney : public CBaseMonster
+class CDeadBarney : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -811,7 +811,7 @@ void CDeadBarney::KeyValue( KeyValueData *pkvd )
 		pkvd->fHandled = TRUE;
 	}
 	else 
-		CBaseMonster::KeyValue( pkvd );
+		CBaseCharacter::KeyValue( pkvd );
 }
 
 LINK_ENTITY_TO_CLASS( monster_barney_dead, CDeadBarney );

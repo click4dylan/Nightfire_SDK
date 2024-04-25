@@ -36,6 +36,7 @@
 #include "game.h"
 #include "pm_shared.h"
 #include "hltv.h"
+#include "gamerules.h"
 
 // #define DUCKFIX
 
@@ -375,7 +376,7 @@ void CBasePlayer :: DeathSound( void )
 
 int CBasePlayer :: TakeHealth( float flHealth, int bitsDamageType )
 {
-	return CBaseMonster :: TakeHealth (flHealth, bitsDamageType);
+	return CBaseCharacter :: TakeHealth (flHealth, bitsDamageType);
 
 }
 
@@ -504,7 +505,7 @@ int CBasePlayer :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, 
 
 	// this cast to INT is critical!!! If a player ends up with 0.5 health, the engine will get that
 	// as an int (zero) and think the player is dead! (this will incite a clientside screentilt, etc)
-	fTookDamage = CBaseMonster::TakeDamage(pevInflictor, pevAttacker, (int)flDamage, bitsDamageType);
+	fTookDamage = CBaseCharacter::TakeDamage(pevInflictor, pevAttacker, (int)flDamage, bitsDamageType);
 
 	// reset damage time countdown for each type of time based damage player just sustained
 
@@ -931,7 +932,7 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
 	if ( ( pev->health < -40 && iGib != GIB_NEVER ) || iGib == GIB_ALWAYS )
 	{
 		pev->solid			= SOLID_NOT;
-		GibMonster();	// This clears pev->model
+		GibCharacter();	// This clears pev->model
 		pev->effects |= EF_NODRAW;
 		return;
 	}
@@ -1117,29 +1118,17 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	ResetSequenceInfo( );
 }
 
-/*
-===========
-TabulateAmmo
-This function is used to find and store 
-all the ammo we have into the ammo vars.
-============
-*/
-void CBasePlayer::TabulateAmmo()
+enum HitEntType
 {
-	ammo_9mm = AmmoInventory( GetAmmoIndex( "9mm" ) );
-	ammo_357 = AmmoInventory( GetAmmoIndex( "357" ) );
-	ammo_argrens = AmmoInventory( GetAmmoIndex( "ARgrenades" ) );
-	ammo_bolts = AmmoInventory( GetAmmoIndex( "bolts" ) );
-	ammo_buckshot = AmmoInventory( GetAmmoIndex( "buckshot" ) );
-	ammo_rockets = AmmoInventory( GetAmmoIndex( "rockets" ) );
-	ammo_uranium = AmmoInventory( GetAmmoIndex( "uranium" ) );
-	ammo_hornets = AmmoInventory( GetAmmoIndex( "Hornets" ) );
-}
-
+	TYPE_NONE = 0,
+	TYPE_NPC,
+	TYPE_BREAKABLE
+};
 
 //Nightfire
 Vector CBasePlayer::FirePredictedBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting, float flSpread, float flDistance, int iBulletType)
 {
+
 	TraceResult tr;
 	Vector vecRight = gpGlobals->v_right;
 	Vector vecUp = gpGlobals->v_up;
@@ -1150,22 +1139,19 @@ Vector CBasePlayer::FirePredictedBullets(ULONG cShots, Vector vecSrc, Vector vec
 	gMultiDamage.type = DMG_BULLET | DMG_NEVERGIB;
 
 	entvars_t* pevAttacker = pev;
-	CBaseEntity* shooter = nullptr;
-	if (pevAttacker && g_engfuncs.pfnEntOffsetOfPEntity(pevAttacker->pContainingEntity))
-		shooter = CBaseEntity::Instance(pevAttacker);
+	CBaseEntity* pAttacker = nullptr;
+	if (!FNullEnt(pevAttacker))
+		pAttacker = CBaseEntity::Instance(pevAttacker);
 
-	if (shooter && shooter->IsPlayer())
-		shooter->IncrementNumShots();
-	else
-		shooter = nullptr;
+	if (pAttacker && pAttacker->IsPlayer())
+		pAttacker->IncrementNumShots();
 
-	int entity_type_hit = 0;
+	HitEntType entity_type_hit = TYPE_NONE;
 
 	for (ULONG iShot = 1; iShot <= cShots; iShot++)
 	{
 		CBaseEntity* pEntity = this;
-		int num_walls_hit = 0;
-		bool bullet_blocked = false;
+		bool bBulletStopped = false;
 
 		//Use player's random seed.
 		// get circular gaussian spread
@@ -1184,17 +1170,18 @@ Vector CBasePlayer::FirePredictedBullets(ULONG cShots, Vector vecSrc, Vector vec
 			y * flSpread * vecUp;
 		Vector vecEnd = vecSrc + vecDir * flDistance;
 
-		while (num_walls_hit < 2 && !bullet_blocked)
+		for (ULONG nPenetrations = 0; !bBulletStopped && nPenetrations < 2; ++nPenetrations)
 		{
-			UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, 0, pEntity->pev->pContainingEntity, &tr);
+			UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, 0, pEntity->edict(), &tr);
 
 			if (tr.flFraction != 1.0)
 			{
-				if (tr.pHit && g_engfuncs.pfnEntOffsetOfPEntity(tr.pHit))
+				if (!FNullEnt(tr.pHit))
 					pEntity = CBaseEntity::Instance(tr.pHit);
 
+				// did we hit ourselves?
 				if (entindex() == pEntity->entindex())
-					continue;
+					break;
 
 				float recoil_force = 0.0f;
 
@@ -1277,11 +1264,11 @@ Vector CBasePlayer::FirePredictedBullets(ULONG cShots, Vector vecSrc, Vector vec
 				pev->velocity[2] += vecDir * -force;
 			}
 
-			// check what we hit
+			// check what we hit, prioritize npcs
 			if (pEntity->MyCharacterPointer())
-				entity_type_hit = 1; // hit npc
-			else if (entity_type_hit != 1 && pEntity->pev->takedamage != 0)
-				entity_type_hit = 2; // hit breakable object
+				entity_type_hit = HitEntType::TYPE_NPC;
+			else if (entity_type_hit != HitEntType::TYPE_NPC && pEntity->pev->takedamage != 0)
+				entity_type_hit = HitEntType::TYPE_BREAKABLE;
 
 			// notify enemies at endpos
 			if (m_iWeaponVolume == NORMAL_WEAPON_VOLUME)
@@ -1290,43 +1277,208 @@ Vector CBasePlayer::FirePredictedBullets(ULONG cShots, Vector vecSrc, Vector vec
 				CSoundEnt::InsertSound(4, tr.vecEndPos, angles, 256, 1.0f);
 			}
 
-			// allow bullet penetration
+			// check object if allows bullet penetration
 			if (pEntity->pev->solid == SOLID_BSP && (pEntity->pev->spawnflags & SF_ALLOW_BULLETS) != 0)
 			{
-				bullet_blocked = false;
-
 				vecSrc[0] = tr.vecEndPos[0] + vecDir[0];
 				vecSrc[1] = tr.vecEndPos[1] + vecDir[1];
 				vecSrc[2] = tr.vecEndPos[2] + vecDir[2];
 			}
 			else
 			{
-				bullet_blocked = true;
-
 				vecSrc[0] = tr.vecEndPos[0];
 				vecSrc[1] = tr.vecEndPos[1];
 				vecSrc[2] = tr.vecEndPos[2];
+
+				bBulletStopped = true;
 			}
 
 			// make bullet trails
 			UTIL_BubbleTrail(vecSrc, tr.vecEndPos, static_cast<int>((flDistance* tr.flFraction) / 64.0));
-
-			++num_walls_hit;
 		}
 	}
 
-	if (shooter && entity_type_hit)
+	if (pAttacker && entity_type_hit)
 	{
-		if (entity_type_hit == 2)
-			shooter->DecrementNumShots();
+		if (entity_type_hit == HitEntType::TYPE_BREAKABLE)
+			pAttacker->DecrementNumShots();
 		else
-			shooter->IncrementNumShotsHitEnemies();
+			pAttacker->IncrementNumShotsHitEnemies();
 	}
 
 	g_pGameRules->ShotFired(pev);
 	ApplyMultiDamage(pev, pevAttacker);
 
 	return Vector(x * flSpread, y * flSpread, 0.0);
+}
+
+void CBasePlayer::PlayStepSound(int step, float fvol)
+{
+	static int iSkipStep = 0;
+	int irand;
+	vec3_t hvel;
+
+	if (!g_pGameRules->PlayFootstepSounds(this, fvol))
+		return;
+
+	irand = g_engfuncs.pfnRandomLong(0, 1) + (m_iStepLeft * 2);
+
+	m_iStepLeft = !m_iStepLeft;
+
+	// irand - 0,1 for right foot, 2,3 for left foot
+	// used to alternate left and right foot
+	// FIXME, move to player state
+
+	switch (step)
+	{
+	default:
+	case STEP_CONCRETE:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_step1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_step3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_step2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_step4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_METAL:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_metal1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_metal3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_metal2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_metal4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_DIRT:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_dirt1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_dirt3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_dirt2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_dirt4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_VENT:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_duct1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_duct3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_duct2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_duct4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_GRATE:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_grate1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_grate3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_grate2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_grate4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_TILE:
+		if (!g_engfuncs.pfnRandomLong(0, 4))
+			irand = 4;
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_tile1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_tile3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_tile2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_tile4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 4: EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_tile5.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_SLOSH:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_slosh1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_slosh3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_slosh2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_slosh4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_WADE:
+		if (iSkipStep == 0)
+		{
+			iSkipStep++;
+			break;
+		}
+
+		if (iSkipStep++ == 3)
+		{
+			iSkipStep = 0;
+		}
+
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_wade1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_wade2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_wade3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_wade4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_LADDER:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_ladder1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_ladder3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_ladder2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_ladder4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_SNOW:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_snow1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_snow3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_snow2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_snow4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_SAND:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_sand1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_sand3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_sand2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_sand4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_CARPET:
+		switch (irand)
+		{
+			// right foot
+		case 0:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_carpet1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_carpet3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_carpet2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	EMIT_SOUND_DYN(edict(), CHAN_BODY, "player/pl_carpet4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	}
 }
 
 /*
@@ -1926,109 +2078,6 @@ void CBasePlayer::AddPointsToTeam( int score, BOOL bAllowNegativeScore )
 		}
 	}
 }
-
-//Player ID
-void CBasePlayer::InitStatusBar()
-{
-	m_flStatusBarDisappearDelay = 0;
-	m_SbarString1[0] = m_SbarString0[0] = 0; 
-}
-
-void CBasePlayer::UpdateStatusBar()
-{
-	int newSBarState[ SBAR_END ];
-	char sbuf0[ SBAR_STRING_SIZE ];
-	char sbuf1[ SBAR_STRING_SIZE ];
-
-	memset( newSBarState, 0, sizeof(newSBarState) );
-	strcpy( sbuf0, m_SbarString0 );
-	strcpy( sbuf1, m_SbarString1 );
-
-	// Find an ID Target
-	TraceResult tr;
-	UTIL_MakeVectors( pev->v_angle + pev->punchangle );
-	Vector vecSrc = EyePosition();
-	Vector vecEnd = vecSrc + (gpGlobals->v_forward * MAX_ID_RANGE);
-	UTIL_TraceLine( vecSrc, vecEnd, dont_ignore_monsters, edict(), &tr);
-
-	if (tr.flFraction != 1.0)
-	{
-		if ( !FNullEnt( tr.pHit ) )
-		{
-			CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
-
-			if (pEntity->Classify() == CLASS_PLAYER )
-			{
-				newSBarState[ SBAR_ID_TARGETNAME ] = ENTINDEX( pEntity->edict() );
-				strcpy( sbuf1, "1 %p1\n2 Health: %i2%%\n3 Armor: %i3%%" );
-
-				// allies and medics get to see the targets health
-				if ( g_pGameRules->PlayerRelationship( this, pEntity ) == GR_TEAMMATE )
-				{
-					newSBarState[ SBAR_ID_TARGETHEALTH ] = static_cast<int>(100 * (pEntity->pev->health / pEntity->pev->max_health));
-					newSBarState[ SBAR_ID_TARGETARMOR ] = static_cast<int>(pEntity->pev->armorvalue); //No need to get it % based since 100 it's the max.
-				}
-
-				m_flStatusBarDisappearDelay = gpGlobals->time + 1.0;
-			}
-		}
-		else if ( m_flStatusBarDisappearDelay > gpGlobals->time )
-		{
-			// hold the values for a short amount of time after viewing the object
-			newSBarState[ SBAR_ID_TARGETNAME ] = m_izSBarState[ SBAR_ID_TARGETNAME ];
-			newSBarState[ SBAR_ID_TARGETHEALTH ] = m_izSBarState[ SBAR_ID_TARGETHEALTH ];
-			newSBarState[ SBAR_ID_TARGETARMOR ] = m_izSBarState[ SBAR_ID_TARGETARMOR ];
-		}
-	}
-
-	BOOL bForceResend = FALSE;
-
-	if ( strcmp( sbuf0, m_SbarString0 ) )
-	{
-		MESSAGE_BEGIN( MSG_ONE, gmsgStatusText, NULL, pev );
-			WRITE_BYTE( 0 );
-			WRITE_STRING( sbuf0 );
-		MESSAGE_END();
-
-		strcpy( m_SbarString0, sbuf0 );
-
-		// make sure everything's resent
-		bForceResend = TRUE;
-	}
-
-	if ( strcmp( sbuf1, m_SbarString1 ) )
-	{
-		MESSAGE_BEGIN( MSG_ONE, gmsgStatusText, NULL, pev );
-			WRITE_BYTE( 1 );
-			WRITE_STRING( sbuf1 );
-		MESSAGE_END();
-
-		strcpy( m_SbarString1, sbuf1 );
-
-		// make sure everything's resent
-		bForceResend = TRUE;
-	}
-
-	// Check values and send if they don't match
-	for (int i = 1; i < SBAR_END; i++)
-	{
-		if ( newSBarState[i] != m_izSBarState[i] || bForceResend )
-		{
-			MESSAGE_BEGIN( MSG_ONE, gmsgStatusValue, NULL, pev );
-				WRITE_BYTE( i );
-				WRITE_SHORT( newSBarState[i] );
-			MESSAGE_END();
-
-			m_izSBarState[i] = newSBarState[i];
-		}
-	}
-}
-
-
-
-
-
-
 
 
 
@@ -3177,7 +3226,7 @@ void CBasePlayer :: Precache( void )
 
 int CBasePlayer::Save( CSave &save )
 {
-	if ( !CBaseMonster::Save(save) )
+	if ( !CBaseCharacter::Save(save) )
 		return 0;
 
 	return save.WriteFields( "PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData) );
@@ -3195,7 +3244,7 @@ void CBasePlayer::RenewItems(void)
 
 int CBasePlayer::Restore( CRestore &restore )
 {
-	if ( !CBaseMonster::Restore(restore) )
+	if ( !CBaseCharacter::Restore(restore) )
 		return 0;
 
 	int status = restore.ReadFields( "PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData) );
@@ -3247,7 +3296,7 @@ int CBasePlayer::Restore( CRestore &restore )
 	RenewItems();
 
 #if defined( CLIENT_WEAPONS )
-	// HACK:	This variable is saved/restored in CBaseMonster as a time variable, but we're using it
+	// HACK:	This variable is saved/restored in CBaseCharacter as a time variable, but we're using it
 	//			as just a counter.  Ideally, this needs its own variable that's saved as a plain float.
 	//			Barring that, we clear it out here instead of using the incorrect restored time value.
 	m_flNextAttack = UTIL_WeaponTimeBase();
@@ -3764,7 +3813,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		pEntity = FindEntityForward( this );
 		if ( pEntity )
 		{
-			CBaseMonster *pMonster = pEntity->MyMonsterPointer();
+			CBaseCharacter *pMonster = pEntity->MyCharacterPointer();
 			if ( pMonster )
 				pMonster->ReportAIState();
 		}
@@ -4010,8 +4059,6 @@ int CBasePlayer :: GiveAmmo( int iCount, const char *szName, int iMax )
 			WRITE_BYTE( iAdd );		// amount
 		MESSAGE_END();
 	}
-
-	TabulateAmmo();
 
 	return i;
 }
@@ -4856,7 +4903,7 @@ BOOL CBasePlayer :: SwitchWeapon( CBasePlayerItem *pWeapon )
 //=========================================================
 // Dead HEV suit prop
 //=========================================================
-class CDeadHEV : public CBaseMonster
+class CDeadHEV : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -4878,7 +4925,7 @@ void CDeadHEV::KeyValue( KeyValueData *pkvd )
 		pkvd->fHandled = TRUE;
 	}
 	else 
-		CBaseMonster::KeyValue( pkvd );
+		CBaseCharacter::KeyValue( pkvd );
 }
 
 LINK_ENTITY_TO_CLASS( monster_hevsuit_dead, CDeadHEV );

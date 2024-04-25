@@ -188,11 +188,12 @@ static cell AMX_NATIVE_CALL engfunc(AMX *amx, cell *params)
 
 
 		// pfnGetEntityIllum
-	case	EngFunc_GetEntityIllum:		// int	)		(edict_t* pEnt);
+	case	EngFunc_GetEntityIllum:		// int	)		(edict_t* pEnt, bool isPlayer);
 		cRet = MF_GetAmxAddr(amx,params[2]);
 		index=cRet[0];
 		CHECK_ENTITY(index);
-		return (*g_engfuncs.pfnGetEntityIllum)(TypeConversion.id_to_edict(index));
+		cRet = MF_GetAmxAddr(amx,params[3]);
+		return (*g_engfuncs.pfnGetEntityIllum)(TypeConversion.id_to_edict(index), cRet[0]);
 
 
 		// pfnFindEntityInSphere
@@ -577,7 +578,7 @@ static cell AMX_NATIVE_CALL engfunc(AMX *amx, cell *params)
 
 
 		// pfnParticleEffect
-	case	EngFunc_ParticleEffect:		// void )		(const float *org, const float *dir, float color, float count);
+	case	EngFunc_ParticleEffect:		// void )		(const float *org, const float *dir, int red, int green, int blue, int count);
 		cRet = MF_GetAmxAddr(amx,params[2]);
 		Vec1[0]=amx_ctof(cRet[0]);
 		Vec1[1]=amx_ctof(cRet[1]);
@@ -586,11 +587,11 @@ static cell AMX_NATIVE_CALL engfunc(AMX *amx, cell *params)
 		Vec2[0]=amx_ctof(cRet[0]);
 		Vec2[1]=amx_ctof(cRet[1]);
 		Vec2[2]=amx_ctof(cRet[2]);
-		cRet = MF_GetAmxAddr(amx,params[4]);
-		fparam1=amx_ctof(cRet[0]);
-		cRet = MF_GetAmxAddr(amx,params[5]);
-		fparam2=amx_ctof(cRet[0]);
-		(*g_engfuncs.pfnParticleEffect)(Vec1,Vec2,fparam1,fparam2);
+		iparam1=params[4]
+		iparam2=params[5];
+		iparam3=params[6];
+		iparam4=params[7];
+		(*g_engfuncs.pfnParticleEffect)(Vec1,Vec2,iparam1,iparam2,iparam3,iparam4);
 		return 1;
 
 		
@@ -615,12 +616,12 @@ static cell AMX_NATIVE_CALL engfunc(AMX *amx, cell *params)
 
 
 		// pfnPointContents
-	case	EngFunc_PointContents:		// int )			(const float *rgflVector);
+	case	EngFunc_PointContents:		// int )			(const float *rgflVector, int brushflags);
 		cRet = MF_GetAmxAddr(amx,params[2]);
 		Vec1[0]=amx_ctof(cRet[0]);
 		Vec1[1]=amx_ctof(cRet[1]);
 		Vec1[2]=amx_ctof(cRet[2]);
-		return (*g_engfuncs.pfnPointContents)(Vec1);
+		return (*g_engfuncs.pfnPointContents)(Vec1, params[3]);
 
 
 		// pfnFreeEntPrivateData

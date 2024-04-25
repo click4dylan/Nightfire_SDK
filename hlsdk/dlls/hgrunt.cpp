@@ -120,7 +120,7 @@ enum
 //=========================================================
 #define bits_COND_GRUNT_NOFIRE	( bits_COND_SPECIAL1 )
 
-class CHGrunt : public CSquadMonster
+class CHGrunt : public CSquadCharacter
 {
 public:
 	void Spawn( void );
@@ -205,7 +205,7 @@ TYPEDESCRIPTION	CHGrunt::m_SaveData[] =
 	DEFINE_FIELD( CHGrunt, m_iSentence, FIELD_INTEGER ),
 };
 
-IMPLEMENT_SAVERESTORE( CHGrunt, CSquadMonster );
+IMPLEMENT_SAVERESTORE( CHGrunt, CSquadCharacter );
 
 const char *CHGrunt::pGruntSentences[] = 
 {
@@ -268,7 +268,7 @@ int CHGrunt::IRelationship ( CBaseEntity *pTarget )
 		return R_NM;
 	}
 
-	return CSquadMonster::IRelationship( pTarget );
+	return CSquadCharacter::IRelationship( pTarget );
 }
 
 //=========================================================
@@ -309,7 +309,7 @@ void CHGrunt :: GibMonster ( void )
 		}
 	}
 
-	CBaseMonster :: GibMonster();
+	CBaseCharacter :: GibMonster();
 }
 
 //=========================================================
@@ -331,7 +331,7 @@ int CHGrunt :: ISoundMask ( void )
 BOOL CHGrunt :: FOkToSpeak( void )
 {
 // if someone else is talking, don't speak
-	if (gpGlobals->time <= CTalkMonster::g_talkWaitTime)
+	if (gpGlobals->time <= CTalkCharacter::g_talkWaitTime)
 		return FALSE;
 
 	if ( pev->spawnflags & SF_MONSTER_GAG )
@@ -354,7 +354,7 @@ BOOL CHGrunt :: FOkToSpeak( void )
 //=========================================================
 void CHGrunt :: JustSpoke( void )
 {
-	CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(1.5, 2.0);
+	CTalkCharacter::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(1.5, 2.0);
 	m_iSentence = HGRUNT_SENT_NONE;
 }
 
@@ -412,11 +412,11 @@ BOOL CHGrunt :: FCanCheckAttacks ( void )
 //=========================================================
 BOOL CHGrunt :: CheckMeleeAttack1 ( float flDot, float flDist )
 {
-	CBaseMonster *pEnemy = NULL;
+	CBaseCharacter *pEnemy = NULL;
 
 	if ( m_hEnemy != 0 )
 	{
-		pEnemy = m_hEnemy->MyMonsterPointer();
+		pEnemy = m_hEnemy->MyCharacterPointer();
 
 		if ( !pEnemy )
 		{
@@ -620,7 +620,7 @@ void CHGrunt :: TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecD
 		// it's head shot anyways
 		ptr->iHitgroup = HITGROUP_HEAD;
 	}
-	CSquadMonster::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
+	CSquadCharacter::TraceAttack( pevAttacker, flDamage, vecDir, ptr, bitsDamageType );
 }
 
 
@@ -633,7 +633,7 @@ int CHGrunt :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, floa
 {
 	Forget( bits_MEMORY_INCOVER );
 
-	return CSquadMonster :: TakeDamage ( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CSquadCharacter :: TakeDamage ( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 //=========================================================
@@ -968,7 +968,7 @@ void CHGrunt :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		}
 
 		default:
-			CSquadMonster::HandleAnimEvent( pEvent );
+			CSquadCharacter::HandleAnimEvent( pEvent );
 			break;
 	}
 }
@@ -1035,7 +1035,7 @@ void CHGrunt :: Spawn()
 		pev->skin = 1; // alway dark skin
 	}
 
-	CTalkMonster::g_talkWaitTime = 0;
+	CTalkCharacter::g_talkWaitTime = 0;
 
 	MonsterInit();
 }
@@ -1104,7 +1104,7 @@ void CHGrunt :: StartTask ( Task_t *pTask )
 	case TASK_RUN_PATH:
 		// grunt no longer assumes he is covered if he moves
 		Forget( bits_MEMORY_INCOVER );
-		CSquadMonster ::StartTask( pTask );
+		CSquadCharacter ::StartTask( pTask );
 		break;
 
 	case TASK_RELOAD:
@@ -1116,7 +1116,7 @@ void CHGrunt :: StartTask ( Task_t *pTask )
 
 	case TASK_FACE_IDEAL:
 	case TASK_FACE_ENEMY:
-		CSquadMonster :: StartTask( pTask );
+		CSquadCharacter :: StartTask( pTask );
 		if (pev->movetype == MOVETYPE_FLY)
 		{
 			m_IdealActivity = ACT_GLIDE;
@@ -1124,7 +1124,7 @@ void CHGrunt :: StartTask ( Task_t *pTask )
 		break;
 
 	default: 
-		CSquadMonster :: StartTask( pTask );
+		CSquadCharacter :: StartTask( pTask );
 		break;
 	}
 }
@@ -1150,7 +1150,7 @@ void CHGrunt :: RunTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CSquadMonster :: RunTask( pTask );
+			CSquadCharacter :: RunTask( pTask );
 			break;
 		}
 	}
@@ -1858,7 +1858,7 @@ DEFINE_CUSTOM_SCHEDULES( CHGrunt )
 	slGruntRepelLand,
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CHGrunt, CSquadMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CHGrunt, CSquadCharacter );
 
 //=========================================================
 // SetActivity 
@@ -2038,7 +2038,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
 				// call base class, all code to handle dead enemies is centralized there.
-				return CBaseMonster :: GetSchedule();
+				return CBaseCharacter :: GetSchedule();
 			}
 
 // new enemy
@@ -2216,7 +2216,7 @@ Schedule_t *CHGrunt :: GetSchedule( void )
 	}
 	
 	// no special cases here, call the base class
-	return CSquadMonster :: GetSchedule();
+	return CSquadCharacter :: GetSchedule();
 }
 
 //=========================================================
@@ -2367,7 +2367,7 @@ Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
 		}
 	default:
 		{
-			return CSquadMonster :: GetScheduleOfType ( Type );
+			return CSquadCharacter :: GetScheduleOfType ( Type );
 		}
 	}
 }
@@ -2378,7 +2378,7 @@ Schedule_t* CHGrunt :: GetScheduleOfType ( int Type )
 // repelling down a line.
 //=========================================================
 
-class CHGruntRepel : public CBaseMonster
+class CHGruntRepel : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -2413,7 +2413,7 @@ void CHGruntRepel::RepelUse ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 	*/
 
 	CBaseEntity *pEntity = Create( "monster_human_grunt", pev->origin, pev->angles );
-	CBaseMonster *pGrunt = pEntity->MyMonsterPointer( );
+	CBaseCharacter *pGrunt = pEntity->MyCharacterPointer( );
 	pGrunt->pev->movetype = MOVETYPE_FLY;
 	pGrunt->pev->velocity = Vector( 0, 0, RANDOM_FLOAT( -196, -128 ) );
 	pGrunt->SetActivity( ACT_GLIDE );
@@ -2435,7 +2435,7 @@ void CHGruntRepel::RepelUse ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 //=========================================================
 // DEAD HGRUNT PROP
 //=========================================================
-class CDeadHGrunt : public CBaseMonster
+class CDeadHGrunt : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -2457,7 +2457,7 @@ void CDeadHGrunt::KeyValue( KeyValueData *pkvd )
 		pkvd->fHandled = TRUE;
 	}
 	else 
-		CBaseMonster::KeyValue( pkvd );
+		CBaseCharacter::KeyValue( pkvd );
 }
 
 LINK_ENTITY_TO_CLASS( monster_hgrunt_dead, CDeadHGrunt );

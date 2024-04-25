@@ -70,7 +70,7 @@ Schedule_t	slHCRangeAttack1Fast[] =
 	},
 };
 
-class CHeadCrab : public CBaseMonster
+class CHeadCrab : public CBaseCharacter
 {
 public:
 	void Spawn( void );
@@ -114,7 +114,7 @@ DEFINE_CUSTOM_SCHEDULES( CHeadCrab )
 	slHCRangeAttack1Fast,
 };
 
-IMPLEMENT_CUSTOM_SCHEDULES( CHeadCrab, CBaseMonster );
+IMPLEMENT_CUSTOM_SCHEDULES( CHeadCrab, CBaseCharacter );
 
 const char *CHeadCrab::pIdleSounds[] = 
 {
@@ -267,7 +267,7 @@ void CHeadCrab :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		break;
 
 		default:
-			CBaseMonster::HandleAnimEvent( pEvent );
+			CBaseCharacter::HandleAnimEvent( pEvent );
 			break;
 	}
 }
@@ -331,7 +331,7 @@ void CHeadCrab :: RunTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CBaseMonster :: RunTask(pTask);
+			CBaseCharacter :: RunTask(pTask);
 		}
 	}
 }
@@ -390,7 +390,7 @@ void CHeadCrab :: StartTask ( Task_t *pTask )
 		}
 	default:
 		{
-			CBaseMonster :: StartTask( pTask );
+			CBaseCharacter :: StartTask( pTask );
 		}
 	}
 }
@@ -430,7 +430,7 @@ int CHeadCrab :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, fl
 	if ( bitsDamageType & DMG_ACID )
 		flDamage = 0;
 
-	return CBaseMonster::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
+	return CBaseCharacter::TakeDamage( pevInflictor, pevAttacker, flDamage, bitsDamageType );
 }
 
 //=========================================================
@@ -477,7 +477,7 @@ Schedule_t* CHeadCrab :: GetScheduleOfType ( int Type )
 		break;
 	}
 
-	return CBaseMonster::GetScheduleOfType( Type );
+	return CBaseCharacter::GetScheduleOfType( Type );
 }
 
 

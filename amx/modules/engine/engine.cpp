@@ -260,10 +260,12 @@ static cell AMX_NATIVE_CALL PointContents(AMX *amx, cell *params)
 	REAL fX = amx_ctof(cAddr[0]);
 	REAL fY = amx_ctof(cAddr[1]);
 	REAL fZ = amx_ctof(cAddr[2]);
+	
+	int iBrushFlags = params[2];
 
 	Vector vPoint = Vector(fX, fY, fZ);
 
-	return POINT_CONTENTS(vPoint);
+	return POINT_CONTENTS(vPoint, iBrushFlags);
 }
 
 static cell AMX_NATIVE_CALL trace_normal(AMX *amx, cell *params)

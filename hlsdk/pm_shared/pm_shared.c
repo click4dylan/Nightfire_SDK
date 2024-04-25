@@ -21,6 +21,7 @@
 #include "pm_shared.h"
 #include "pm_movevars.h"
 #include "pm_debug.h"
+#include "pm_materials.h"
 #include <stdio.h>  // NULL
 #include <math.h>   // sqrt
 #include <string.h> // strcpy
@@ -66,6 +67,7 @@ playermove_t *pmove = NULL;
 #define CTEXTURESMAX		512			// max number of textures loaded
 #define CBTEXTURENAMEMAX	13			// only load first n chars of name
 
+#if 0
 #define CHAR_TEX_CONCRETE	'C'			// texture types
 #define CHAR_TEX_METAL		'M'
 #define CHAR_TEX_DIRT		'D'
@@ -77,16 +79,7 @@ playermove_t *pmove = NULL;
 #define CHAR_TEX_COMPUTER	'P'
 #define CHAR_TEX_GLASS		'Y'
 #define CHAR_TEX_FLESH		'F'
-
-#define STEP_CONCRETE	0		// default step sound
-#define STEP_METAL		1		// metal floor
-#define STEP_DIRT		2		// dirt, sand, rock
-#define STEP_VENT		3		// ventillation duct
-#define STEP_GRATE		4		// metal grating
-#define STEP_TILE		5		// floor tiles
-#define STEP_SLOSH		6		// shallow liquid puddle
-#define STEP_WADE		7		// wading in liquid
-#define STEP_LADDER		8		// climbing ladder
+#endif
 
 #define PLAYER_FATAL_FALL_SPEED		1024// approx 60 feet
 #define PLAYER_MAX_SAFE_FALL_SPEED	580// approx 20 feet
@@ -292,7 +285,10 @@ void PM_PlayStepSound( int step, float fvol )
 	VectorCopy( pmove->velocity, hvel );
 	hvel[2] = 0.0;
 
-	if ( pmove->multiplayer && ( !g_onladder && Length( hvel ) <= 220 ) )
+	if ( pmove->multiplayer && ( !g_onladder && Length( hvel ) <= 120 ) )
+		return;
+
+	if (pmove->movetype == MOVETYPE_NIGHTFIRE_UNKNOWN)
 		return;
 
 	// irand - 0,1 for right foot, 2,3 for left foot
@@ -306,55 +302,55 @@ void PM_PlayStepSound( int step, float fvol )
 		switch (irand)
 		{
 		// right foot
-		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_step1.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_step3.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_step1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_step3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		// left foot
-		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_step2.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_step4.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_step2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_step4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		}
 		break;
 	case STEP_METAL:
 		switch(irand)
 		{
 		// right foot
-		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_metal1.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_metal3.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_metal1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_metal3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		// left foot
-		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_metal2.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_metal4.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_metal2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_metal4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		}
 		break;
 	case STEP_DIRT:
 		switch(irand)
 		{
 		// right foot
-		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_dirt1.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_dirt3.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_dirt1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_dirt3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		// left foot
-		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_dirt2.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_dirt4.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_dirt2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_dirt4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		}
 		break;
 	case STEP_VENT:
 		switch(irand)
 		{
 		// right foot
-		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_duct1.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_duct3.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_duct1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_duct3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		// left foot
-		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_duct2.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_duct4.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_duct2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_duct4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		}
 		break;
 	case STEP_GRATE:
 		switch(irand)
 		{
 		// right foot
-		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_grate1.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_grate3.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_grate1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_grate3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		// left foot
-		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_grate2.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_grate4.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_grate2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_grate4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		}
 		break;
 	case STEP_TILE:
@@ -363,23 +359,23 @@ void PM_PlayStepSound( int step, float fvol )
 		switch(irand)
 		{
 		// right foot
-		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile1.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile3.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		// left foot
-		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile2.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile4.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 4: pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile5.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 4: pmove->PM_PlaySound( CHAN_BODY, "player/pl_tile5.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		}
 		break;
 	case STEP_SLOSH:
 		switch(irand)
 		{
 		// right foot
-		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_slosh1.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_slosh3.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_slosh1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_slosh3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		// left foot
-		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_slosh2.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_slosh4.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_slosh2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_slosh4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		}
 		break;
 	case STEP_WADE:
@@ -397,22 +393,55 @@ void PM_PlayStepSound( int step, float fvol )
 		switch (irand)
 		{
 		// right foot
-		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_wade1.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_wade2.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_wade1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_wade2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		// left foot
-		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_wade3.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_wade4.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_wade3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_wade4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		}
 		break;
 	case STEP_LADDER:
 		switch(irand)
 		{
 		// right foot
-		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_ladder1.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_ladder3.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 0:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_ladder1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_ladder3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		// left foot
-		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_ladder2.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
-		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_ladder4.wav", fvol, ATTN_NORM, 0, PITCH_NORM );	break;
+		case 2:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_ladder2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound( CHAN_BODY, "player/pl_ladder4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_SNOW:
+		switch (irand)
+		{
+		// right foot
+		case 0:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_snow1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_snow3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		// left foot
+		case 2:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_snow2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_snow4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_SAND:
+		switch (irand)
+		{
+			// right foot
+		case 0:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_sand1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_sand3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_sand2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_sand4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		}
+		break;
+	case STEP_CARPET:
+		switch (irand)
+		{
+			// right foot
+		case 0:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_carpet1.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 1:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_carpet3.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+			// left foot
+		case 2:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_carpet2.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
+		case 3:	pmove->PM_PlaySound(CHAN_BODY, "player/pl_carpet4.wav", fvol, ATTN_NORM, 0, PITCH_NIGHTFIRE_RANDOM);	break;
 		}
 		break;
 	}
@@ -424,7 +453,10 @@ int PM_MapTextureTypeStepType(char chTextureType)
 	{
 		default:
 		case CHAR_TEX_CONCRETE:	return STEP_CONCRETE;	
+		case CHAR_TEX_SAND: return STEP_SAND;
 		case CHAR_TEX_METAL: return STEP_METAL;	
+		case CHAR_TEX_SNOW: return STEP_SNOW;
+		case CHAR_TEX_CARPET: return STEP_CARPET;
 		case CHAR_TEX_DIRT: return STEP_DIRT;	
 		case CHAR_TEX_VENT: return STEP_VENT;	
 		case CHAR_TEX_GRATE: return STEP_GRATE;	

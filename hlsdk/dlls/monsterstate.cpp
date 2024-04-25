@@ -29,7 +29,7 @@
 //=========================================================
 // SetState
 //=========================================================
-void CBaseMonster :: SetState ( MONSTERSTATE State )
+void CBaseCharacter :: SetState ( CHARACTERSTATE State )
 {
 /*
 	if ( State != m_MonsterState )
@@ -61,7 +61,7 @@ void CBaseMonster :: SetState ( MONSTERSTATE State )
 //=========================================================
 // RunAI
 //=========================================================
-void CBaseMonster :: RunAI ( void )
+void CBaseCharacter :: RunAI ( void )
 {
 	// to test model's eye height
 	//UTIL_ParticleEffect ( pev->origin + pev->view_ofs, g_vecZero, 255, 10 );
@@ -118,7 +118,7 @@ void CBaseMonster :: RunAI ( void )
 // GetIdealState - surveys the Conditions information available
 // and finds the best new state for a monster.
 //=========================================================
-MONSTERSTATE CBaseMonster :: GetIdealState ( void )
+CHARACTERSTATE CBaseCharacter :: GetIdealState ( void )
 {
 	int	iConditions;
 

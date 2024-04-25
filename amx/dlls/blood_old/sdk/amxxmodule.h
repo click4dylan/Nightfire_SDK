@@ -898,7 +898,7 @@ edict_t *FN_FindEntityByString(edict_t *pEdictStartSearchAfter, const char *pszF
 #endif // FN_FindEntityByString
 
 #ifdef FN_GetEntityIllum
-int FN_GetEntityIllum(edict_t *pEnt);
+int FN_GetEntityIllum(edict_t *pEnt, bool isPlayer);
 #endif // FN_GetEntityIllum
 
 #ifdef FN_FindEntityInSphere
@@ -1006,7 +1006,7 @@ void FN_engClientCommand(edict_t *pEdict, char *szFmt, ...);
 #endif // FN_engClientCommand
 
 #ifdef FN_ParticleEffect
-void FN_ParticleEffect(const float *org, const float *dir, float color, float count);
+void FN_ParticleEffect(const float *org, const float *dir, int red, int green, int blue, int count);
 #endif // FN_ParticleEffect
 
 #ifdef FN_LightStyle
@@ -1018,7 +1018,7 @@ int FN_DecalIndex(const char *name);
 #endif // FN_DecalIndex
 
 #ifdef FN_PointContents
-int FN_PointContents(const float *rgflVector);
+int FN_PointContents(const float *rgflVector, int brushflags);
 #endif // FN_PointContents
 
 #ifdef FN_MessageBegin
@@ -1587,7 +1587,7 @@ void FN_engClientCommand_Post(edict_t *pEdict, char *szFmt, ...);
 #endif // FN_engClientCommand_Post
 
 #ifdef FN_ParticleEffect_Post
-void FN_ParticleEffect_Post(const float *org, const float *dir, float color, float count);
+void FN_ParticleEffect_Post(const float *org, const float *dir, int red, int green, int blue, int count);
 #endif // FN_ParticleEffect_Post
 
 #ifdef FN_LightStyle_Post
@@ -1599,7 +1599,7 @@ int FN_DecalIndex_Post(const char *name);
 #endif // FN_DecalIndex_Post
 
 #ifdef FN_PointContents_Post
-int FN_PointContents_Post(const float *rgflVector);
+int FN_PointContents_Post(const float *rgflVector, int brushflags);
 #endif // FN_PointContents_Post
 
 #ifdef FN_MessageBegin_Post

@@ -29,6 +29,7 @@
 #include "animation.h"
 #include "weapons.h"
 #include "func_break.h"
+#include "gamerules.h"
 
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 extern DLL_GLOBAL int			g_iSkillLevel;
@@ -253,7 +254,7 @@ void CGib :: SpawnRandomGibs( entvars_t *pevVictim, int cGibs, int human )
 }
 
 
-BOOL CBaseMonster :: HasHumanGibs( void )
+BOOL CBaseCharacter :: HasHumanGibs( void )
 {
 	int myClass = Classify();
 
@@ -268,7 +269,7 @@ BOOL CBaseMonster :: HasHumanGibs( void )
 }
 
 
-BOOL CBaseMonster :: HasAlienGibs( void )
+BOOL CBaseCharacter :: HasAlienGibs( void )
 {
 	int myClass = Classify();
 
@@ -285,7 +286,7 @@ BOOL CBaseMonster :: HasAlienGibs( void )
 }
 
 
-void CBaseMonster::FadeMonster( void )
+void CBaseCharacter::FadeMonster( void )
 {
 	StopAnimation();
 	pev->velocity = g_vecZero;
@@ -300,7 +301,7 @@ void CBaseMonster::FadeMonster( void )
 // GibMonster - create some gore and get rid of a monster's
 // model.
 //=========================================================
-void CBaseMonster :: GibMonster( void )
+void CBaseCharacter :: GibMonster( void )
 {
 	TraceResult	tr;
 	BOOL		gibbed = FALSE;
@@ -331,7 +332,7 @@ void CBaseMonster :: GibMonster( void )
 		if ( gibbed )
 		{
 			// don't remove players!
-			SetThink ( &CBaseMonster::SUB_Remove );
+			SetThink ( &CBaseCharacter::SUB_Remove );
 			pev->nextthink = gpGlobals->time;
 		}
 		else
@@ -345,7 +346,7 @@ void CBaseMonster :: GibMonster( void )
 // GetDeathActivity - determines the best type of death
 // anim to play.
 //=========================================================
-Activity CBaseMonster :: GetDeathActivity ( void )
+Activity CBaseCharacter :: GetDeathActivity ( void )
 {
 	Activity	deathActivity;
 	BOOL		fTriedDirection;
@@ -466,7 +467,7 @@ Activity CBaseMonster :: GetDeathActivity ( void )
 // GetSmallFlinchActivity - determines the best type of flinch
 // anim to play.
 //=========================================================
-Activity CBaseMonster :: GetSmallFlinchActivity ( void )
+Activity CBaseCharacter :: GetSmallFlinchActivity ( void )
 {
 	Activity	flinchActivity;
 //	float		flDot;
@@ -513,7 +514,7 @@ Activity CBaseMonster :: GetSmallFlinchActivity ( void )
 }
 
 
-void CBaseMonster::BecomeDead( void )
+void CBaseCharacter::BecomeDead( void )
 {
 	pev->takedamage = DAMAGE_YES;// don't let autoaim aim at corpses.
 	
@@ -530,7 +531,7 @@ void CBaseMonster::BecomeDead( void )
 }
 
 
-BOOL CBaseMonster::ShouldGibMonster( int iGib )
+BOOL CBaseCharacter::ShouldGibMonster( int iGib )
 {
 	if ( ( iGib == GIB_NORMAL && pev->health < GIB_HEALTH_VALUE ) || ( iGib == GIB_ALWAYS ) )
 		return TRUE;
@@ -539,7 +540,7 @@ BOOL CBaseMonster::ShouldGibMonster( int iGib )
 }
 
 
-void CBaseMonster::CallGibMonster( void )
+void CBaseCharacter::CallGibMonster( void )
 {
 	BOOL fade = FALSE;
 
@@ -586,7 +587,7 @@ void CBaseMonster::CallGibMonster( void )
 Killed
 ============
 */
-void CBaseMonster :: Killed( entvars_t *pevAttacker, int iGib )
+void CBaseCharacter :: Killed( entvars_t *pevAttacker, int iGib )
 {
 	if ( HasMemory( bits_MEMORY_KILLED ) )
 	{
@@ -800,7 +801,7 @@ void CGib :: Spawn( const char *szGibModel )
 }
 
 // take health
-int CBaseMonster :: TakeHealth (float flHealth, int bitsDamageType)
+int CBaseCharacter :: TakeHealth (float flHealth, int bitsDamageType)
 {
 	if (!pev->takedamage)
 		return 0;
@@ -830,7 +831,7 @@ When a monster is poisoned via an arrow etc it takes all the poison damage at on
 GLOBALS ASSUMED SET:  g_iSkillLevel
 ============
 */
-int CBaseMonster :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType )
+int CBaseCharacter :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType )
 {
 	float	flTake;
 	Vector	vecDir;
@@ -966,7 +967,7 @@ int CBaseMonster :: TakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker,
 // DeadTakeDamage - takedamage function called when a monster's
 // corpse is damaged.
 //=========================================================
-int CBaseMonster :: DeadTakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType )
+int CBaseCharacter :: DeadTakeDamage( entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType )
 {
 	Vector			vecDir;
 
@@ -1012,7 +1013,7 @@ int CBaseMonster :: DeadTakeDamage( entvars_t *pevInflictor, entvars_t *pevAttac
 }
 
 
-float CBaseMonster :: DamageForce( float damage )
+float CBaseCharacter :: DamageForce( float damage )
 { 
 	float force = damage * ((32 * 32 * 72.0) / (pev->size.x * pev->size.y * pev->size.z)) * 5;
 	
@@ -1105,13 +1106,13 @@ void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacke
 }
 
 
-void CBaseMonster :: RadiusDamage(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
+void CBaseCharacter :: RadiusDamage(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
 {
 	::RadiusDamage( pev->origin, pevInflictor, pevAttacker, flDamage, flDamage * 2.5, iClassIgnore, bitsDamageType );
 }
 
 
-void CBaseMonster :: RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
+void CBaseCharacter :: RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType )
 {
 	::RadiusDamage( vecSrc, pevInflictor, pevAttacker, flDamage, flDamage * 2.5, iClassIgnore, bitsDamageType );
 }
@@ -1125,7 +1126,7 @@ void CBaseMonster :: RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entva
 //
 // Used for many contact-range melee attacks. Bites, claws, etc.
 //=========================================================
-CBaseEntity* CBaseMonster :: CheckTraceHullAttack( float flDist, int iDamage, int iDmgType )
+CBaseEntity* CBaseCharacter :: CheckTraceHullAttack( float flDist, int iDamage, int iDmgType )
 {
 	TraceResult tr;
 
@@ -1161,7 +1162,7 @@ CBaseEntity* CBaseMonster :: CheckTraceHullAttack( float flDist, int iDamage, in
 // the caller's forward view cone. The dot product is performed
 // in 2d, making the view cone infinitely tall. 
 //=========================================================
-BOOL CBaseMonster :: FInViewCone ( CBaseEntity *pEntity )
+BOOL CBaseCharacter :: FInViewCone ( CBaseEntity *pEntity )
 {
 	Vector2D	vec2LOS;
 	float	flDot;
@@ -1188,7 +1189,7 @@ BOOL CBaseMonster :: FInViewCone ( CBaseEntity *pEntity )
 // the caller's forward view cone. The dot product is performed
 // in 2d, making the view cone infinitely tall. 
 //=========================================================
-BOOL CBaseMonster :: FInViewCone ( Vector *pOrigin )
+BOOL CBaseCharacter :: FInViewCone ( Vector *pOrigin )
 {
 	Vector2D	vec2LOS;
 	float		flDot;
@@ -1294,7 +1295,7 @@ void CBaseEntity::TraceAttack(entvars_t *pevAttacker, float flDamage, Vector vec
 //=========================================================
 // TraceAttack
 //=========================================================
-void CBaseMonster::TraceAttack(entvars_t *pevAttacker, float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType)
+void CBaseCharacter::TraceAttack(entvars_t *pevAttacker, float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType)
 {
 	Vector vecOrigin = ptr->vecEndPos - vecDir * 4;
 
@@ -1318,7 +1319,7 @@ void CBaseMonster::TraceAttack(entvars_t *pevAttacker, float flDamage, Vector ve
 //=========================================================
 // TraceAttack
 //=========================================================
-void CBaseMonster :: TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType)
+void CBaseCharacter :: TraceAttack( entvars_t *pevAttacker, float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType)
 {
 	if ( pev->takedamage )
 	{
@@ -1329,21 +1330,21 @@ void CBaseMonster :: TraceAttack( entvars_t *pevAttacker, float flDamage, Vector
 		case HITGROUP_GENERIC:
 			break;
 		case HITGROUP_HEAD:
-			flDamage *= gSkillData.monHead;
+			flDamage *= gSkillData.characterHead;
 			break;
 		case HITGROUP_CHEST:
-			flDamage *= gSkillData.monChest;
+			flDamage *= gSkillData.characterChest;
 			break;
 		case HITGROUP_STOMACH:
-			flDamage *= gSkillData.monStomach;
+			flDamage *= gSkillData.characterStomach;
 			break;
 		case HITGROUP_LEFTARM:
 		case HITGROUP_RIGHTARM:
-			flDamage *= gSkillData.monArm;
+			flDamage *= gSkillData.characterArm;
 			break;
 		case HITGROUP_LEFTLEG:
 		case HITGROUP_RIGHTLEG:
-			flDamage *= gSkillData.monLeg;
+			flDamage *= gSkillData.characterLeg;
 			break;
 		default:
 			break;
@@ -1367,6 +1368,8 @@ This version is used by Monsters.
 void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting, Vector vecSpread, float flDistance, int iBulletType, int iTracerFreq, int iDamage, entvars_t *pevAttacker )
 {
 	static int tracerCount;
+	static int nPenetrations;
+	static int i;
 	int tracer;
 	TraceResult tr;
 	Vector vecRight = gpGlobals->v_right;
@@ -1380,6 +1383,9 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 
 	for (ULONG iShot = 1; iShot <= cShots; iShot++)
 	{
+		CBaseEntity* pEntity = this;
+		bool bBulletStopped = false;
+
 		// get circular gaussian spread
 		float x, y, z;
 		do {
@@ -1391,95 +1397,178 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 		Vector vecDir = vecDirShooting +
 						x * vecSpread.x * vecRight +
 						y * vecSpread.y * vecUp;
-		Vector vecEnd;
+		Vector vecEnd = vecSrc + vecDir * flDistance;
 
-		vecEnd = vecSrc + vecDir * flDistance;
-		UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(pev)/*pentIgnore*/, &tr);
-
-		tracer = 0;
-		if (iTracerFreq != 0 && (tracerCount++ % iTracerFreq) == 0)
+		if (!g_pGameRules->IsMultiplayer())
 		{
-			Vector vecTracerSrc;
-
-			if ( IsPlayer() )
-			{// adjust tracer position for player
-				vecTracerSrc = vecSrc + Vector ( 0 , 0 , -4 ) + gpGlobals->v_right * 2 + gpGlobals->v_forward * 16;
-			}
-			else
-			{
-				vecTracerSrc = vecSrc;
-			}
-			
-			if ( iTracerFreq != 1 )		// guns that always trace also always decal
-				tracer = 1;
-			switch( iBulletType )
-			{
-			case BULLET_MONSTER_MP5:
-			case BULLET_MONSTER_9MM:
-			case BULLET_MONSTER_12MM:
-			default:
-				MESSAGE_BEGIN( MSG_PAS, SVC_TEMPENTITY, vecTracerSrc );
-					WRITE_BYTE( TE_TRACER );
-					WRITE_COORD( vecTracerSrc.x );
-					WRITE_COORD( vecTracerSrc.y );
-					WRITE_COORD( vecTracerSrc.z );
-					WRITE_COORD( tr.vecEndPos.x );
-					WRITE_COORD( tr.vecEndPos.y );
-					WRITE_COORD( tr.vecEndPos.z );
-				MESSAGE_END();
-				break;
-			}
+			MESSAGE_BEGIN(MSG_PAS, gmsgNpcFire, vecEnd);
+			WRITE_COORD(vecSrc.x);
+			WRITE_COORD(vecSrc.y);
+			WRITE_COORD(vecSrc.z);
+			WRITE_COORD(vecEnd.x);
+			WRITE_COORD(vecEnd.x);
+			WRITE_COORD(vecEnd.x);
+			WRITE_SHORT(entindex());
 		}
-		// do damage, paint decals
-		if (tr.flFraction != 1.0)
+
+		nPenetrations = 1;
+
+		for (i = 0; !bBulletStopped && i <= nPenetrations; ++i)
 		{
-			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
+			UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, 0, pEntity->edict(), &tr);
 
-			if ( iDamage )
+			tracer = 0;
+			if (iTracerFreq != 0 && (tracerCount++ % iTracerFreq) == 0)
 			{
-				pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB) );
-				
-				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				DecalGunshot( &tr, iBulletType );
-			} 
-			else switch(iBulletType)
-			{
-			default:
-			case BULLET_MONSTER_9MM:
-				pEntity->TraceAttack(pevAttacker, gSkillData.monDmg9MM, vecDir, &tr, DMG_BULLET);
-				
-				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				DecalGunshot( &tr, iBulletType );
+				Vector vecTracerSrc;
 
-				break;
-
-			case BULLET_MONSTER_MP5:
-				pEntity->TraceAttack(pevAttacker, gSkillData.monDmgMP5, vecDir, &tr, DMG_BULLET);
-				
-				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				DecalGunshot( &tr, iBulletType );
-
-				break;
-
-			case BULLET_MONSTER_12MM:		
-				pEntity->TraceAttack(pevAttacker, gSkillData.monDmg12MM, vecDir, &tr, DMG_BULLET); 
-				if ( !tracer )
-				{
-					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-					DecalGunshot( &tr, iBulletType );
+				if (IsPlayer())
+				{// adjust tracer position for player
+					vecTracerSrc = vecSrc + Vector(0, 0, -4) + gpGlobals->v_right * 2 + gpGlobals->v_forward * 16;
 				}
-				break;
+				else
+				{
+					vecTracerSrc = vecSrc;
+				}
+
+				if (iTracerFreq != 1)		// guns that always trace also always decal
+					tracer = 1;
 			
-			case BULLET_NONE: // FIX 
-				pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB);
-				TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
-				// only decal glass
-				if ( !FNullEnt(tr.pHit) && VARS(tr.pHit)->rendermode != 0)
+				MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, vecTracerSrc);
+				WRITE_BYTE(TE_TRACER);
+				WRITE_COORD(vecTracerSrc.x);
+				WRITE_COORD(vecTracerSrc.y);
+				WRITE_COORD(vecTracerSrc.z);
+				WRITE_COORD(tr.vecEndPos.x);
+				WRITE_COORD(tr.vecEndPos.y);
+				WRITE_COORD(tr.vecEndPos.z);
+				MESSAGE_END();
+			}
+			// do damage, paint decals
+			if (tr.flFraction != 1.0)
+			{
+				pEntity = CBaseEntity::Instance(tr.pHit);
+
+				if (iDamage)
 				{
-					UTIL_DecalTrace( &tr, DECAL_GLASSBREAK1 + RANDOM_LONG(0,2) );
+					pEntity->TraceAttack(pevAttacker, iDamage, vecDir, &tr, DMG_BULLET | ((iDamage > 16) ? DMG_ALWAYSGIB : DMG_NEVERGIB));
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+				}
+				else switch (iBulletType)
+				{
+				case BULLET_NONE: // FIX 
+					pEntity->TraceAttack(pevAttacker, 50, vecDir, &tr, DMG_CLUB);
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				//players
+
+				case BULLET_PLAYER_P99:
+					pEntity->TraceAttack(pevAttacker, gSkillData.plr_pp9_bullet, vecDir, &tr, DMG_BULLET);
+					break;
+
+				case BULLET_PLAYER_RAPTOR:
+					pEntity->TraceAttack(pevAttacker, gSkillData.plr_raptor_bullet, vecDir, &tr, DMG_BULLET);
+					break;
+
+				case BULLET_PLAYER_MP9:
+					pEntity->TraceAttack(pevAttacker, gSkillData.plr_mp9_bullet, vecDir, &tr, DMG_BULLET);
+					break;
+
+				case BULLET_PLAYER_SNIPER:
+					pEntity->TraceAttack(pevAttacker, gSkillData.plr_sniper_bullet, vecDir, &tr, DMG_BULLET);
+					break;
+
+				case BULLET_PLAYER_BUCKSHOT:
+				{
+					float fraction = tr.flFraction <= 1.0 ? tr.flFraction : 1.0;
+					float scale = 1.0 - fraction;
+					float dmg = min(1.0f, gSkillData.plr_buckshot_bullet * (scale * scale));
+					pEntity->TraceAttack(pevAttacker, dmg, vecDir, &tr, DMG_BULLET);
+					break;
 				}
 
-				break;
+				case BULLET_PLAYER_COMMANDO:
+					pEntity->TraceAttack(pevAttacker, gSkillData.plr_commando_bullet, vecDir, &tr, DMG_BULLET);
+					break;
+
+				case BULLET_PLAYER_PDW90:
+					pEntity->TraceAttack(pevAttacker, gSkillData.plr_pdw90_bullet, vecDir, &tr, DMG_BULLET);
+					break;
+
+				case BULLET_PLAYER_MINIGUN:
+					pEntity->TraceAttack(pevAttacker, gSkillData.plr_minigun_bullet, vecDir, &tr, DMG_BULLET);
+					break;
+
+				// enemies
+
+				case BULLET_ENEMY_KOWLOON:
+					pEntity->TraceAttack(pevAttacker, gSkillData.kowloon_bullet, vecDir, &tr, DMG_BULLET);
+					if (!tracer)
+						TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				case BULLET_ENEMY_COMMANDO:
+					pEntity->TraceAttack(pevAttacker, gSkillData.commando_bullet, vecDir, &tr, DMG_BULLET);
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				case BULLET_ENEMY_MP9:
+					pEntity->TraceAttack(pevAttacker, gSkillData.mp9_bullet, vecDir, &tr, DMG_BULLET);
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				case BULLET_ENEMY_BUCKSHOT:
+					pEntity->TraceAttack(pevAttacker, gSkillData.buckshot_bullet, vecDir, &tr, DMG_BULLET);
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				case BULLET_ENEMY_PDW90:
+					pEntity->TraceAttack(pevAttacker, gSkillData.pdw90_bullet, vecDir, &tr, DMG_BULLET);
+					if (!tracer)
+						TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				case BULLET_ENEMY_SNIPER:
+					pEntity->TraceAttack(pevAttacker, gSkillData.sniper_bullet, vecDir, &tr, DMG_BULLET);
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				case BULLET_ENEMY_ALERTED:
+					pEntity->TraceAttack(pevAttacker, gSkillData.alerted_bullet, vecDir, &tr, DMG_BULLET);
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				case BULLET_ENEMY_UNKNOWN:
+					pEntity->TraceAttack(pevAttacker, 0, vecDir, &tr, DMG_BULLET);
+					break;
+
+				case BULLET_ENEMY_RAPTOR:
+					pEntity->TraceAttack(pevAttacker, gSkillData.raptor_bullet, vecDir, &tr, DMG_BULLET);
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				case BULLET_ENEMY_MINIGUN:
+					pEntity->TraceAttack(pevAttacker, gSkillData.minigun_bullet, vecDir, &tr, DMG_BULLET);
+					TEXTURETYPE_PlaySound(&tr, vecSrc, vecEnd, iBulletType);
+					break;
+
+				default:
+					pEntity->TraceAttack(pevAttacker, gSkillData.plr_kowloon_bullet, vecDir, &tr, DMG_BULLET);
+					break;
+				}
+
+				// check object if allows bullet penetration
+				if (pEntity->pev->solid == SOLID_BSP && (pEntity->pev->spawnflags & SF_ALLOW_BULLETS) != 0)
+				{
+					vecSrc[0] = tr.vecEndPos[0] + vecDir[0];
+					vecSrc[1] = tr.vecEndPos[1] + vecDir[1];
+					vecSrc[2] = tr.vecEndPos[2] + vecDir[2];
+				}
+				else
+				{
+					bBulletStopped = true;
+				}
 			}
 		}
 		// make bullet trails
@@ -1649,7 +1738,7 @@ void CBaseEntity :: TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr,
 
 //=========================================================
 //=========================================================
-void CBaseMonster :: MakeDamageBloodDecal ( int cCount, float flNoise, TraceResult *ptr, const Vector &vecDir )
+void CBaseCharacter :: MakeDamageBloodDecal ( int cCount, float flNoise, TraceResult *ptr, const Vector &vecDir )
 {
 	// make blood decal on the wall! 
 	TraceResult Bloodtr;

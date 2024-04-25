@@ -37,13 +37,13 @@ typedef struct
 
 #define MAX_CARRY	24
 
-class COsprey : public CBaseMonster
+class COsprey : public CBaseCharacter
 {
 public:
 	int		Save( CSave &save );
 	int		Restore( CRestore &restore );
 	static	TYPEDESCRIPTION m_SaveData[];
-	int		ObjectCaps( void ) { return CBaseMonster :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	int		ObjectCaps( void ) { return CBaseCharacter :: ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 	
 	void Spawn( void );
 	void Precache( void );
@@ -59,7 +59,7 @@ public:
 	void EXPORT HitTouch( CBaseEntity *pOther );
 	void EXPORT FindAllThink( void );
 	void EXPORT HoverThink( void );
-	CBaseMonster *MakeGrunt( Vector vecSrc );
+	CBaseCharacter *MakeGrunt( Vector vecSrc );
 	void EXPORT CrashTouch( CBaseEntity *pOther );
 	void EXPORT DyingThink( void );
 	void EXPORT CommandUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
@@ -139,7 +139,7 @@ TYPEDESCRIPTION	COsprey::m_SaveData[] =
 	DEFINE_FIELD( COsprey, m_iDoLeftSmokePuff, FIELD_INTEGER ),
 	DEFINE_FIELD( COsprey, m_iDoRightSmokePuff, FIELD_INTEGER ),
 };
-IMPLEMENT_SAVERESTORE( COsprey, CBaseMonster );
+IMPLEMENT_SAVERESTORE( COsprey, CBaseCharacter );
 
 
 void COsprey :: Spawn( void )
@@ -280,10 +280,10 @@ BOOL COsprey :: HasDead( )
 }
 
 
-CBaseMonster *COsprey :: MakeGrunt( Vector vecSrc )
+CBaseCharacter *COsprey :: MakeGrunt( Vector vecSrc )
 {
 	CBaseEntity *pEntity;
-	CBaseMonster *pGrunt;
+	CBaseCharacter *pGrunt;
 
 	TraceResult tr;
 	UTIL_TraceLine( vecSrc, vecSrc + Vector( 0, 0, -4096.0), dont_ignore_monsters, ENT(pev), &tr);
@@ -299,7 +299,7 @@ CBaseMonster *COsprey :: MakeGrunt( Vector vecSrc )
 				m_hGrunt[i]->SUB_StartFadeOut( );
 			}
 			pEntity = Create( "monster_human_grunt", vecSrc, pev->angles );
-			pGrunt = pEntity->MyMonsterPointer( );
+			pGrunt = pEntity->MyCharacterPointer( );
 			pGrunt->pev->movetype = MOVETYPE_FLY;
 			pGrunt->pev->velocity = Vector( 0, 0, RANDOM_FLOAT( -196, -128 ) );
 			pGrunt->SetActivity( ACT_GLIDE );

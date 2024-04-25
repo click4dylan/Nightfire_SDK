@@ -856,7 +856,7 @@ BOOL FEnvSoundInRange(entvars_t *pev, entvars_t *pevTarget, float *pflRange)
 	float flRange;
 	TraceResult tr;
 
-	UTIL_TraceLine(vecSpot1, vecSpot2, ignore_monsters, ENT(pev), &tr);
+	UTIL_TraceLine(vecSpot1, vecSpot2, ignore_monsters, 0, ENT(pev), &tr);
 	
 	// check if line of sight crosses water boundary, or is blocked
 
@@ -1284,7 +1284,7 @@ void SENTENCEG_Init()
 
 	
 	int filePos = 0, fileSize;
-	byte *pMemFile = g_engfuncs.pfnLoadFileForMe( "sound/sentences.txt", &fileSize );
+	byte *pMemFile = g_engfuncs.pfnCOM_LoadHeapFile( "sound/sentences.txt", &fileSize );
 	if ( !pMemFile )
 		return;
 
@@ -1369,7 +1369,7 @@ void SENTENCEG_Init()
 		}
 	}
 
-	g_engfuncs.pfnFreeFile( pMemFile );
+	g_engfuncs.pfnCOM_FreeFile( pMemFile );
 	
 	fSentencesInit = TRUE;
 
@@ -1659,6 +1659,9 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 		vecSrc.CopyToArray(rgfl1);
 		vecEnd.CopyToArray(rgfl2);
 
+		// NIGHTFIRE DEVS REMOVED THIS
+#if 0
+
 		// get texture from entity or world (world is ent(0))
 		if (pEntity)
 			pTextureName = TRACE_TEXTURE( ENT(pEntity->pev), rgfl1, rgfl2 );
@@ -1682,8 +1685,10 @@ float TEXTURETYPE_PlaySound(TraceResult *ptr,  Vector vecSrc, Vector vecEnd, int
 			// get texture type
 			chTextureType = TEXTURETYPE_Find(szbuffer);	
 		}
+#endif
 	}
 
+	//NIGHTFIRE TODO:
 	switch (chTextureType)
 	{
 	default:
@@ -1864,9 +1869,9 @@ void CSpeaker :: SpeakerThink( void )
 
 
 	// Wait for the talkmonster to finish first.
-	if (gpGlobals->time <= CTalkMonster::g_talkWaitTime)
+	if (gpGlobals->time <= CTalkCharacter::g_talkWaitTime)
 	{
-		pev->nextthink = CTalkMonster::g_talkWaitTime + RANDOM_FLOAT( 5, 10 );
+		pev->nextthink = CTalkCharacter::g_talkWaitTime + RANDOM_FLOAT( 5, 10 );
 		return;
 	}
 	
@@ -1911,7 +1916,7 @@ void CSpeaker :: SpeakerThink( void )
 		pev->nextthink = gpGlobals->time + 
 						RANDOM_FLOAT(ANNOUNCE_MINUTES_MIN * 60.0, ANNOUNCE_MINUTES_MAX * 60.0);
 
-		CTalkMonster::g_talkWaitTime = gpGlobals->time + 5;		// time delay until it's ok to speak: used so that two NPCs don't talk at once
+		CTalkCharacter::g_talkWaitTime = gpGlobals->time + 5;		// time delay until it's ok to speak: used so that two NPCs don't talk at once
 	}
 
 	return;

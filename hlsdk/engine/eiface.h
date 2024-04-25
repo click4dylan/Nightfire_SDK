@@ -128,7 +128,7 @@ typedef struct enginefuncs_s
 	void		(*pfnChangeYaw)				(edict_t* ent);
 	void		(*pfnChangePitch)			(edict_t* ent);
 	edict_t*	(*pfnFindEntityByString)	(edict_t *pEdictStartSearchAfter, const char *pszField, const char *pszValue);
-	int			(*pfnGetEntityIllum)		(edict_t* pEnt, bool unknown);
+	int			(*pfnGetEntityIllum)		(edict_t* pEnt, bool isPlayer);
 	int			(*pfnGetPointIllum)			(const float* rgflVector); //added, used in CTempEnts::Sprite_Spray
 	edict_t*	(*pfnFindEntityInSphere)	(edict_t *pEdictStartSearchAfter, const float* org, float rad);
 	edict_t*	(*pfnFindClientInPVS)		(edict_t *pEdict);
@@ -155,7 +155,7 @@ typedef struct enginefuncs_s
 	void		(*pfnServerCommand)			(const char* str);
 	void		(*pfnServerExecute)			(void);
 	void		(*pfnClientCommand)			(edict_t* pEdict, const char* szFmt, ...);
-	void		(*pfnParticleEffect)		(const float *org, const float *dir, float red, float green, float blue, float count);
+	void		(*pfnParticleEffect)		(const float *org, const float *dir, int red, int green, int blue, int count);
 	void		(*pfnLightStyle)			(int style, const char* val);
 	int			(*pfnAllocateDecal)			(const char *name); //added
 	int			(*pfnDecalIndex)			(const char *name);

@@ -57,67 +57,17 @@ enum
 };
 
 //TODO : place in respective files
-#if 0
 #define TEAM_MI6 0
 #define TEAM_PHOENIX 1
 #define TEAM_COUNT 2
 #define CHARACTER_SLOTS 20
 #define MAX_NAME_SIZE 32
 
-const char team_names[TEAM_COUNT][MAX_NAME_SIZE] = {
-	"MI6\0",
-	"Phoenix\0"
-};
+extern const char team_names[TEAM_COUNT][MAX_NAME_SIZE];
 
-const char team_chars[TEAM_COUNT][CHARACTER_SLOTS][MAX_NAME_SIZE] = {
-	// Team MI6
-	{
-		"MP_MI6_tux\0",
-		"MP_MI6_suit\0",
-		"MP_MI6_stealth\0",
-		"MP_alura_combat\0",
-		"MP_dominique\0",
-		"MP_Zoe\0",
-		"MP_Q\0",
-		"MP_christmas_jones\0",
-		"MP_pussy_galore\0",
-		"MP_wai_lin\0",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		""
-	},
-	// Team PHOENIX
-	{
-		"MP_castle_guard\0",
-		"MP_commando\0",
-		"MP_drake\0",
-		"MP_kiko\0",
-		"MP_Rook\0",
-		"MP_snowguard\0",
-		"MP_yakuza\0",
-		"MP_mayday\0",
-		"MP_xenia\0",
-		"MP_jaws\0",
-		"MP_oddjob\0",
-		"MP_elektra\0",
-		"MP_goldfinger\0",
-		"MP_baren_samedi\0",
-		"MP_renard\0",
-		"MP_scaramanga\0",
-		"",
-		"",
-		"",
-		""
-	}
-};
+extern const char team_chars[TEAM_COUNT][CHARACTER_SLOTS][MAX_NAME_SIZE];
 
+#if 0
 __declspec(noinline) const char* GetCharacterType(int team, int charactermodel_slot) {
 	if (charactermodel_slot >= CHARACTER_SLOTS)
 		return "";  // Return empty string if charactermodel_slot is out of bounds
@@ -125,6 +75,8 @@ __declspec(noinline) const char* GetCharacterType(int team, int charactermodel_s
 	return team_chars[team][charactermodel_slot];
 }
 #endif
+
+extern const char* CTF_GetIndexedTeamName(int index);
 
 class CGameRules
 {
@@ -226,7 +178,7 @@ public:
 	virtual const char* GetCharacterType(int team, int charactermodel_slot) { return ""; }
 
 	virtual int GetNumTeams() { return 0; }
-	virtual int TeamWithFewestPlayers() { return 0; }
+	virtual const char* TeamWithFewestPlayers() { return 0; }
 	virtual BOOL TeamsBalanced() { return TRUE; }
 
 // Sounds
@@ -244,7 +196,7 @@ extern CGameRules *InstallGameRules( void );
 
 
 //=========================================================
-// CHalfLifeRules - rules for the single player Half-Life 
+// CBondRules - rules for the single player Half-Life 
 // game.
 //=========================================================
 class CBondRules : public CGameRules
@@ -339,7 +291,7 @@ public:
 };
 
 //=========================================================
-// CHalfLifeMultiplay - rules for the basic half life multiplayer
+// CBondMultiplay - rules for the basic half life multiplayer
 // competition
 //=========================================================
 class CBondMultiplay : public CGameRules
@@ -450,87 +402,12 @@ protected:
 	float m_flIntermissionEndTime = 0;
 	bool_nightfire m_iEndIntermissionButtonHit;
 	void SendMOTDToClient( edict_t *client );
-};
-
-//=========================================================
-// CHalfLifeTeamplay - rules for the basic half life multiplayer teamplay
-// competition
-//=========================================================
-class CBondTeamplay : public CBondMultiplay
-{
-public:
-	CBondTeamplay();
-
-	// GR_Think
-	virtual void Think(void);
-
-	// Functions to verify the single/multiplayer status of a game
-	virtual BOOL IsTeamplay(void) { return TRUE; };// is this deathmatch game being played with team rules?
-	virtual BOOL IsCTF(void) { return FALSE; }
-	virtual const char* GetGameDescription(void) { return "HL Teamplay"; }  // this is the game name that gets seen in the server browser
-
-	// Client connection/disconnection
-		// If ClientConnected returns FALSE, the connection is rejected and the user is provided the reason specified in
-		//  svRejectReason
-		// Only the client's name and remote address are provided to the dll for verification.
-	virtual void InitHUD(CBasePlayer* pl);		// the client dll is ready for updating
-	virtual void UpdateGameMode(CBasePlayer* pPlayer);  // the client needs to be informed of the current game mode
-
-// Client damage rules
-	virtual BOOL  FPlayerCanTakeDamage(CBasePlayer* pPlayer, CBaseEntity* pAttacker);
-	virtual BOOL ShouldAutoAim(CBasePlayer* pPlayer, edict_t* target);
-
-	// Client spawn/respawn control
-
-	virtual BOOL ClientCommand(CBasePlayer* pPlayer, const char* pcmd, unsigned int numargs, const char** args);  // handles the user commands;  returns TRUE if command handled properly
-	virtual void ClientUserInfoChanged(CBasePlayer* pPlayer, char* infobuffer);		// the player has changed userinfo;  can change it now
-
-	// Client kills/scoring
-	virtual int IPointsForKill(CBasePlayer* pAttacker, CBasePlayer* pKilled);
-	virtual void PlayerKilled(CBasePlayer* pVictim, entvars_t* pKiller, entvars_t* pInflictor);
-	virtual void DeathNotice(CBasePlayer* pVictim, entvars_t* pKiller, entvars_t* pInflictor);
-
-	// Weapon retrieval
-
-// Weapon spawn/respawn control
-
-	// Item retrieval
-
-	// Item spawn/respawn control
-
-	// Ammo retrieval
-
-	// Ammo spawn/respawn control
-
-	// Healthcharger respawn control
-
-	// What happens to a dead player's weapons
-
-	// What happens to a dead player's ammo	
-
-	// Teamplay stuff	
-	virtual const char* GetTeamID(CBaseEntity* pEntity);
-	virtual int PlayerRelationship(CBaseEntity* pPlayer, CBaseEntity* pTarget);
-	virtual int GetTeamIndex(const char* pTeamName);
-	virtual const char* GetIndexedTeamName(int teamIndex);
-	virtual BOOL IsValidTeam(const char* pTeamName);
-	virtual void ChangePlayerTeam(CBasePlayer* pPlayer, const char* pTeamName, BOOL bKill, BOOL bGib);
-	virtual const char* SetDefaultPlayerTeam(CBasePlayer* pPlayer);
-
-	virtual int TeamWithFewestPlayers();
-
-private:
-	void RecountTeams(bool bResendInfo = FALSE);
-
-	bool_nightfire m_DisableDeathMessages;
-	bool_nightfire m_DisableDeathPenalty;
-	bool_nightfire m_teamLimit;				// This means the server set only some teams as valid
-	char m_szTeamList[TEAMPLAY_TEAMLISTLENGTH]; //512
+	void BotGameRulesThink();
 };
 
 
 //=========================================================
-// CHalfLifeMultiplayCTF - rules for the basic half life multiplayer ctf
+// CBondMultiplayCTF - rules for the basic half life multiplayer ctf
 // competition
 //=========================================================
 class CBondCTFPlay : public CBondMultiplay
@@ -611,7 +488,7 @@ public:
 	virtual const char* GetCharacterType(int team, int charactermodel_slot);
 
 	virtual int GetNumTeams();
-	virtual int TeamWithFewestPlayers();
+	virtual const char* TeamWithFewestPlayers();
 	virtual BOOL TeamsBalanced();
 
 protected:
@@ -619,7 +496,7 @@ protected:
 
 private:
 
-	void SendTeamStatInfo(CBondCTFPlay* this, int team);
+	void SendTeamStatInfo(int team);
 	void SendPlayerStatInfo(CBasePlayer* pPlayer);
 
 	void RecountTeams(bool bResendInfo = FALSE);

@@ -84,16 +84,12 @@ public:
 	}
 	operator float *()								{ return &x; } // Vectors will now automatically convert to float * when needed
 	operator const float *() const					{ return &x; } // Vectors will now automatically convert to float * when needed
-	void NormalizeInPlace()
+	inline Vector Normalize(void) const
 	{
-		float radius = sqrtf( x * x + y * y + z * z );
-		float iradius = 1.f / ( radius + 1.192092896e-07F );
-
-		x *= iradius;
-		y *= iradius;
-		z *= iradius;
-
-		//return radius;
+		float flLen = Length();
+		if (flLen == 0) return Vector(0, 0, 1); // ????
+		flLen = 1 / flLen;
+		return Vector(x * flLen, y * flLen, z * flLen);
 	}
 
 	inline Vector2D Make2D ( void ) const

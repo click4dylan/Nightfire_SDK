@@ -206,6 +206,8 @@ public:
 	float defaultvalue; //0; //24 //can also be int, bool, float, etc
 	char* szvalue; //28
 
+#if 0
+
 	//dylan's added stuff
 	float GetFloat()
 	{
@@ -315,6 +317,8 @@ public:
 	{
 		SetString(szval);
 	}
+
+#endif
 
 	/*
 	const char *name;
