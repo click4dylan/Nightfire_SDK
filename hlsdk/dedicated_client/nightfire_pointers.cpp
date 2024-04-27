@@ -35,14 +35,13 @@ void nf_pointers::GetImportantEngineOffsets(long enginedll)
 	if (!gpGlobals && !FindMemoryPattern(pattern_t(gpGlobals, enginedll, "68 ? ? ? ? 68 ? ? ? ? FF D0 A1 ? ? ? ? 83 F8 32 75 16 68", false, true, 1, 0, false, "gpGlobals", true)))
 		return;
 
-	DWORD loadthisdll;
-	if (FindMemoryPattern(loadthisdll, enginedll, "57 53 FF 15 ? ? ? ? 8B F8 85 FF 75 17", false))
+	if (!g_pEngineFuncs && (nf_hooks::LoadThisDLL_FunctionAddress || FindMemoryPattern(nf_hooks::LoadThisDLL_FunctionAddress, enginedll, "57 53 FF 15 ? ? ? ? 8B F8 85 FF 75 17", false)))
 	{
-		//gpGlobals = (globalvars_t*)*(DWORD*)(loadthisdll + 0x4D);
-		g_pEngineFuncs = (enginefuncs_s*)*(DWORD*)(loadthisdll + 0x52);
+		//gpGlobals = (globalvars_t*)*(DWORD*)(nf_hooks::LoadThisDLL_FunctionAddress + 0x4D);
+		g_pEngineFuncs = (enginefuncs_s*)*(DWORD*)(nf_hooks::LoadThisDLL_FunctionAddress + 0x52);
 	}
 
-	if (!FindMemoryPattern(psvs, enginedll, "E8 ? ? ? ? A0 ? ? ? ? 84 C0 74 0E 68", false, true, 6, 0, false))
+	if (!psvs && !FindMemoryPattern(psvs, enginedll, "E8 ? ? ? ? A0 ? ? ? ? 84 C0 74 0E 68", false, true, 6, 0, false))
 		return;
 
 	if (!EV_PlayerTrace)

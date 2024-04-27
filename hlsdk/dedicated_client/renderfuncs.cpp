@@ -22,6 +22,7 @@
 #include <globalvars.h>
 #include "renderfuncs.h"
 #include <bsprender.h>
+#include <nightfire_pointers.h>
 
 enum
 {
@@ -133,7 +134,7 @@ void CL_PrecacheResources()
 	//egon_amplitude->setValueFloat(1.0f);
 	//g_pEngineFuncs->pfnCreateConsoleVariableGame(IConsoleVariable(CVAR_FLOAT, "egon_amplitude", "", "1.0", FCVAR_EXTDLL));
 	g_oCL_PrecacheResources();
-	beam_sprite = g_pEngineFuncs->pfnPrecacheModel("sprites/laser_beam.spz");
+	beam_sprite = g_Pointers.g_pEngineFuncs->pfnPrecacheModel("sprites/laser_beam.spz");
 }
 
 void Hook_CL_PrecacheResources()

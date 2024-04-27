@@ -44,4 +44,6 @@ namespace nf_hooks
 
 	extern uintptr_t Netchan_Transit_FragSend_Retadr;
 	extern DWORD NetchanCreateFragments_Transmit_Retadr;
+
+	extern DWORD LoadThisDLL_FunctionAddress;
 }

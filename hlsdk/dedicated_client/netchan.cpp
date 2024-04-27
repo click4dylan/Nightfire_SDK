@@ -391,7 +391,7 @@ void nf_hooks::Netchan_Setup(netsrc_t socketnumber, netchan_t* chan, netadr_t ad
 	}
 	chan->message.buffername = "netchan->message";
 	// nightfire fix, use cl_rate value:
-	static ConsoleVariable* cl_rate = g_pEngineFuncs->pfnGetConsoleVariableGame("cl_rate");
+	static ConsoleVariable* cl_rate = g_Pointers.g_pEngineFuncs->pfnGetConsoleVariableGame("cl_rate");
 	double rate = cl_rate ? max(min(cl_rate->getValueFloat(), 1000), MAX_RATE) : DEFAULT_RATE;
 	chan->rate = rate;
 	chan->connection_status = connection_status;

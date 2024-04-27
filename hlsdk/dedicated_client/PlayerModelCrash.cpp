@@ -169,7 +169,7 @@ __declspec(naked) void StudioSetupBones_Hook()
 model_s* nf_hooks::R_StudioSetupPlayerModel(int playerindex)
 {
 	player_info_s* info = g_Pointers.ENG_GetPlayerInfo(playerindex);
-	static ConsoleVariable* developer = g_pEngineFuncs->pfnGetConsoleVariableGame("developer");
+	static ConsoleVariable* developer = g_Pointers.g_pEngineFuncs->pfnGetConsoleVariableGame("developer");
 	DM_PlayerState_s* state = (DM_PlayerState_s*)g_Pointers.DM_PlayerState;
 	cl_entity_s* current_entity = (*g_Pointers.g_rCurrentEntity);
 

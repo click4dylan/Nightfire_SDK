@@ -47,8 +47,8 @@ void __fastcall AI_ChangeYaw(void* ent, void* edx, int speed)
 	float* globalvars2 = (float*)0x4217A168;
 	float frametime = globalvars2[1];
 
-	edict_t* ed = (edict_t*)g_pEngineFuncs->pfnFindEntityByVars(entvars);
-	int entindex = g_pEngineFuncs->pfnIndexOfEdict(g_pEngineFuncs->pfnFindEntityByVars(entvars));
+	edict_t* ed = (edict_t*)g_Pointers.g_pEngineFuncs->pfnFindEntityByVars(entvars);
+	int entindex = g_Pointers.g_pEngineFuncs->pfnIndexOfEdict(g_Pointers.g_pEngineFuncs->pfnFindEntityByVars(entvars));
 	if (entindex < 0 || entindex >= ARRAYSIZE(edict_yaw_times))
 		return g_oAI_ChangeYaw(ent, edx, speed);
 

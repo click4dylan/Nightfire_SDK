@@ -14,6 +14,7 @@ extern void Fix_Gamespy();
 extern void Fix_Water_Hull();
 extern void Fix_RainDrop_WaterCollision();
 extern void Fix_MiniMem_OutOfMemoryMissingNotification();
+extern void Fix_Sprite_Orientation();
 extern void Fix_AI_TurnSpeed();
 extern void Fix_AlertMessage_Crash();
 extern void Fix_Con_DPrintf_StackSmash_Crash();

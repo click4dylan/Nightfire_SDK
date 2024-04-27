@@ -203,6 +203,28 @@ void Fix_RainDrop_WaterCollision()
 	VirtualProtect((LPVOID)touch, 128, old, &old2);
 }
 
+void Fix_Sprite_Orientation()
+{
+	// forcing server-side entities causes sprite orientation to break such as the fireplace in m1_austria03
+	// this removes the below lines from the HLSDK/Nightfire GAMEDLL because Gearcraft DOES set the pitch, yaw and roll correctly
+	
+	// the line specifically below in CSprite::Spawn:
+	//  Worldcraft only sets y rotation, copy to Z
+	//if (pev->angles.y != 0 && pev->angles.z == 0)
+	//{
+	//	pev->angles.z = pev->angles.y;
+	//	pev->angles.y = 0;
+	//}
+
+	DWORD adr;
+	if (FindMemoryPattern(adr, g_gameDllHinst, "7B 1C D9 41 ? D8 1D ? ? ? ? DF E0 F6 C4 44 7A 0C 8B 51", false))
+	{
+		PushProtection(adr);
+		*(unsigned char*)(adr) = 0xEB; //replace with JMP
+		PopProtection();
+	}
+}
+
 // Forces various entities on the server to not delete themselves and instead send to the client
 // Fixes things such as sprite render fx, model/breakable collision, etc
 void Force_ServerSide_Entities_GameDLL()
@@ -307,6 +329,7 @@ void Fix_GameDLL_Bugs()
 
 	already_fixed = true;
 
+	Fix_Sprite_Orientation();
 	Force_ServerSide_Entities_GameDLL();
 	Fix_AI_TurnSpeed();
 	Fix_LighterSpark();
@@ -403,8 +426,8 @@ double* host_frametime;
 DWORD Set_NextSVCmdTime_Jmpback;
 void Set_NextSVCmdTimeCPP()
 {
-	static ConsoleVariable* fps_max = g_pEngineFuncs->pfnGetConsoleVariableGame("fps_max");
-	static ConsoleVariable* sys_ticrate = g_pEngineFuncs->pfnGetConsoleVariableGame("sys_ticrate");
+	static ConsoleVariable* fps_max = g_Pointers.g_pEngineFuncs->pfnGetConsoleVariableGame("fps_max");
+	static ConsoleVariable* sys_ticrate = g_Pointers.g_pEngineFuncs->pfnGetConsoleVariableGame("sys_ticrate");
 	double minimum_frametime = 1.0 / (g_bDedicated ? (double)sys_ticrate->getValueFloat() : (double)fps_max->getValueFloat());
 	minimum_frametime = min(max(minimum_frametime, 1.0 / MAX_FPS), 1.0 / 0.5);
 		
@@ -476,7 +499,7 @@ void AlertMessage(int a1, char* Format, ...)
 	va_list ArgList; // [esp+10h] [ebp+Ch] BYREF
 	static ConsoleVariable* dev = nullptr;
 	if (!dev) //hack
-		g_pEngineFuncs->pfnGetConsoleVariableGame("developer");
+		g_Pointers.g_pEngineFuncs->pfnGetConsoleVariableGame("developer");
 
 	va_start(ArgList, Format);
 	if (a1 == 5 && *g_Pointers.svs_maxclients > 1)
@@ -537,7 +560,7 @@ void Con_DPrintf(const char* fmt, ...)
 {
 	va_list		argptr;
 	char		msg[4096];
-	static ConsoleVariable* dev = g_pEngineFuncs->pfnGetConsoleVariableGame("developer");
+	static ConsoleVariable* dev = g_Pointers.g_pEngineFuncs->pfnGetConsoleVariableGame("developer");
 	if (dev && dev->getValueInt())
 	{
 		va_start(argptr, fmt);
@@ -590,11 +613,10 @@ __declspec(naked) void LoadThisDll_Hook()
 
 void Hook_GameDLLLoadLibrary()
 {
-	DWORD adr;
-	if (!FindMemoryPattern(adr, g_engineDllHinst, "57 53 FF 15 ? ? ? ? 8B F8 85 FF 75 17", false))
+	if (!FindMemoryPattern(nf_hooks::LoadThisDLL_FunctionAddress, g_engineDllHinst, "57 53 FF 15 ? ? ? ? 8B F8 85 FF 75 17", false))
 		return;
 
-	if (!HookFunctionWithMinHook((void*)adr, (void*)&LoadThisDll_Hook, (void**)&g_oLoadThisDll))
+	if (!HookFunctionWithMinHook((void*)nf_hooks::LoadThisDLL_FunctionAddress, (void*)&LoadThisDll_Hook, (void**)&g_oLoadThisDll))
 		return;
 }
 

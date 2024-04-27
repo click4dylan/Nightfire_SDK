@@ -154,7 +154,7 @@ void PostFrame()
 	{
 		for (int i = 1; i <= 32; ++i)
 		{
-			edict_s* player = (edict_s*)g_pEngineFuncs->pfnPEntityOfEntIndex(i);
+			edict_s* player = (edict_s*)g_Pointers.g_pEngineFuncs->pfnPEntityOfEntIndex(i);
 			if (player && player->v.health > 0)
 			{
 				//g_pEngineFuncs->pfnPrecacheModel("models/3rd_person.mdl");
