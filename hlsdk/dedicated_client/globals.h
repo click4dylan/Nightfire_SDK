@@ -5,6 +5,8 @@
 #include "exefuncs.h"
 #include "sys_ded.h"
 
+#include <renderd3d.h>
+
 extern CreateRenderT CreateRender;
 extern CreateRenderPlatformInfoT CreateRenderPlatformInfo;
 extern CreateRenderFeaturesT CreateRenderFeatures;
