@@ -324,7 +324,7 @@ void mm_engClientCommand(edict_t *pEdict, const char *szFmt, ...) {
 }
 
 void mm_ParticleEffect(const float *org, const float *dir, int red, int green, int blue, int count) {
-	META_ENGINE_HANDLE_void(FN_PARTICLEEFFECT, pfnParticleEffect, (org, dir, r, g, b, count));
+	META_ENGINE_HANDLE_void(FN_PARTICLEEFFECT, pfnParticleEffect, (org, dir, red, green, blue, count));
 	RETURN_API_void()
 }
 void mm_LightStyle(int style, const char *val) {

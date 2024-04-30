@@ -171,6 +171,9 @@ struct display_t
 	char data[40000];
 };
 
+class RenderViewportAPI;
+class RenderMaterialAPI;
+
 class d3dRenderable
 {
 public:

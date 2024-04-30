@@ -273,7 +273,7 @@ meta_enginefuncs_t::meta_enginefuncs_t(
             int              (*_pfnRegUserMsg)                      (const char*, int),
             void             (*_pfnUnregUserMsgs)					(void),
             void             (*_pfnGetBonePosition)                 (const edict_t*, int, float*, float* ),
-			BOOLEAN			 (*_pfnGetBoneCoord)					(edict_t *, const char *, int, int),
+			BOOLEAN			 (*_pfnGetBoneCoord)					(edict_t *, const char *, float*, float*),
             uint32           (*_pfnFunctionFromName)                (const char*),
             const char*      (*_pfnNameForFunction)                 (uint32),
             void             (*_pfnClientPrintf)                    (edict_t*, PRINT_TYPE, const char*),
