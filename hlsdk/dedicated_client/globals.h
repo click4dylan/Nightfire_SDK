@@ -7,6 +7,9 @@
 
 #include <renderd3d.h>
 
+// new protocol versions for nightfire patches will cause proper translated connection failures to old clients
+#define PROTOCOL_VERSION 52
+
 extern CreateRenderT CreateRender;
 extern CreateRenderPlatformInfoT CreateRenderPlatformInfo;
 extern CreateRenderFeaturesT CreateRenderFeatures;

@@ -98,7 +98,7 @@ void nf_pointers::GetImportantEngineOffsets(long enginedll)
 		DWORD adr;
 		FindMemoryPattern(adr, enginedll, "68 ? ? ? ? FF 15 ? ? ? ? 8B 3D ? ? ? ? 6A 40", false);
 		if (adr)
-			g_psv = *(server_t***)(adr + 1);
+			g_psv = *(server_t**)(adr + 1);
 	}
 
 	// get studio model api from the engine

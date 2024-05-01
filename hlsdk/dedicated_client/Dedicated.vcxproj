@@ -344,6 +344,7 @@
     <ClCompile Include="nightfire_pointers.cpp" />
     <ClCompile Include="pattern_scanner.cpp" />
     <ClCompile Include="PlayerModelCrash.cpp" />
+    <ClCompile Include="protocol_version.cpp" />
     <ClCompile Include="renderfuncs.cpp" />
     <ClCompile Include="r_studioint.cpp" />
     <ClCompile Include="sv_user.cpp" />

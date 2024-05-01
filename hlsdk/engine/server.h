@@ -138,9 +138,10 @@ struct server_t
 	const char *sound_precache[MAX_SOUNDS];
 	const char *generic_precache[MAX_GENERIC];
 	struct model_s *models[MAX_MODELS];
-#ifndef MAC_VERSION
-	int pc_padding;
-#endif
+	// not sure what this was.
+//#ifndef MAC_VERSION
+	//int pc_padding;
+//#endif
 	struct event_s event_precache[MAX_EVENTS];
 	unsigned short sound_precache_hashedlookup[MAX_SOUNDS_HASHLOOKUP_SIZE];
 	bool_nightfire sound_precache_hashedlookup_built;

@@ -85,7 +85,7 @@ void SV_EstablishTimeBase(client_t *cl, usercmd_t *cmds, int dropped, int numbac
 		time_at_end += cmds[i].msec / 1000.0;
 	}
 
-	cl->svtimebase = *host_frametime + (*g_Pointers.g_psv)->time - (time_at_end + runcmd_time);
+	cl->svtimebase = *host_frametime + g_Pointers.g_psv->time - (time_at_end + runcmd_time);
 }
 
 #if 0

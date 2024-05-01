@@ -27,3 +27,4 @@ extern void Fix_RateDesync();
 extern void Fix_LighterSpark();
 extern void Fix_FirePredictedBullets_GameDLL();
 extern void Fix_FirePredictedBullets_ClientDLL();
+extern void UpdateEngineProtocolVersion();

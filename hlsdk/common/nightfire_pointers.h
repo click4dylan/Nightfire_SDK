@@ -120,7 +120,7 @@ public:
 	netchan_s* cls_netchan{};
 	struct server_static_s *psvs{};						// &svs
 	//struct client_static_s *pcls{};						// &cls
-	server_t** g_psv{};
+	server_t* g_psv{};
 	int* svs_maxclients{};
 	cl_entity_s** g_rCurrentEntity{};
 	struct playermove_s** g_PlayerMove{};

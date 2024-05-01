@@ -134,7 +134,12 @@ void CL_PrecacheResources()
 	//egon_amplitude->setValueFloat(1.0f);
 	//g_pEngineFuncs->pfnCreateConsoleVariableGame(IConsoleVariable(CVAR_FLOAT, "egon_amplitude", "", "1.0", FCVAR_EXTDLL));
 	g_oCL_PrecacheResources();
-	beam_sprite = g_Pointers.g_pEngineFuncs->pfnPrecacheModel("sprites/laser_beam.spz");
+
+	// FIXME: can't precache as a client unless the server also precached the item. This will kick us when joining a multiplayer server
+	if (g_Pointers.g_psv->state == ss_loading || g_Pointers.g_psv->state == ss_active)
+		beam_sprite = g_Pointers.g_pEngineFuncs->pfnPrecacheModel("sprites/laser_beam.spz");
+	else
+		beam_sprite = -1;
 }
 
 void Hook_CL_PrecacheResources()

@@ -159,6 +159,9 @@
     <ClCompile Include="gamedll\FirePredictedBullets.cpp">
       <Filter>Source Files\fixes</Filter>
     </ClCompile>
+    <ClCompile Include="protocol_version.cpp">
+      <Filter>Source Files\fixes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="dedicated.rc">

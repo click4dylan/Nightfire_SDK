@@ -752,6 +752,7 @@ void Fix_Engine_Bugs()
 	Fix_FpsCap();
 	Fix_UserInfoString();
 	Fix_TempEnts();
+	UpdateEngineProtocolVersion();
 }
 
 void Fix_Gamespy()
