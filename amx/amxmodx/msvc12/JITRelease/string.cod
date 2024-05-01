@@ -9,8 +9,6 @@
 INCLUDELIB LIBCMT
 INCLUDELIB OLDNAMES
 
-PUBLIC	??_C@_02DPKJAMEF@?$CFd?$AA@			; `string'
-PUBLIC	??_C@_02NJPGOMH@?$CFf?$AA@			; `string'
 PUBLIC	??_C@_0CA@BOKAAEHK@Pos?5has?5to?5be?5a?5positive?5number?$AA@ ; `string'
 PUBLIC	?string_Natives@@3PAUtagAMX_NATIVE_INFO@@A	; string_Natives
 PUBLIC	??_C@_0CE@BPGCCENF@Invalid?5vararg?5parameter?5passed?3@ ; `string'
@@ -69,6 +67,8 @@ PUBLIC	??_C@_07KJDOPNEF@vformat?$AA@			; `string'
 PUBLIC	??_C@_0BM@KJALMONH@No?5search?5string?5specified?4?$AA@ ; `string'
 PUBLIC	??_C@_0CJ@NFNJDNGL@replace?$CI?$CJ?5buffer?5not?5big?5enough?5@ ; `string'
 PUBLIC	??_C@_0CK@IBLGDDPF@Cannot?5replace?5searches?5of?5empty@ ; `string'
+PUBLIC	??_C@_02DPKJAMEF@?$CFd?$AA@			; `string'
+PUBLIC	??_C@_02NJPGOMH@?$CFf?$AA@			; `string'
 _BSS	SEGMENT
 ?g_cpbuf@@3PAHA DD 01000H DUP (?)			; g_cpbuf
 _BSS	ENDS
@@ -76,6 +76,14 @@ _BSS	ENDS
 _BSS	SEGMENT
 ?cpbuf@?1??vformat@@YAHPAUtagAMX@@PAH@Z@4PAHA DD 01000H DUP (?) ; `vformat'::`2'::cpbuf
 _BSS	ENDS
+;	COMDAT ??_C@_02NJPGOMH@?$CFf?$AA@
+CONST	SEGMENT
+??_C@_02NJPGOMH@?$CFf?$AA@ DB '%f', 00H			; `string'
+CONST	ENDS
+;	COMDAT ??_C@_02DPKJAMEF@?$CFd?$AA@
+CONST	SEGMENT
+??_C@_02DPKJAMEF@?$CFd?$AA@ DB '%d', 00H		; `string'
+CONST	ENDS
 ;	COMDAT ??_C@_0CK@IBLGDDPF@Cannot?5replace?5searches?5of?5empty@
 CONST	SEGMENT
 ??_C@_0CK@IBLGDDPF@Cannot?5replace?5searches?5of?5empty@ DB 'Cannot repla'
@@ -416,14 +424,6 @@ _DATA	ENDS
 CONST	SEGMENT
 ??_C@_0CA@BOKAAEHK@Pos?5has?5to?5be?5a?5positive?5number?$AA@ DB 'Pos has'
 	DB	' to be a positive number', 00H		; `string'
-CONST	ENDS
-;	COMDAT ??_C@_02NJPGOMH@?$CFf?$AA@
-CONST	SEGMENT
-??_C@_02NJPGOMH@?$CFf?$AA@ DB '%f', 00H			; `string'
-CONST	ENDS
-;	COMDAT ??_C@_02DPKJAMEF@?$CFd?$AA@
-CONST	SEGMENT
-??_C@_02DPKJAMEF@?$CFd?$AA@ DB '%d', 00H		; `string'
 CONST	ENDS
 PUBLIC	___local_stdio_printf_options
 PUBLIC	??$__vcrt_va_start_verify_argument_type@QBD@@YAXXZ ; __vcrt_va_start_verify_argument_type<char const * const>

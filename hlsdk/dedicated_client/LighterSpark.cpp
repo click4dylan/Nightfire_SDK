@@ -111,7 +111,7 @@ void Fix_LighterSpark()
     static bool fixed_client = false;
     static bool fixed_server = false;
 
-    if (*g_clientDllHinst && !fixed_client)
+    if (g_clientDllHinst && *g_clientDllHinst && !fixed_client)
     {
         // overwrite client.dll primaryattack
         PlaceJMP((BYTE*)0x4100A9D0, (DWORD)&CLighter_PrimaryAttack, 5);

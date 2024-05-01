@@ -7,4 +7,4 @@ extern int CreateConsoleWindow(void);
 extern void ProcessConsoleInput(void);
 extern void DestroyConsoleWindow(void);
 extern void UpdateStatus(int force);
-extern void ProcessCommands(char* cmdline);
+extern void ProcessCommands(const char* cmdline);

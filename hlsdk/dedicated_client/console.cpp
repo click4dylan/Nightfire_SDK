@@ -149,66 +149,61 @@ void DestroyConsoleWindow(void)
 	DeinitConProc();
 }
 
-void ProcessCommands(char* cmdline)
+// note: TODO: FIXME: nightfire has a bug in this function. 
+// the only way to have command line options work properly is to follow this order:
+// all -  keys with no value go first (-dedicated)
+// all - keys with a value (-port 26015) go second
+// all + keys with or without value (+map ctf_romania) go last
+void __cdecl ProcessCommands(const char* input)
 {
-	const char* v1; // r28
-	const char* v2; // r30
-	char v3; // r10
-	char v4; // r11
-	char v5; // r4
-	int v6; // r8
-	int v7; // r10
-	char v8; // r11
-	char i; // r9
-	char tmp[2052]; // [sp+40h] [-820h] BYREF
+	char buffer[2048];
 
-	v1 = cmdline;
-	v2 = cmdline;
-	v3 = *cmdline;
-	v4 = *cmdline;
-	if (*cmdline)
+	const char* current = input;
+	if (*input)
 	{
 		while (1)
 		{
-			if (v3 == '+')
+			if (*current == '+')
 			{
-				if (v2 == v1)
+				if (current == input)
 					break;
-				v5 = *(v2 - 1);
-				if (v5 == ' ' || v5 == '\t')
+				char v3 = *(current - 1);
+				if (v3 == ' ' || v3 == '\t')
 					break;
 			}
-			if (v4)
-				v4 = *++v2;
-		LABEL_22:
-			v3 = v4;
-			if (!v4)
-				return;
+			if (*current)
+			{
+				++current;
+			LABEL_20:
+				if (*current)
+					continue;
+			}
+			return;
 		}
-		memset(tmp, 0, 2048u);
-		++v2;
-		v6 = 0;
-		v7 = 0;
-		while (++v6 <= '\n')
+		memset(buffer, 0, sizeof(buffer));
+		++current;
+		int i = 0;
+		for (int command_number = 0; command_number < 10; ++command_number)
 		{
-			v8 = *v2;
-			for (i = *v2; *v2 != ' ' && v8 != '\t' && v8; i = *v2)
+			for (char current_char = *current; *current != ' '; current_char = *current)
 			{
-				tmp[v7] = i;
-				++v2;
-				if (++v7 > 2047)
+				if (current_char == '\t' || !current_char)
+					break;
+				++current;
+				buffer[i++] = current_char;
+				if (i >= 2048)
 					return;
-				v8 = *v2;
 			}
-			tmp[v7++] = ' ';
-			if (v8)
-				v8 = *++v2;
-			if (v8 == '+' || !v8)
+
+			buffer[i++] = ' ';
+			if (*current != '\0')
+				++current;
+			if (*current == '+' || !*current)
 			{
-				strcpy(&tmp[v7 - 1], "\n");
-				g_EngineAPI.ConsoleBuffer_AddText(tmp);
-				v4 = *v2;
-				goto LABEL_22;
+				buffer[i - 1] = '\n';
+				buffer[i] = 0;
+				g_EngineAPI.ConsoleBuffer_AddText(buffer);
+				goto LABEL_20;
 			}
 		}
 	}

@@ -57,8 +57,8 @@ HANDLE* g_pMultipleInstanceMutex = nullptr;
 // System Memory & Size
 unsigned char* s_pMemBase = NULL;
 size_t s_MemSize = 0;
-size_t				s_HunkSize = 20; //64mb nf hunk //0x2000000;  // 32 Mb default heapsize
-size_t				s_HeapSize = 128; //72mb nf heap
+size_t				s_HunkSize = 60; //default nightfire value is 20
+size_t				s_HeapSize = 256; //default nightfire value is 128
 
 exefuncs_t s_LauncherAPI;
 

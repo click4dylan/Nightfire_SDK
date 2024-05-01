@@ -333,13 +333,15 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 		if (heap > 0)
 			s_HeapSize = heap; //Heap in MB
 	}
-
+	
+	/*
 	if ((CheckParm("-heapsize", &p)) && p)
 	{
 		int hunk = atoi(p);
 		if (hunk > 0)
 			s_HunkSize = hunk * 1024; //Bits to Bytes
 	}
+	*/
 
 	if ((CheckParm("-hunk", &p)) && p)
 	{
