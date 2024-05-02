@@ -8,6 +8,7 @@
 // dedicated.h
 #ifndef INC_DEDICATEDH
 #define INC_DEDICATEDH
+
 #include <Windows.h>
 #include "exefuncs.h"
 #include "nightfire_other.h"
@@ -54,6 +55,7 @@ extern BOOLEAN Render_Close(void);
 extern bool Render_Shutdown(void);
 extern void unlinkGUIDll(void);
 extern void unlinkEngineDll(void);
-BOOLEAN Render_Open(unsigned cfullscreen, unsigned cwidth, unsigned cheight, unsigned ccolorbits, unsigned crefreshrate, unsigned cantialias, unsigned cvsync, unsigned chwinfo);
+BOOLEAN Render_Open(bool cfullscreen, unsigned cwidth, unsigned cheight, unsigned ccolorbits, unsigned crefreshrate, unsigned cantialias, bool cvsync, bool chwinfo);
 extern long g_guiDllHinst;
+
 #endif

@@ -116,6 +116,7 @@ void ClientDLL_Init()
 
 void RunMetaHook()
 {
+
 	// hook renderer temporarily for debugging
 //#ifdef _DEBUG
 	Hook_SCR_ConnectMsg();

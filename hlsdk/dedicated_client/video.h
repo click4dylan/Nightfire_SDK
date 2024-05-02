@@ -3,7 +3,7 @@
 
 //sub_00401D50
 extern BOOLEAN Render_Close(void);
-extern BOOLEAN Render_Open(unsigned cfullscreen, unsigned cwidth, unsigned cheight, unsigned ccolorbits, unsigned crefreshrate, unsigned cantialias, unsigned cvsync, unsigned chwinfo);
+extern BOOLEAN Render_Open(bool cfullscreen, unsigned cwidth, unsigned cheight, unsigned ccolorbits, unsigned crefreshrate, unsigned cantialias, bool cvsync, bool chwinfo);
 extern int UnregisterWindowClass(int unknown, HWND window);
 extern HWND CreateRenderWindow(unsigned u1, char alwaysontop, unsigned width, unsigned height);
 extern HWND CreateRenderWindow(unsigned u1, char alwaysontop, unsigned width, unsigned height);

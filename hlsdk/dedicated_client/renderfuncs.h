@@ -10,12 +10,12 @@ enum DevTextColor : int
 	GREEN = 4,
 	PURPLE = 5
 };
-inline void DrawDevText(DevTextColor color, int x, int y, const char* str)
+inline void DrawDevText(DevTextColor color, int x, int y, const char* text)
 {
 	__asm
 	{
 		mov eax, color
-		push str
+		push text
 		push y
 		push x
 		mov ecx, 0x43056180

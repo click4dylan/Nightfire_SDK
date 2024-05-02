@@ -38,17 +38,15 @@ typedef struct
 
 typedef struct
 {
-	float					prevanimtime;  
-	float					sequencetime;
-	byte					prevseqblending[2];
-	vec3_t					prevorigin;
-	vec3_t					prevangles;
-
-	int						prevsequence;
-	float					prevframe;
-
-	byte					prevcontroller[4];
-	byte					prevblending[2];
+	float					prevanimtime;  //2924
+	float					sequencetime; //2928
+	byte					prevblending[2]; //2932
+	byte					prevseqblending[2]; //2934
+	vec3_t					prevorigin; //2936
+	vec3_t					prevangles; //2948
+	byte					prevcontroller[4]; //2960
+	int						prevsequence; //2964
+	float					prevframe; //2968
 } latchedvars_t;
 
 typedef struct
@@ -74,7 +72,6 @@ typedef struct cl_entity_s cl_entity_t;
 #include "progs.h"
 #endif
 
-#pragma pack(push, 4)
 struct cl_entity_s
 {
 	int						index;      // Index into cl_entities ( should match actual slot, but not necessarily )
@@ -123,6 +120,5 @@ struct cl_entity_s
 	char pad2[280];
 };
 //size: 3336
-#pragma pack(pop)
 
 #endif // !CL_ENTITYH

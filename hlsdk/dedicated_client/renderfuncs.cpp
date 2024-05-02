@@ -126,25 +126,27 @@ __declspec(naked) void Hooked_SCR_ConnectMsg()
 	}
 }
 
-void(*g_oCL_PrecacheResources)();
-void CL_PrecacheResources()
+bool(*g_oCL_PrecacheResources)();
+bool CL_PrecacheResources()
 {
 	//ConsoleVariable* egon_amplitude = (ConsoleVariable*)0x4310F998;
 	//float val = egon_amplitude->getValue();
 	//egon_amplitude->setValueFloat(1.0f);
 	//g_pEngineFuncs->pfnCreateConsoleVariableGame(IConsoleVariable(CVAR_FLOAT, "egon_amplitude", "", "1.0", FCVAR_EXTDLL));
-	g_oCL_PrecacheResources();
+	bool result = g_oCL_PrecacheResources();
 
 	// FIXME: can't precache as a client unless the server also precached the item. This will kick us when joining a multiplayer server
 	if (g_Pointers.g_psv->state == ss_loading || g_Pointers.g_psv->state == ss_active)
 		beam_sprite = g_Pointers.g_pEngineFuncs->pfnPrecacheModel("sprites/laser_beam.spz");
 	else
 		beam_sprite = -1;
+
+	return result;
 }
 
 void Hook_CL_PrecacheResources()
 {
-	HookFunctionWithMinHook((void*)0x43033DC0, (void*)&CL_PrecacheResources, (void**)&g_oCL_PrecacheResources);
+	HookFunctionWithMinHook((void*)0x43033DC0, CL_PrecacheResources, (void**)&g_oCL_PrecacheResources);
 }
 
 void Hook_SCR_ConnectMsg()

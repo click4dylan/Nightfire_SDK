@@ -518,7 +518,7 @@ int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	// dylan test stuff
 	//CreateThread(0, 0, test, 0, 0, 0);
 
-	g_EngineAPI.Game_Init(s_szCmdLine, s_pMemBase, s_MemSize, &s_LauncherAPI, &g_EngWnd, NULL, nosound, cdpath);
+	g_EngineAPI.GameInit(s_szCmdLine, s_pMemBase, s_MemSize, &s_LauncherAPI, &g_EngWnd, false, nosound, cdpath);
 
 	g_EngineAPI.SCR_SetWindowPosition(g_WindowX, g_WindowY);
 	g_EngineAPI.SetStartupMode(1);

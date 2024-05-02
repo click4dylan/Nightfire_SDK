@@ -4,7 +4,6 @@
 //
 // $NoKeywords: $
 //=============================================================================
-
 // conproc.c -- support for qhost
 #include "dedicated.h"
 #include "sys_ded.h"

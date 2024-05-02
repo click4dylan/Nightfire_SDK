@@ -188,7 +188,7 @@ public:
 	virtual d3dFrameBufferTexture* getScreenshot();
 	virtual void setWireFrame(bool wireframe);
 	virtual ~d3dRenderable();
-	virtual bool doClear() { return ClearBuffers(clear_to_color, true, clear_to_stencil, clear_color, 1.0f, clear_stencil); }
+	virtual bool doClear() { return ClearBuffers(clear_to_color ? true : false, true, clear_to_stencil ? true : false, clear_color, 1.0f, clear_stencil); }
 	virtual bool doRender();
 	virtual bool doFlip();
 	virtual int doPresent();

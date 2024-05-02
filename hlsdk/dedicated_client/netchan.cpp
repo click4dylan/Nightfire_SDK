@@ -111,7 +111,7 @@ void nf_hooks::Netchan_CreateFragments_(BOOL server, netchan_s* chan, sizebuf_s*
 		unsigned int compressedSize = msg->cursize - sizeof(hdr);	// we should fit in same data buffer minus 4 bytes for a header
 		if (!BZ2_bzBuffToBuffCompress((char*)compressed, &compressedSize, (char*)msg->data, msg->cursize, 9, 0, 30))
 		{
-			//Con_DPrintf("Compressing split packet (%d -> %d bytes)\n", msg->cursize, compressedSize);
+			g_Pointers.g_pCL_EngineFuncs->Con_DPrintf("Compressing split packet (%d -> %d bytes)\n", msg->cursize, compressedSize);
 			memcpy(msg->data, hdr, sizeof(hdr));
 			memcpy(msg->data + sizeof(hdr), compressed, compressedSize);
 			msg->cursize = compressedSize + sizeof(hdr);
@@ -340,7 +340,7 @@ void nf_hooks::Netchan_Clear(netchan_s* chan)
 
 	if (chan->reliable_length)
 	{
-		//Con_DPrintf("%s: reliable length not 0, reliable_sequence: %d, incoming_reliable_acknowledged: %d\n", __func__, chan->reliable_length, chan->incoming_reliable_acknowledged);
+		g_Pointers.g_pCL_EngineFuncs->Con_DPrintf("%s: reliable length not 0, reliable_sequence: %d, incoming_reliable_acknowledged: %d\n", __func__, chan->reliable_length, chan->incoming_reliable_acknowledged);
 		chan->reliable_sequence ^= 1;
 		chan->reliable_length = 0;
 	}
@@ -370,7 +370,7 @@ void nf_hooks::Netchan_Setup(netsrc_t socketnumber, netchan_t* chan, netadr_t ad
 	nf_hooks::Netchan_Setup_orig(socketnumber, chan, adr, player_slot, connection_status, pfnNetchan_Blocksize);
 #else
 	Netchan_Clear(chan);
-	memset(chan, 0, 9496);
+	memset(chan, 0, sizeof(netchan_t)); //9496
 	chan->sock = socketnumber;
 	chan->player_slot = player_slot + 1;
 	chan->remote_address = adr;

@@ -49,7 +49,7 @@ typedef struct engine_api_s
 	int		( *Host_Frame )					( float time, int iState, int *stateInfo );
 	void	( *Host_GetHostInfo )			( float *fps, int *nActive, int *nSpectators, int *nMaxPlayers, char *pszMap, int sizeOfMapString, float *flInKB, float *flOutKB );
 	void	( *Host_Shutdown )				( void );
-	bool	( *Game_Init )					( char *lpCmdLine, unsigned char *pMem, int iSize, struct exefuncs_s *pef, HWND* g_EngWnd, void *, int nosound, const char* cdpath );
+	bool	( *GameInit )					( const char *lpCmdLine, unsigned char *pMem, int iSize, struct exefuncs_s *pef, HWND* g_EngWnd, bool isauthenticationserver, bool nosound, const char* cdpath );
 	void	( *SCR_SetWindowPosition )		( int x, int y );
 	void	( *IN_ActivateMouse )			( void );
 	void	( *IN_ClearStates )				( void );

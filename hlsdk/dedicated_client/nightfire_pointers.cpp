@@ -167,7 +167,7 @@ void nf_pointers::GetImportantEngineOffsets(long enginedll)
 		FindMemoryPattern(pattern_t(MSG_ReadStringLine, enginedll, "E8 ? ? ? ? 8D 4C 24 18 8B F0", false, false, 0, 1, true, "MSG_ReadStringLine", true));
 		FindMemoryPattern(pattern_t(MSG_ReadAngle, enginedll, "E8 ? ? ? ? D9 5C 24 54 89 74 24 58", false, false, 0, 1, true, "MSG_ReadAngle", true));
 		FindMemoryPattern(pattern_t(MSG_ReadHiresAngle, enginedll, "E8 ? ? ? ? D9 5C 24 00 D9 05 ? ? ? ?", false, false, 0, 1, true, "MSG_ReadHiresAngle", true));
-		FindMemoryPattern(pattern_t(MSG_WriteByte, enginedll, "E8 ? ? ? ? 6A 33", false, false, 0, 1, true, "MSG_WriteByte", true));
+		FindMemoryPattern(pattern_t(MSG_WriteByte, enginedll, "E8 ? ? ? ? 8B 87 ? ? ? ? 50 E8 ? ? ? ? 50", false, false, 0, 1, true, "MSG_WriteByte", true));
 		FindMemoryPattern(pattern_t(MSG_WriteShort, enginedll, "E8 ? ? ? ? 6A 2D", false, false, 0, 1, true, "MSG_WriteShort", true));
 		FindMemoryPattern(pattern_t(MSG_WriteWord, enginedll, "8B 44 24 04 6A 02 50 E8 ? ? ? ? 8B 4C 24 10 88 08 C1 F9 08 83 C4 08 88 48 01 C3 90 90 90 90 8B 44 24 04 6A 04", false, "MSG_WriteWord", true));
 		FindMemoryPattern(pattern_t(MSG_WriteLong, enginedll, "E8 ? ? ? ? 6A 39", false, false, 0, 1, true, "MSG_WriteLong", true));

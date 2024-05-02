@@ -25,6 +25,7 @@
 #define ENTITY_BEAM			(1<<1)
 
 #include <bool_nightfire.h>
+#include "weaponinfo.h"
 
 // Entity state is used for the baseline and for delta compression of a packet of 
 //  entities that is sent to a client.
@@ -186,7 +187,6 @@ typedef struct clientdata_s
 } clientdata_t;
 //0x1FC mac
 
-#include "weaponinfo.h"
 
 typedef struct local_state_s
 {

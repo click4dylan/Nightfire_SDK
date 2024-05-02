@@ -92,9 +92,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <StringPooling>true</StringPooling>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
@@ -104,11 +101,7 @@
       <PrecompiledHeaderOutputFile>.\Release\Dedicated.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
       <InterproceduralOptimization>MultiFile</InterproceduralOptimization>
       <OptimizeForWindowsApplication>true</OptimizeForWindowsApplication>
       <EnableMatrixMultiplyLibraryCall>Yes</EnableMatrixMultiplyLibraryCall>
@@ -117,11 +110,8 @@
       <GenerateAlternateCodePaths>None</GenerateAlternateCodePaths>
       <UseProcessorExtensions>SSE2</UseProcessorExtensions>
       <UseMSVC>true</UseMSVC>
-      <FloatingPointModel>Precise</FloatingPointModel>
-      <ExceptionHandling>false</ExceptionHandling>
-      <OmitFramePointers>true</OmitFramePointers>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -144,7 +134,6 @@
       <SubSystem>Windows</SubSystem>
       <OutputFile>.\Release/$(TargetName).exe</OutputFile>
       <AdditionalDependencies>uxtheme.lib;wsock32.lib;odbc32.lib;odbccp32.lib;winmm.lib;psapi.lib;..\utils\procinfo\lib\win32_vc6\procinfo.lib;..\platform.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <GenerateMapFile>false</GenerateMapFile>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <BaseAddress>0x400000</BaseAddress>
@@ -156,6 +145,7 @@
       <StackCommitSize>4096</StackCommitSize>
       <LargeAddressAware>true</LargeAddressAware>
       <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_SWDS|Win32'">

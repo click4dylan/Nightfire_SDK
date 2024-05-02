@@ -71,7 +71,7 @@ int ResChangeHandler()
 	return result;
 }
 
-BOOLEAN Render_Open(unsigned cfullscreen, unsigned cwidth, unsigned cheight, unsigned ccolorbits, unsigned crefreshrate, unsigned cantialias, unsigned cvsync, unsigned chwinfo)
+BOOLEAN Render_Open(bool cfullscreen, unsigned cwidth, unsigned cheight, unsigned ccolorbits, unsigned crefreshrate, unsigned cantialias, bool cvsync, bool chwinfo)
 {
 	int ccantialias; // esi@3
 	int ccrefreshrate; // ebx@3
