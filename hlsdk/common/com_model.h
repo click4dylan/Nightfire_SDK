@@ -84,15 +84,18 @@ typedef enum
 
 #endif
 
+// nightfire struct in bsp
 typedef struct dmodel_s
 {
-	float mins[3] = { 0 }, maxs[3] = { 0 };
-	float origin[3] = { 0 };
+	float mins[3] = { 0 };
+	float maxs[3] = { 0 };
 	int headnode[MAX_MAP_HULLS] = { 0 };
-	int visleafs = 0;  // not including the solid leaf 0
-	int firstface = 0, numfaces = 0;
+	int firstleaf = 0;
+	int numleafs = 0;
+	int firstface = 0;
+	int numfaces = 0;
 } dmodel_t;
-//size: 0x40
+//size: 0x38
 
 // nightfire structure in memory
 typedef struct mplane_s
@@ -163,6 +166,13 @@ typedef struct
 					   // s or t = dot(3Dpoint,vecs[i])+vecs[i][3]
 } mtexinfo_t;
 //size: 0x20
+
+// nightfire structure in bsp
+typedef struct
+{
+	float           point[3];
+}
+dvertex_t;
 
 // 06/23/2002 MAH
 // This structure is only need for hardware rendering

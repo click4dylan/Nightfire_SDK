@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34723.18
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bbsp_fixes", "bbsp_fixes.vcxproj", "{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		DebugEXE|x64 = DebugEXE|x64
+		DebugEXE|x86 = DebugEXE|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.Debug|x64.ActiveCfg = Debug|x64
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.Debug|x64.Build.0 = Debug|x64
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.Debug|x86.ActiveCfg = Debug|Win32
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.Debug|x86.Build.0 = Debug|Win32
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.DebugEXE|x64.ActiveCfg = DebugEXE|x64
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.DebugEXE|x64.Build.0 = DebugEXE|x64
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.DebugEXE|x86.ActiveCfg = DebugEXE|Win32
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.DebugEXE|x86.Build.0 = DebugEXE|Win32
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.Release|x64.ActiveCfg = Release|x64
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.Release|x64.Build.0 = Release|x64
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.Release|x86.ActiveCfg = Release|Win32
+		{AAF6C67F-D188-47BA-B03C-DE55D303D9AC}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B9CD18DD-04ED-4E1E-B1DE-50BF6326E656}
+	EndGlobalSection
+EndGlobal
