@@ -77,31 +77,24 @@ void WriteDrawLeaf(node_t* node)
     }
 }
 
-node_t* FindLeafNodeAlongVector(node_t* startNode, const double* vector)
+node_t* PointInLeaf(node_t* node, const vec3_t point)
 {
-    while (startNode->planenum != -1)
-    {
-        const plane_t& plane = gMappedPlanes[startNode->planenum];
-        double dotProduct = plane.normal[0] * vector[0] +
-            plane.normal[1] * vector[1] +
-            plane.normal[2] * vector[2] -
-            plane.dist;
+    if (node->planenum == -1)
+        return node;
 
-        if (dotProduct <= 0.0)
-            startNode = startNode->children[1];
-        else
-            startNode = startNode->children[0];
-    }
+    const plane_t& plane = gMappedPlanes[node->planenum];
+    vec_t d = DotProduct(plane.normal, point) - plane.dist;
 
-    return startNode;
+    if (d > 0)
+        return PointInLeaf(node->children[0], point);
+
+    return PointInLeaf(node->children[1], point);
 }
 
-bool PlaceOccupant(double* a1, node_t* n, unsigned int entindex)
+bool PlaceOccupant(const vec3_t point, node_t* headnode, unsigned int entindex)
 {
-    node_t* LeafNodeAlongVector; // eax
-
-    LeafNodeAlongVector = FindLeafNodeAlongVector(n, a1);
-    MarkLeafOccupancyAndCheckLeaks(LeafNodeAlongVector, entindex);
+    node_t* n = PointInLeaf(headnode, point);
+    MarkLeafOccupancyAndCheckLeaks(n, entindex);
     if (g_bLeaked)
     {
         g_CurrentEntity = entindex;
@@ -156,9 +149,9 @@ void CountLeaves(int level, node_t* node)
         if (node->occupied)
             ++g_numOccupiedLeafs;
         if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
-            ++g_NumSolidLeafs;
+            ++g_numSolidLeafs2;
 
-        ++g_NumLeafs2;
+        ++g_numLeafs2;
     }
 
     if (node->children[0])
@@ -169,16 +162,16 @@ void CountLeaves(int level, node_t* node)
 
 void PrintLeafMetrics(node_t* node, const char* name)
 {
-    g_NumLeafs2 = 0;
-    g_numSolidLeafs = 0;
+    g_numLeafs2 = 0;
+    g_numSolidLeafs2 = 0;
     g_numOccupiedLeafs = 0;
     g_numFloodedLeafs = 0;
 
     CountLeaves(0, node);
 
     Verbose("Leaf metrics : %s\n", name);
-    Verbose("%5i empty nodes\n", g_numEmptyNodes);
-    Verbose("%5i solid nodes\n", g_numSolidNodes);
-    Verbose("%5i empty leafs\n", g_numEmptyLeafs);
-    Verbose("%5i solid leafs\n", g_numSolidLeafs);
+    Verbose("%5i leafs\n", g_numLeafs2);
+    Verbose("%5i solid leafs\n", g_numSolidLeafs2);
+    Verbose("%5i occupied leafs\n", g_numOccupiedLeafs);
+    Verbose("%5i flooded leafs\n", g_numFloodedLeafs);
 }

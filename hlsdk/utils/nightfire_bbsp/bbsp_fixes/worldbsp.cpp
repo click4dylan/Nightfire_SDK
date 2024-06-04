@@ -302,15 +302,11 @@ void PrintLeakInfoIfLeaked(entinfo_t* entinfo, int pass_num)
     }
 }
 
-node_t* FillOutside(entinfo_t* entinfo, node_t* a2, int pass_num) 
+node_t* FillOutside(entinfo_t* entinfo, node_t* node, int pass_num) 
 {
-    node_t* node = a2;
-    entinfo_t* entInfo = entinfo;
-    unsigned int numEntities = entInfo->numentities;
-    unsigned int entityIndex = 1;
     g_EntInfo = entinfo;
-    g_bLeaked = 0;
-    bool occupantFound = false;
+    g_bLeaked = false;
+    bool inside = false;
 
     Verbose("----- FillOutside ----\n");
     pointfile = fopen(g_pointfilename, "w");
@@ -320,51 +316,60 @@ node_t* FillOutside(entinfo_t* entinfo, node_t* a2, int pass_num)
     if (!linefile)
         Error("Couldn't open linefile '%s'\n", g_linefilename);
 
-    PrintLeafMetrics(a2, "Original tree");
+    PrintLeafMetrics(node, "Original tree");
 
-    for (; entityIndex < numEntities; ++entityIndex) 
+    for (unsigned int i = 1; i < entinfo->numentities; ++i)
     {
         if (g_bLeaked)
             break;
 
-        entity_t* entity = entInfo->entities[entityIndex];
-        double origin[3];
+        entity_t* entity = entinfo->entities[i];
+        vec_t origin[3];
         GetVectorForKey(entity, "origin", origin);
-        const char* classname = ValueForKey(entity, "classname");
+        const char* cl = ValueForKey(entity, "classname");
 
-        if (!entity->numbrushes) 
+        if (!entity->numbrushes)
         {
             // Check if origin is close to (0, 0, 0)
-            int i;
-            for (i = 0; i < 24 && fabs(origin[i / 8] - 0.0) <= 0.001; i += 8);
-
-            if (i >= 24)
-                // All coordinates are near 0, skip processing
-                continue;
-
-            if (!strcmp(classname, "info_player_start")) 
+            //FIXME: zhlt in hl1 had a fix for this!  if (*ValueForKey(&g_entities[i], "origin")) //--vluzacn
+            if (!VectorCompare(origin, vec3_origin))
             {
-                for (int x = -16; x <= 16 && !occupantFound; x += 16) 
+                origin[2] += 1;                            // so objects on floor are ok
+
+                // nudge playerstart around if needed so clipping hulls always have a valid point
+                if (!strcmp(cl, "info_player_start"))
                 {
-                    for (int y = -16; y <= 16 && !occupantFound; y += 16) 
+                    int             x, y;
+
+                    for (x = -16; x <= 16; x += 16)
                     {
-                        vec3_t testOrigin = { origin[0] + x, origin[1] + y, origin[2] };
-                        if (PlaceOccupant(testOrigin, node, entityIndex))
-                            occupantFound = true;
+                        for (y = -16; y <= 16; y += 16)
+                        {
+                            origin[0] += x;
+                            origin[1] += y;
+                            if (PlaceOccupant(origin, node, i))
+                            {
+                                inside = true;
+                                goto gotit;
+                            }
+                            origin[0] -= x;
+                            origin[1] -= y;
+                        }
                     }
+                gotit:;
                 }
-            }
-            else {
-                if (PlaceOccupant(origin, node, entityIndex)) {
-                    occupantFound = true;
+                else
+                {
+                    if (PlaceOccupant(origin, node, i))
+                        inside = true;
                 }
             }
         }
     }
 
-    if (occupantFound) 
+    if (inside)
     {
-        PrintLeakInfoIfLeaked(entInfo, pass_num);
+        PrintLeakInfoIfLeaked(entinfo, pass_num);
         fclose(pointfile);
         fclose(linefile);
         pointfile = NULL;

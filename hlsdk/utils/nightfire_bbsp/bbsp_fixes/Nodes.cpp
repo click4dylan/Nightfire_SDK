@@ -310,7 +310,7 @@ void CalcInternalNodes(node_t* node)
     CalcInternalNodes_r(node);
 }
 
-int g_PortalLog[MAX_MAP_PORTALS];
+unsigned int g_PortalLog[MAX_MAP_PORTALS];
 
 void MakeNodePortal(node_t* node)
 {

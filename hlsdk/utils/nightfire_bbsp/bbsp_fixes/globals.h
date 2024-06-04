@@ -110,11 +110,19 @@ inline texinfo_t g_texinfo[MAX_MAP_TEXINFO];
 #define TEXTURE_REFERENCE_MAX_SIZE (sizeof(int) * 1024)
 inline unsigned g_TextureReferenceCount[MAX_MAP_TEXTURES];
 inline unsigned g_numWindings = 0;
+
+// yeah...
 inline unsigned g_numOccupiedLeafs = 0;
-inline unsigned g_NumSolidLeafs = 0;
-inline unsigned g_NumLeafs2 = 0;
+inline unsigned g_numSolidLeafs2 = 0;
+inline unsigned g_numLeafs2 = 0;
 inline unsigned g_numFloodedLeafs = 0;
 inline unsigned g_numFalseNodes = 0;
+
+// yeah.. 
+inline unsigned g_numEmptyLeafs = 0;
+inline unsigned g_numSolidLeafs = 0;
+inline unsigned g_numEmptyNodes = 0;
+inline unsigned g_numSolidNodes = 0;
 inline int g_MapVersion = 0;
 //#define g_TextureReferenceCount  ((int*)0x8BE2318)
 //#define g_numWindings *(int*)0x8BE3318
@@ -127,8 +135,8 @@ inline int g_MapVersion = 0;
 //#define threadstart *(double*)0x8BE3330
 
 //#define g_numOccupiedLeafs *(int*)0x8BE3338
-//#define g_NumSolidLeafs *(int*)0x8BE333C
-//#define g_NumLeafs2 *(int*)0x8BE3340
+//#define g_numSolidLeafs2 *(int*)0x8BE333C
+//#define g_numLeafs2 *(int*)0x8BE3340
 //#define g_numFloodedLeafs *(int*)0x8BE3344
 //#define g_numFalseNodes *(int*)0x8BE3348
 //#define g_MapVersion *(int*)0x8BE334C
@@ -182,10 +190,6 @@ inline unsigned g_numNodes = 0;
 //50000 ints of frontplane, backplane 
 //#define g_PortalLog ((int*)0x42A3E8)
 //#define g_NumLeafFrontFaces *(int*)0x45B128
-inline unsigned g_numEmptyLeafs = 0;
-inline unsigned g_numSolidLeafs = 0;
-inline unsigned g_numEmptyNodes = 0;
-inline unsigned g_numSolidNodes = 0;
 //#define g_numEmptyLeafs *(int*)0x45B130
 //#define g_numSolidLeafs *(int*)0x45B134
 //#define g_numEmptyNodes *(int*)0x45B13C

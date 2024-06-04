@@ -18,3 +18,4 @@ extern void BuildBSPTree(bool makeNodePortals, node_t* node, face_t* bspFaces);
 extern void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make_node_portals);
 extern void ModelBSP(entity_t* entity, dmodel_t* model, int modelbsp_index);
 extern void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel);
+extern node_t* FillOutside(entinfo_t* entinfo, node_t* node, int pass_num);
