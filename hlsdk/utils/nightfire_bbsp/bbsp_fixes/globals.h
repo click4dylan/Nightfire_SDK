@@ -344,24 +344,24 @@ inline unsigned g_numDPlanes = 0;
 inline plane_t gMappedPlanes[MAX_MAP_PLANES];
 inline unsigned gNumMappedPlanes = 0;
 inline unsigned num_visleafs = 0;
-inline node_t* g_CurrentNode = nullptr;
+inline node_t* g_OutsideNode = nullptr;
 inline unsigned num_visportals = 0;
 inline unsigned g_NumNonInvertedFaces = 0;
 
 //#define g_numDPlanes *(int*)0x1EE21A4
 //#define gNumMappedPlanes *(int*)0x67E0700
 //#define num_visleafs *(int*)0x67E0704
-//#define g_CurrentNode *(node_t**)0x67E0708
+//#define g_OutsideNode *(node_t**)0x67E0708
 //#define Stream *(FILE**)0x67E070C
 //#define num_visportals *(int*)0x67E0710
 
 //#define g_NumNonInvertedFaces *(int*)0x45B128
 
-
-extern bool g_MakeNodePortals;
-extern node_t* g_Node;
-
 #define MAX_NODE_SIZE g_MaxNodeSize
+
+// the exact bounding box of the brushes is expanded some for the headnode
+// volume.  is this still needed?
+#define	SIDESPACE	24
 
 #if 0
 enum BBSP_ERROR_CODES {

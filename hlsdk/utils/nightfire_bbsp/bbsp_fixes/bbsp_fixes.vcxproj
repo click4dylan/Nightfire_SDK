@@ -243,7 +243,6 @@
     <ClInclude Include="Nodes.h" />
     <ClInclude Include="planes.h" />
     <ClInclude Include="portals.h" />
-    <ClInclude Include="renderer.h" />
     <ClInclude Include="scriplib.h" />
     <ClInclude Include="textures.h" />
     <ClInclude Include="threads.h" />
@@ -256,7 +255,6 @@
     <ClCompile Include="bspfile.cpp" />
     <ClCompile Include="bsp_structs.cpp" />
     <ClCompile Include="cmdlib.cpp" />
-    <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="face.cpp" />
     <ClCompile Include="filelib.cpp" />
     <ClCompile Include="helpers.cpp" />
@@ -269,7 +267,6 @@
     <ClCompile Include="Nodes.cpp" />
     <ClCompile Include="planes.cpp" />
     <ClCompile Include="portals.cpp" />
-    <ClCompile Include="renderer.cpp" />
     <ClCompile Include="scriplib.cpp" />
     <ClCompile Include="textures.cpp" />
     <ClCompile Include="threads.cpp" />

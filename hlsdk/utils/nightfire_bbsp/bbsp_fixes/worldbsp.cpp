@@ -113,57 +113,67 @@ void ExpandBounds(vec3_t& minBounds, vec3_t& maxBounds, const vec3_t& point)
 
 void MakeHeadnodePortals(node_t* node)
 {
-    // Expand the bounding box
-    vec_t expandedMins[3];
-    vec_t expandedMaxs[3];
+    vec3_t bounds[2];
+
+    // pad with some space so there will never be null volume leafs
     for (int i = 0; i < 3; ++i)
     {
-        expandedMins[i] = node->mins[i] - 24.0f;
-        expandedMaxs[i] = node->maxs[i] + 24.0f;
+        bounds[0][i] = node->mins[i] - SIDESPACE;
+        bounds[1][i] = node->maxs[i] + SIDESPACE;
     }
 
     // Create a solid leaf node
-    node_t* solidLeaf = new node_t;
-    solidLeaf->leaf_type = LEAF_SOLID_AKA_OPAQUE;
-    solidLeaf->planenum = -1;
-    g_CurrentNode = solidLeaf;
+    g_OutsideNode = new node_t;
+    g_OutsideNode->leaf_type = LEAF_SOLID_AKA_OPAQUE;
+    g_OutsideNode->planenum = -1;
 
     // Create portals
     portal_t* portals[6];
-    int portalIndex = 0;
+    unsigned int planes[6];
 
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 3; ++i)
     {
-        for (int j = 0; j < 3; ++j)
+        for (int j = 0; j < 2; ++j)
         {
-            vec_t normal[3] = { 0.0, 0.0, 0.0 };
-            normal[j] = (i == 0) ? -1.0 : 1.0;
+            int n = j * 3 + i;
 
-            unsigned int plane_num = FindIntPlane(normal, (i == 0) ? expandedMins[j] : expandedMaxs[j]);
+            vec3_t normal{};
+            vec_t dist;
+            if (j)
+            {
+                normal[i] = -1;
+                dist = -bounds[j][i];
+            }
+            else
+            {
+                normal[i] = 1;
+                dist = bounds[j][i];
+            }
+
+            unsigned int plane_num = FindIntPlane(normal, dist);
             plane_t* plane = &gMappedPlanes[plane_num];
 
             portal_t* portal = new portal_t;
             portal->planenum = plane_num;
-
-            Winding* winding = new Winding(*plane);
-            portal->winding = winding;
+            portal->winding = new Winding(*plane);
+            portals[n] = portal;
+            planes[n] = plane_num;
 
             // Add portal to nodes
-            AddPortalToNodes(portal, node, solidLeaf);
-
-            portals[portalIndex++] = portal;
+            AddPortalToNodes(portal, node, g_OutsideNode);
         }
     }
 
-    // Clip portals
+    // clip the basewindings by all the other planes
     for (int i = 0; i < 6; ++i)
     {
         for (int j = 0; j < 6; ++j)
         {
-            if (j != i)
-            {
-                portals[i]->winding->Clip(gMappedPlanes[j].normal, gMappedPlanes[j].dist, true);
-            }
+            if (j == i)
+                continue;
+
+            plane_t* plane = &gMappedPlanes[planes[j]];
+            portals[i]->winding->Clip(plane->normal, plane->dist, true);
         }
     }
 }
@@ -193,6 +203,76 @@ void BuildBSPTree(bool makeNodePortals, node_t* node, face_t* bspFaces)
             double endTime = I_FloatTime();
             LogTimeElapsed(endTime - startTime);
         }
+    }
+}
+
+void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make_node_portals)
+{
+#if 0
+    if (g_MakeNodePortals)
+    {
+        // subdivide large original_face
+        face_t** prevptr = &original_face;
+        face_t* f;
+        while (1)
+        {
+            f = *prevptr;
+            if (!f || !f->winding)
+            {
+                break;
+            }
+
+            SubdivideFace(f, prevptr);
+            f = *prevptr;
+            prevptr = &f->next;
+        }
+
+        //list = original_face;
+    }
+#endif
+
+    unsigned int planenum;                // Planenum of the current node
+    face_t* original_back_face;  // Original back list
+    face_t* front_face_new;      // New front list after splitting
+    face_t* back_face_new;       // New back list after splitting
+
+    // Checking if the recommended maximum BSP depth is exceeded
+    if (bspdepth > 256)
+        PrintOnce("BuildBspTree_r MAX_RECOMMENDED_BSP_DEPTH exceeded\n");
+
+    // Calculating the planenum of the current node based on its bounds and size
+    // If the node size is within a maximum size, choose a plane from a list, otherwise choose a middle plane.
+    planenum = CalcNodePlane(node, bspdepth, original_face);
+
+    if (planenum == -1) {
+        // If planenum is -1, it means the node has no bounds, mark it as a leaf
+        node->planenum = -1;
+        ++g_numLeafs;
+    }
+    else {
+        // Otherwise, split the original_face based on the selected plane
+        node->planenum = planenum & 0xFFFFFFFE;
+        ++g_numNodes;
+
+        // Splitting the original_face into front and back
+        SplitFaces(original_face, planenum & 0xFFFFFFFE, bspdepth, &front_face_new, &back_face_new);
+
+        // Allocating memory for the child nodes
+        node->children[0] = new node_t;
+        node->children[1] = new node_t;
+
+        // compute bounds
+        CalcNodeChildBounds(planenum & 0xFFFFFFFE, node);
+
+        if (make_node_portals) {
+            // Making the current node a portal node and splitting its portals
+            MakeNodePortal(node);
+            SplitNodePortals(node);
+        }
+
+        // Recursively build the BSP tree for the child nodes
+        BuildBspTree_r(bspdepth + 1, node->children[0], front_face_new, make_node_portals);
+        BuildBspTree_r(bspdepth + 1, node->children[1], back_face_new, make_node_portals);
     }
 }
 

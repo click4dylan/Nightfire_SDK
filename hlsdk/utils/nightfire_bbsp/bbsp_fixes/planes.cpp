@@ -54,6 +54,87 @@ unsigned int ChoosePlaneFromList(node_t* node, face_t* list)
     return bestSplit;
 }
 
+unsigned int ChooseMidPlaneFromListHL1(node_t* node, face_t* original_face, const vec3_t mins, const vec3_t maxs)
+{
+    int             j, l;
+    face_t* p;
+    face_t* bestsurface;
+    vec_t           bestvalue;
+    vec_t           value;
+    vec_t           dist;
+    plane_t* plane;
+
+    //
+    // pick the plane that splits the least
+    //
+    bestvalue = 6 * 8192 * 8192;
+    bestsurface = NULL;
+
+    for (p = original_face; p; p = p->next)
+    {
+        bool on_node = p->planenum == node->planenum || p->planenum == (node->planenum ^ 1);
+        if (on_node)
+        {
+            continue;
+        }
+
+        plane = &gMappedPlanes[p->planenum];
+
+        // check for axis aligned surfaces
+        l = plane->closest_axis;
+        if (l > plane_z)
+        {
+            continue;
+        }
+
+        //
+        // calculate the split metric along axis l, smaller values are better
+        //
+        value = 0;
+
+        dist = plane->dist * plane->normal[l];
+        for (j = 0; j < 3; j++)
+        {
+            if (j == l)
+            {
+                value += (maxs[l] - dist) * (maxs[l] - dist);
+                value += (dist - mins[l]) * (dist - mins[l]);
+            }
+            else
+            {
+                value += 2 * (maxs[j] - mins[j]) * (maxs[j] - mins[j]);
+            }
+        }
+
+        if (value > bestvalue)
+        {
+            continue;
+        }
+
+        //
+        // currently the best!
+        //
+        bestvalue = value;
+        bestsurface = p;
+    }
+
+    if (!bestsurface)
+    {
+        for (p = original_face; p; p = p->next)
+        {
+            bool on_node = p->planenum == node->planenum || p->planenum == (node->planenum ^ 1);
+            if (!on_node)
+            {
+                return p->planenum;                                  // first valid surface
+            }
+        }
+        //Error2("ChooseMidPlaneFromList: no valid planes");
+        return -1;
+    }
+
+    return bestsurface->planenum;
+}
+
 unsigned int ChooseMidPlaneFromList(node_t* node, int axis)
 {
     vec3_t normal;

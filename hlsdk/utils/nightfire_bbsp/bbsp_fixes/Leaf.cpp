@@ -113,7 +113,7 @@ bool PlaceOccupant(double* a1, node_t* n, unsigned int entindex)
 void MarkLeafOccupancyAndCheckLeaks(node_t* currentNode, unsigned int occupancyValue)
 {
     // Check if the current node is the same as the global current node.
-    if (currentNode == g_CurrentNode)
+    if (currentNode == g_OutsideNode)
     {
         g_bLeaked = 1; // Mark as a leak.
     }

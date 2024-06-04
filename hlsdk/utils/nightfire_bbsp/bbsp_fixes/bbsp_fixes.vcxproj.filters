@@ -39,9 +39,6 @@
     <ClInclude Include="globals.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="renderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Leaf.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -92,9 +89,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hooks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -108,9 +102,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vectors.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="worldbsp.cpp">

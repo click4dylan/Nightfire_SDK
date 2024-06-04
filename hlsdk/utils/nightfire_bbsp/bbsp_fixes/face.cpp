@@ -179,6 +179,133 @@ void SplitFace(face_t* in, const vec3_t normal, const vec_t dist, face_t** front
     }
 }
 
+// This function splits original_face based on a given plane number.
+// It takes in an array of original_face, the plane number of a node, depth of recursion,
+// pointers to pointers for the resulting front and back original_face.
+void SplitFaces(
+    face_t* original_face,            // Array of original_face
+    unsigned int node_planenum,        // Plane number of the node
+    int depth,                // Depth of recursion
+    face_t** dest_front_face, // Pointer to pointer for front original_face
+    face_t** dest_back_face   // Pointer to pointer for back original_face
+) {
+    face_t* face;       // Current list being processed
+    unsigned int planenum;       // Planenum of the current list
+    face_t* next;       // Next list in the array
+    int back;           // Counter for back original_face
+    int front;          // Counter for front original_face
+    int source;         // Counter for total original_face processed
+    face_t* front_face{}; // Temporary pointer for front list
+    face_t* back_face{};  // Temporary pointer for back list
+
+    // Initializing counters and pointers
+    face = original_face;
+    *dest_front_face = nullptr;
+    *dest_back_face = nullptr;
+    source = 0;
+    front = 0;
+    back = 0;
+
+#if 0
+    // subdivide large original_face
+    face_t** prevptr = &list;
+    face_t* f;
+    while (1)
+    {
+        f = *prevptr;
+        if (!f)
+        {
+            break;
+        }
+        if (strstr(f->texinfo->name, "lagzone"))
+        {
+            int breakpoint = 1;
+        }
+        SubdivideFace(f, prevptr);
+        f = *prevptr;
+        prevptr = &f->next;
+    }
+
+    //list = original_face;
+#endif
+
+
+    // Processing each list in the array
+    if (original_face) {
+        do {
+            planenum = face->planenum; // Getting the plane number of the list
+            next = face->next;         // Getting the next list in the array
+            ++source;                  // Incrementing total list counter
+
+            // If the list is coplanar or back-facing, free the list
+            // fixme: q3 doesn't free opposite planes
+            if (planenum == node_planenum || planenum == (node_planenum ^ 1))
+            {
+                FreeFace(face);
+            }
+            else {
+                // Otherwise, split the list and update front/back counters
+
+
+#if 0
+    // subdivide large original_face
+                face_t** prevptr = &list;
+                face_t* f;
+                while (1)
+                {
+                    f = *prevptr;
+                    if (!f || !f->winding)
+                    {
+                        break;
+                    }
+
+                    SubdivideFace(f, prevptr);
+                    f = *prevptr;
+                    prevptr = &f->next;
+                }
+
+                //list = original_face;
+#endif
+#if 0
+                plane_t newplane = gMappedPlanes[node_planenum];
+                newplane.dist = 512;
+                SplitFace(list, newplane, &original_face, &back_face);
+
+                if (original_face)
+                    list = original_face;
+#endif
+                //int plane_test = ChoosePlaneFromList(g_Node, list);
+                //int old_planenum = node_planenum;
+
+                SplitFace(face, node_planenum, &front_face, &back_face);
+                FreeFace(face); // Freeing the original list
+
+                if (front_face) {
+                    ++front; // Incrementing front list counter
+                    // Adding the front list to the front list list
+                    front_face->next = *dest_front_face;
+                    *dest_front_face = front_face;
+                }
+
+                if (back_face) {
+                    ++back; // Incrementing back list counter
+                    // Adding the back list to the back list list
+                    back_face->next = *dest_back_face;
+                    *dest_back_face = back_face;
+                }
+            }
+
+            face = next; // Moving to the next list
+        } while (next);
+    }
+
+    // Printing debug information
+    Developer(DEVELOPER_LEVEL_SPAM, "SplitFaces (#%-5i) (depth %3i) (source %5i) (front %5i) (back %5i)\n", g_TimesCalledSplitFaces, depth, source, front, back);
+
+    // Returning the total times this function has been called
+    ++g_TimesCalledSplitFaces;
+}
+
 void StripOutsideFaces(node_t* node, entity_t* ent, unsigned int filterFlag)
 {
     unsigned int brushIndex = 0;
@@ -191,7 +318,7 @@ void StripOutsideFaces(node_t* node, entity_t* ent, unsigned int filterFlag)
     {
         brush_t* brush = ent->firstbrush[brushIndex];
 
-        // Check if the filter flag matches the brush's flags
+        // Check if the filter flag matches the brush's brushflags
         if ((filterFlag & brush->brushflags) != 0)
         {
             unsigned int numSides = brush->numsides;
@@ -328,6 +455,52 @@ void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inve
     }
 }
 
+void FilterFaceIntoTree_r(int depth, node_t* node, side_t* brushside, face_t* list, bool face_windings_are_inverted, bool is_in_lighting_stage)
+{
+    if (node->planenum == -1) //PLANENUM_LEAF
+    {
+        if (face_windings_are_inverted)
+        {
+            list->next = brushside->inverted_face_fragments;
+            brushside->inverted_face_fragments = list;
+            list->leaf_node = node;
+
+            unsigned int brush_flags = 0;
+            if (is_in_lighting_stage)
+                brush_flags = list->brush->brushflags & 0xFFFFFF00;
+            int brush_leaf_type = list->brush->leaf_type;
+
+            // Set node leaf type as empty and update with brush brushflags
+            node->leaf_type = LEAF_EMPTY_AKA_NOT_OPAQUE; //1
+            node->leaf_type |= (brush_flags | node->leaf_type) & 0xFFFFFF00;
+
+            // Update node leaf type if brush leaf type is greater
+            if ((unsigned char)node->leaf_type < (int)(unsigned char)brush_leaf_type)
+                node->leaf_type = brush_leaf_type;
+        }
+        else
+        {
+            ++g_NumNonInvertedFaces;
+            list->next = brushside->face_fragments;
+            brushside->face_fragments = list;
+            list->leaf_node = node;
+        }
+    }
+    else
+    {
+        face_t* front_of_node_face_list;
+        face_t* back_of_node_face_list;
+
+        if (SplitFacesByNodePlane(list, node->planenum, &front_of_node_face_list, &back_of_node_face_list))
+            FreeFace(list);
+
+        if (front_of_node_face_list)
+            FilterFaceIntoTree_r(++depth, node->children[0], brushside, front_of_node_face_list, face_windings_are_inverted, is_in_lighting_stage);
+        if (back_of_node_face_list)
+            FilterFaceIntoTree_r(++depth, node->children[1], brushside, back_of_node_face_list, face_windings_are_inverted, is_in_lighting_stage);
+    }
+}
+
 node_t* ClearOutFaces(node_t* a1)
 {
     g_numFalseNodes = 0;
@@ -338,47 +511,49 @@ node_t* ClearOutFaces(node_t* a1)
 
 node_t* ClearOutFaces_r(int depth, node_t* node)
 {
-    node_t* left_child = node->children[0];
-
     // Initialize the valid flag to false
     node->valid = false;
 
-    if (!left_child)
+    if (!node->children[0])
     {
         // Leaf node reached
         if (node->leaf_type != LEAF_SOLID_AKA_OPAQUE)
         {
             // Propagate valid flag through portals
-            portal_t* portals = node->portals;
-            while (portals)
+            for (portal_t* portal = node->portals, *pnext; portal; portal = pnext)
             {
-                node_t* on_node = portals->onnode;
-                if (on_node)
-                    on_node->valid = true;
-                portals = (portals->nodes[0] == node) ? portals->next[0] : portals->next[1];
+                if (portal->onnode)
+                    portal->onnode->valid = true;
+
+                if (node == portal->nodes[0])
+                    pnext = portal->next[0];
+                else
+                    pnext = portal->next[1];
             }
         }
         return node;
     }
 
     // Recursively propagate the valid flag
-    node->children[0] = ClearOutFaces_r(depth + 1, left_child);
+    node->children[0] = ClearOutFaces_r(depth + 1, node->children[0]);
     node->children[1] = ClearOutFaces_r(depth + 1, node->children[1]);
 
-    // Check if the current node should be pruned
-    bool is_valid = node->valid;
-    if (!is_valid && node->children[0]->leaf_type == LEAF_SOLID_AKA_OPAQUE && node->children[1]->leaf_type == LEAF_SOLID_AKA_OPAQUE)
+    if (!node->valid)
     {
-        // Prune the current node
-        delete node->children[0];
-        delete node->children[1];
-        node->leaf_type = LEAF_SOLID_AKA_OPAQUE;
-        node->children[0] = nullptr;
-        node->children[1] = nullptr;
-        node->planenum = -1;
-    }
-    else if (!is_valid)
-    {
+        // this node does not touch any interior leafs
+        if (node->children[0]->leaf_type == LEAF_SOLID_AKA_OPAQUE && node->children[1]->leaf_type == LEAF_SOLID_AKA_OPAQUE)
+        {
+            // if both children are solid, just make this node solid
+            node->leaf_type = LEAF_SOLID_AKA_OPAQUE;
+            node->planenum = -1;
+
+            delete node->children[0];
+            delete node->children[1];
+            node->children[0] = nullptr;
+            node->children[1] = nullptr;
+            return node;
+        }
+
         // Increment the count of false nodes
         ++g_numFalseNodes;
     }
@@ -424,7 +599,7 @@ void SetFacesLeafNode(node_t* node, entity_t* entity)
     }
 }
 
-face_t* CopyFaceList(entity_t* ent, unsigned int flags)
+face_t* CopyFaceList(entity_t* ent, unsigned int brushflags)
 {
     face_t* copiedFaces = nullptr; // Pointer to the list of copied original_face
     unsigned int numCopiedFaces = 0; // Counter for the number of copied original_face
@@ -434,15 +609,15 @@ face_t* CopyFaceList(entity_t* ent, unsigned int flags)
     {
         brush_t* brush = ent->firstbrush[brushIndex];
 
-        // Check if the brush flags match the specified flags
-        if ((flags & brush->brushflags) != 0)
+        // Check if the brush brushflags match the specified brushflags
+        if ((brush->brushflags & brushflags) != 0)
         {
             // Iterate over all sides of the brush
             for (unsigned int sideIndex = 0; sideIndex < brush->numsides; ++sideIndex)
             {
                 face_t* face = brush->brushsides[sideIndex]->original_face;
 
-                // Check if the originalFace flags match the criteria
+                // Check if the originalFace brushflags match the criteria
                 if ((face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | CONTENTS_UNKNOWN)) == 0)
                 {
                     // Copy the originalFace and add it to the list
@@ -456,16 +631,16 @@ face_t* CopyFaceList(entity_t* ent, unsigned int flags)
     }
 
     // Log the number of copied original_face
-    const char* surfaceTypeStr = GetSurfaceTypeStr(flags);
+    const char* surfaceTypeStr = GetSurfaceTypeStr(brushflags);
     Verbose("%5i %s faces\n", numCopiedFaces, surfaceTypeStr);
 
     return copiedFaces;
 }
 
-face_t* CopyFaceList_Inverted(entity_t* ent, unsigned int flags)
+face_t* CopyFaceList_Inverted(entity_t* ent, unsigned int brushflags)
 {
-    // Copy the originalFace list with the given flags from the entity
-    face_t* face = CopyFaceList(ent, flags);
+    // Copy the originalFace list with the given brushflags from the entity
+    face_t* face = CopyFaceList(ent, brushflags);
 
     // Iterate over the copied original_face and invert their windings
     for (face_t* f = face; f != nullptr; f = f->next) 
@@ -522,7 +697,7 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
     pFace->built_draw_indices_for_face = 1;
     g_numDFaces += 1;
 
-    // Handle special face flags
+    // Handle special face brushflags
     if ((pFace->flags & (CONTENTS_NODRAW | CONTENTS_PORTAL | SURF_SKY | CONTENTS_UNKNOWN | CONTENTS_SOLID)) != 0)
         pFace->winding->m_NumPoints = 0;
 
@@ -656,4 +831,108 @@ void MarkFaceFragments(node_t* node, entity_t* ent)
             }
         }
     }
+}
+
+// not used in nightfire
+void SubdivideFace(face_t* f, face_t** prevptr)
+{
+    vec_t           mins, maxs;
+    vec_t           v;
+    int             axis;
+    unsigned int             i;
+    plane_t        plane;
+    face_t* front;
+    face_t* back;
+    face_t* next;
+    texinfo_t* tex;
+    vec3_t          temp;
+
+    // special (non-surface cached) original_face don't need subdivision
+    tex = f->texinfo;
+
+    if (f->flags & CONTENTS_HINTSKIP)
+        return;
+    if (f->flags & CONTENTS_SOLID)
+        return;
+    if (f->flags & CONTENTS_NODRAW)
+        return;
+    if (f->flags & CONTENTS_ORIGIN)
+        return;
+    if (f->flags & CONTENTS_WATER)
+        return;
+    if (f->flags & SURF_SKY)
+        return;
+#if 0
+    tex = &g_texinfo[f->texturenum];
+
+    if (tex->flags & TEX_SPECIAL)
+    {
+        return;
+    }
+
+    if (f->facestyle == face_hint)
+    {
+        return;
+    }
+    if (f->facestyle == face_skip)
+    {
+        return;
+    }
+
+#ifdef ZHLT_NULLTEX    // AJM
+    if (f->facestyle == face_null)
+        return; // ideally these should have their tex_special flag set, so its here jic
+#endif
+#endif
+
+#if 1
+    for (axis = 0; axis < 2; axis++)
+    {
+        while (1)
+        {
+            mins = 999999;
+            maxs = -999999;
+
+            for (i = 0; i < f->winding->m_NumPoints; i++)
+            {
+                v = DotProduct(f->winding->m_Points[i], tex->vecs[axis]);
+                if (v < mins)
+                {
+                    mins = v;
+                }
+                if (v > maxs)
+                {
+                    maxs = v;
+                }
+            }
+
+            if ((maxs - mins) <= g_subdivide_size)
+            {
+                break;
+            }
+
+            // split it
+            //subdivides++;
+
+            VectorCopy(tex->vecs[axis], temp);
+
+            v = VectorNormalize(temp);
+
+            VectorCopy(temp, plane.normal);
+            plane.dist = (mins + g_subdivide_size - 16) / v;
+            next = f->next;
+            SplitFace(f, plane.normal, plane.dist, &front, &back);
+            if (!front || !back)
+            {
+                Developer(DEVELOPER_LEVEL_SPAM, "SubdivideFace: didn't split the %d-sided polygon @(%.0f,%.0f,%.0f)",
+                    f->winding->m_NumPoints, f->winding->m_Points[0][0], f->winding->m_Points[0][1], f->winding->m_Points[0][2]);
+                break;
+            }
+            *prevptr = back;
+            back->next = front;
+            front->next = next;
+            f = back;
+        }
+    }
+#endif
 }

@@ -22,20 +22,17 @@ void CalcBrushBounds(vec3_t& maxs_dest, vec3_t& mins_dest, const brush_t* brush)
     }
 }
 
-void FilterBrushesIntoTree(node_t* node, entity_t* ent, int flags) 
+void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags) 
 {
-    unsigned int numBrushes = ent->numbrushes;
     g_NumNonInvertedFaces = 0;
 
-    for (unsigned int brushIndex = 0; brushIndex < numBrushes; ++brushIndex) 
+    for (unsigned int brushIndex = 0; brushIndex < ent->numbrushes; ++brushIndex)
     {
         brush_t* brush = ent->firstbrush[brushIndex];
 
-        if ((flags & brush->brushflags) != 0) 
+        if ((brush->brushflags & brushflags) != 0)
         {
-            unsigned int numSides = brush->numsides;
-
-            for (unsigned int sideIndex = 0; sideIndex < numSides; ++sideIndex) 
+            for (unsigned int sideIndex = 0; sideIndex < brush->numsides; ++sideIndex)
             {
                 side_t* side = brush->brushsides[sideIndex];
                 face_t* original_face = side->original_face;
@@ -43,7 +40,7 @@ void FilterBrushesIntoTree(node_t* node, entity_t* ent, int flags)
                 if ((original_face->flags & CONTENTS_BSP) == 0) 
                 {
                     face_t* newFace = new face_t(*original_face);
-                    FilterFaceIntoTree_r(0, node, side, newFace, 0, 0);
+                    FilterFaceIntoTree_r(0, node, side, newFace, false, false);
                 }
             }
         }
@@ -561,7 +558,7 @@ void AddNewPlanesToBrush(brush_t* brush, vec3_t directionVector, vec3_t points)
             for (sideIndex = 0; sideIndex < brush->numsides; sideIndex++)
             {
                 originalFace = (*brushSides)->original_face;
-                if (originalFace && !(originalFace->flags & CONTENTS_BSP) && originalFace->winding)
+                if (originalFace && !(originalFace->brushflags & CONTENTS_BSP) && originalFace->winding)
                 {
                     int side = originalFace->winding->WindingOnPlaneSide(newPlane.normal, planeDistance + 0.1);
                     if (side != SIDE_FRONT && side != SIDE_BACK)
@@ -670,7 +667,7 @@ void ExpandBrush(brush_t* brush)
             face_t* originalFace = currentSide->original_face; // Get the original face of the side
 
             // Check if the original face exists and is not a BSP face
-            if (originalFace && !(originalFace->flags & CONTENTS_BSP))
+            if (originalFace && !(originalFace->brushflags & CONTENTS_BSP))
             {
                 Winding* winding = originalFace->winding; // Get the winding of the original face
 

@@ -13,6 +13,11 @@
 #include "portals.h"
 #include "planes.h"
 
+bool node_t::IsPortalLeaf()
+{
+    return !valid && children[0] == nullptr && children[1] == nullptr;
+}
+
 void WriteDrawNodes_r(int depth, const node_t* const node)
 {
     dnode_t* n;
@@ -71,6 +76,34 @@ void EmitDrawNode_r(node_t* n)
     else
         WriteDrawNodes_r(0, n);
     CheckFatal();
+}
+
+void CalcNodeChildBounds(unsigned int planenum, node_t* node)
+{
+    for (int child = 0; child < 2; ++child)
+    {
+        for (int axis = 0; axis < 3; ++axis)
+        {
+            node->children[child]->mins[axis] = node->mins[axis];
+            node->children[child]->maxs[axis] = node->maxs[axis];
+        }
+    }
+
+    const plane_t* plane = &gMappedPlanes[planenum];
+    const auto axis = plane->closest_axis;
+    if (axis <= plane_z)
+    {
+        if (plane->normal[axis] < 1)
+        {
+            node->children[0]->mins[axis] = -plane->dist;
+            node->children[1]->maxs[axis] = -plane->dist;
+        }
+        else
+        {
+            node->children[0]->mins[axis] = plane->dist;
+            node->children[1]->maxs[axis] = plane->dist;
+        }
+    }
 }
 
 void CalcNodeBoundsFromBrushes(node_t* node, entity_t* ent)
@@ -383,30 +416,11 @@ void AddPortalToNodes(portal_t* p, node_t* front, node_t* back)
     back->portals = p;
 }
 
-unsigned int CalculateNodePlane(node_t* node, int bsp_depth, face_t* face)
+unsigned int CalcNodePlane(node_t* node, int bsp_depth, face_t* face)
 {
     int maxsize = g_MaxNodeSize;
-    if (maxsize != 128)
-        int wtf = 1;
-    else
-        int wow = 1;
-
-    //0x092c7020 {-1024.0000000000000, -2048.0000000000000, -1024.0000000000000}
-    //0x092c7038 {2048.0000000000000, 1024.0000000000000, 2048.0000000000000}
-#if 0
-    int oversized_axis;
-    if (CalcNodeBounds(node, oversized_axis))
-    {
-        int result = ChooseMidPlaneFromListNew(node, list, node->mins, node->maxs);
-        if (result == -1)
-            result = ChooseMidPlaneFromList(node, oversized_axis);
-        return result;
-    }
-    else
-    {
-        return ChoosePlaneFromList(node, list);
-    }
-#endif
+    if (maxsize != 1024)
+        int islightingtree = 1;
 
     int axis; // esi
     vec3_t bounds; // [esp+10h] [ebp-1Ch]

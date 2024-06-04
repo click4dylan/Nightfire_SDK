@@ -4,9 +4,6 @@
 #include "winding.h"
 #include <set>
 
-
-#if 1
-
 enum leaf_types_t
 {
     LEAF_EMPTY_AKA_NOT_OPAQUE = 1, //references original_face, player can enter
@@ -39,25 +36,10 @@ enum surfaceflags_t
     CONTENTS_TRIGGER  =  (1 << 21)                                                                // 2097152 (0x00200000)
 };
 
-#if 0
-#define CONTENTS_SOLID    (1 << 0)                                                                  // 1 (0x00000001)
-#define SURF_SKY          (1 << 2)                                                                  // 4 (0x00000004)
-#define FLAG_KEEP         (1 << 3)                                                                  // 8 (0x00000008)
-#define CONTENTS_PORTAL   (1 << 4)                                                                  // 16 (0x00000010)
-#define CONTENTS_NODRAW   (1 << 5)                                                                  // 32 (0x00000020)
-#define CONTENTS_BSP      (1 << 8)                                                                  // 256 (0x00000100)
-#define CONTENTS_DETAIL   (1 << 9)                                                                  // 512 (0x00000200)
-#define CONTENTS_ORIGIN   (1 << 10)                                                                 // 1024 (0x00000400)
-#define FLAG_UNKNOWN       (1 << 11)                                                                // 2048 (0x00000800)
-#define CONTENTS_HINTSKIP   (1 << 12)                                                               // 4096 (0x00001000)
-#define CONTENTS_PLAYERCLIP (1 << 16)                                                               // 65536 (0x00010000)
-#define FLAG_NOIMPACTS     (1 << 17)                                                                // 131072 (0x00020000)
-#define FLAG_NODECALS      (1 << 18)                                                                // 262144 (0x00040000)
-#define FLAG_HASITEMCLIP   (1 << 19)                                                                // 524288 (0x00080000)
-#define CONTENTS_WATER     (1 << 20)                                                                // 1048576 (0x00100000)
-#define CONTENTS_TRIGGER    (1 << 21)                                                               // 2097152 (0x00200000)
-#endif
+// bevel creation
+#define FLAG_BEVEL         (CONTENTS_NODRAW | CONTENTS_DETAIL | CONTENTS_BSP)                       // 800 (0x00000320)
 
+// special textures flags
 #define SURFACEFLAG_HINT    (CONTENTS_SOLID | CONTENTS_NODRAW)                                      // 33 (0x00000021)
 #define BRUSHFLAG_HINT     (CONTENTS_BSP | CONTENTS_HINTSKIP)                                       // 4352 (0x00001100)
 #define SURFACEFLAG_BSP     (CONTENTS_SOLID | CONTENTS_NODRAW)                                      // 33 (0x00000021)
@@ -68,8 +50,6 @@ enum surfaceflags_t
 #define BRUSHFLAG_SKIP     CONTENTS_HINTSKIP                                                        // 4096 (0x00001000)
 #define SURFACEFLAG_OPAQUE  CONTENTS_NODRAW                                                         // 32 (0x00000020)
 #define BRUSHFLAG_OPAQUE   CONTENTS_DETAIL                                                          // 512 (0x00000200)
-
-#define FLAG_BEVEL         (CONTENTS_NODRAW | CONTENTS_DETAIL | CONTENTS_BSP)                       // 800 (0x00000320)
 #define SURFACEFLAG_CLIP    CONTENTS_NODRAW                                                         // 32 (0x00000020)
 #define BRUSHFLAG_CLIP     (CONTENTS_DETAIL | CONTENTS_PLAYERCLIP | FLAG_NOIMPACTS | FLAG_NODECALS) // 983808 (0x000F0200)
 #define SURFACEFLAG_NPCCLIP CONTENTS_NODRAW                                                         // 32 (0x00000020)
@@ -90,59 +70,6 @@ enum surfaceflags_t
 #define BRUSHFLAG_TRIGGER (CONTENTS_DETAIL | CONTENTS_TRIGGER)                                      // 2621440 (0x00200200)
 #define SURFACEFLAG_LIQUIDS (CONTENTS_PLAYERCLIP | FLAG_NODECALS)                                   // 327680 (0x00050000)
 #define BRUSHFLAG_LIQUIDS  CONTENTS_WATER                                                           // 1048576 (0x00100000)
-#else
-#define CONTENTS_SOLID (1 << 0)
-#define SURF_SKY (1 << 2)
-#define FLAG_KEEP           (1 << 3)
-#define CONTENTS_PORTAL 	(1 << 4)
-#define CONTENTS_NODRAW         (1 << 5)  
-#define CONTENTS_BSP        (1 << 8)
-#define CONTENTS_DETAIL           (1 << 9)    
-#define CONTENTS_ORIGIN           (1 << 10)
-#define FLAG_UNKNOWN	    (1 << 11)
-#define CONTENTS_HINTSKIP	    (1 << 12)    
-#define CONTENTS_PLAYERCLIP (1 << 16)   
-#define FLAG_NOIMPACTS      (1 << 17)    
-#define FLAG_NODECALS		(1 << 18)    
-#define FLAG_HASITEMCLIP	(1 << 19)
-#define CONTENTS_WATER          (1 << 20)
-#define CONTENTS_TRIGGER		(1 << 21)
-
-
-
-#define SURFACEFLAG_HINT           	(CONTENTS_SOLID | CONTENTS_NODRAW)
-#define BRUSHFLAG_HINT			(CONTENTS_BSP | CONTENTS_HINTSKIP)
-#define SURFACEFLAG_BSP		(CONTENTS_SOLID | CONTENTS_NODRAW)
-#define BRUSHFLAG_BSP		CONTENTS_BSP
-#define SURFACEFLAG_PORTAL	(CONTENTS_SOLID | CONTENTS_PORTAL | CONTENTS_NODRAW)
-#define BRUSHFLAG_PORTAL	CONTENTS_BSP
-#define SURFACEFLAG_SKIP		(CONTENTS_NODRAW | CONTENTS_DETAIL)
-#define BRUSHFLAG_SKIP		CONTENTS_HINTSKIP
-#define SURFACEFLAG_OPAQUE	CONTENTS_NODRAW
-#define BRUSHFLAG_OPAQUE	CONTENTS_DETAIL
-
-#define FLAG_BEVEL		(CONTENTS_NODRAW | CONTENTS_DETAIL | CONTENTS_BSP)
-#define SURFACEFLAG_CLIP		CONTENTS_NODRAW
-#define BRUSHFLAG_CLIP		(CONTENTS_DETAIL | CONTENTS_PLAYERCLIP | FLAG_NOIMPACTS | FLAG_NODECALS)
-#define SURFACEFLAG_NPCCLIP	CONTENTS_NODRAW
-#define BRUSHFLAG_NPCCLIP	(CONTENTS_DETAIL | FLAG_NODECALS)
-#define SURFACEFLAG_PLAYERCLIP	CONTENTS_NODRAW
-#define BRUSHFLAG_PLAYERCLIP	(CONTENTS_DETAIL | CONTENTS_PLAYERCLIP)
-#define SURFACEFLAG_ENEMYCLIP	CONTENTS_NODRAW
-#define BRUSHFLAG_ENEMYCLIP	(CONTENTS_DETAIL | FLAG_NOIMPACTS)
-#define SURFACEFLAG_ITEMCLIP	CONTENTS_NODRAW
-#define BRUSHFLAG_ITEMCLIP	(CONTENTS_DETAIL | FLAG_HASITEMCLIP)
-#define SURFACEFLAG_ORIGIN	CONTENTS_NODRAW
-#define BRUSHFLAG_ORIGIN	CONTENTS_ORIGIN
-#define SURFACEFLAG_SKY		(SURF_SKY | FLAG_NOIMPACTS | FLAG_NODECALS)
-#define BRUSHFLAG_SKY		(CONTENTS_BSP | FLAG_UNKNOWN)
-#define SURFACEFLAG_AAATRIGGER	CONTENTS_NODRAW
-#define BRUSHFLAG_AAATRIGGER	(CONTENTS_DETAIL | CONTENTS_TRIGGER)
-#define SURFACEFLAG_TRIGGER	CONTENTS_NODRAW
-#define BRUSHFLAG_AAATRIGGER	(CONTENTS_DETAIL | CONTENTS_TRIGGER)
-#define SURFACEFLAG_LIQUIDS (CONTENTS_PLAYERCLIP | FLAG_NODECALS)
-#define BRUSHFLAG_LIQUIDS CONTENTS_WATER
-#endif
 
 typedef struct dleaf_s
 {
@@ -410,13 +337,15 @@ typedef struct node_s
     vec3_t maxs{};
     portal_t* portals{};
     int leaf_type{};
-    struct node_s* children[2]{}; // only valid for decision nodes
+    struct node_s* children[2]{}; // only valid for decision nodes, 0 is left, 1 is right
     bool valid{};
     unsigned int visleafnum{}; // -1 = solid
     std::set<struct face_s*>* markfaces{};  // leaf nodes only, point to node original_face
     std::set<struct brush_s*>* markbrushes{};  // leaf nodes only, point to node brushes
     unsigned int occupied{}; // light number in leaf for outside filling
     int unused2{};
+
+    bool IsPortalLeaf();
 
     node_s();
     ~node_s();
