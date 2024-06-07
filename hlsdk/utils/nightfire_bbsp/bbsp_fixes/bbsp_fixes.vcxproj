@@ -226,9 +226,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BBSP_Caller.h" />
     <ClInclude Include="brush.h" />
     <ClInclude Include="bspfile.h" />
     <ClInclude Include="bsp_structs.h" />
+    <ClInclude Include="bytepatcher.h" />
     <ClInclude Include="cmdlib.h" />
     <ClInclude Include="face.h" />
     <ClInclude Include="filelib.h" />

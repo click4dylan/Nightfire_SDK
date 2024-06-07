@@ -13,9 +13,9 @@ class Winding
 {
 public:
     virtual ~Winding();
-    unsigned int m_NumPoints;
-    vec3_t* m_Points;
-    unsigned int m_MaxPoints;
+    unsigned int m_NumPoints{};
+    vec3_t* m_Points{};
+    unsigned int m_MaxPoints{};
 
     bool Valid() { return m_NumPoints >= 3 && m_Points; }
 #if 0
@@ -43,6 +43,7 @@ public:
     bool Chop(const vec3_t normal, const vec_t dist, bool keep_front = true);
     void ClearNumPoints() { m_NumPoints = 0; }
     int WindingOnPlaneSide(const vec3_t normal, const vec_t dist);
+    int classifyPointAgainstPlaneEdges(char* sides_buffer, const int max_sides, const struct plane_s& plane, const vec3_t point);
     Winding(const Winding& other);
     Winding(const struct dface_s& face);
     Winding();
@@ -54,5 +55,4 @@ public:
 };
 
 //todo: check inside RemoveColinearPoints 
-extern int classifyPointsAgainstPlane(unsigned char* classificationResult, const struct plane_s* plane, Winding* winding, vec_t* threshold);
 //extern void shiftWindingPoints(char* start_point, int offset, Winding* winding);

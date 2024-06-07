@@ -116,17 +116,20 @@ Winding::Winding(const Winding& other)
 {
     ++g_numWindings;
     m_NumPoints = other.m_NumPoints;
-    m_MaxPoints = (m_NumPoints + 3) & ~3;   // groups of 4
+    m_MaxPoints = max(other.m_MaxPoints, 8);//(m_NumPoints + 3) & ~3;   // groups of 4
 
     m_Points = new vec3_t[m_MaxPoints];
-    memcpy(m_Points, other.m_Points, sizeof(vec3_t) * m_NumPoints);
+    if (m_NumPoints)
+        memcpy(m_Points, other.m_Points, sizeof(vec3_t) * m_NumPoints);
 }
 
 Winding::Winding()
 {
     ++g_numWindings;
-    m_Points = NULL;
-    m_NumPoints = m_MaxPoints = 0;
+    m_NumPoints = 0;
+    m_MaxPoints = 8;
+    m_Points = new vec3_t[m_MaxPoints];
+    memset(m_Points, 0, sizeof(vec3_t) * 8);
 }
 
 Winding::Winding(const struct dface_s& face)
@@ -134,22 +137,17 @@ Winding::Winding(const struct dface_s& face)
     ++g_numWindings;
 
     m_NumPoints = face.num_vertices;
-    m_MaxPoints = (m_NumPoints + 3) & ~3;	// groups of 4
+    m_MaxPoints = (m_NumPoints + 7) & 0xFFFFFFF8; //(m_NumPoints + 3) & ~3;	// groups of 4
 
-    if (m_MaxPoints < 8)
-        m_MaxPoints = 8;
+    m_MaxPoints = max(m_MaxPoints, 8);
 
     m_Points = new vec3_t[m_MaxPoints];
 
-    if (face.num_vertices)
+    const dvertex_t* dv = &g_dverts[face.first_vertex_index];
+    for (unsigned int i = 0; i < face.num_vertices; ++i)
     {
-        dvertex_t* dv = &g_dverts[face.first_vertex_index];
-
-        for (unsigned int i = 0; i < face.num_vertices; ++i)
-        {
-            VectorCopy(dv->point, m_Points[i]);
-            ++dv;
-        }
+        VectorCopy(dv->point, m_Points[i]);
+        ++dv;
     }
     RemoveColinearPoints();
 }
@@ -167,12 +165,23 @@ Winding::Winding(const struct plane_s& plane)
 
 Winding::Winding(UINT32 numpoints)
 {
-    //hlassert(numpoints >= 3);
-    m_NumPoints = numpoints;
-    m_MaxPoints = (m_NumPoints + 3) & ~3;   // groups of 4
+    ++g_numWindings;
+
+    if (numpoints >= 3)
+    {
+        if (numpoints >= 8)
+        {
+            m_NumPoints = numpoints;
+            m_MaxPoints = (numpoints + 7) & 0xFFFFFFF8;
+        }
+    }
+    else
+    {
+        m_MaxPoints = 8;
+    }
 
     m_Points = new vec3_t[m_MaxPoints];
-    memset(m_Points, 0, sizeof(vec3_t) * m_NumPoints);
+    memset(m_Points, 0, sizeof(vec3_t) * m_MaxPoints);
 }
 
 void Winding::getCenter(vec3_t& center) const
@@ -375,41 +384,6 @@ void Winding::initFromPlane(const vec3_t normal, const vec_t dist)
 #endif
 }
 
-
-//fixme: vectornormalize missing
-int classifyPointsAgainstPlane(unsigned char* classificationResult, const struct plane_s* plane, Winding* winding, vec_t* threshold) {
-    unsigned int numPoints = winding->m_NumPoints;
-    unsigned int numPointsOnPlane = 0;
-
-    if (numPoints > 0) {
-        unsigned int count = 0;
-        unsigned char* resultPtr = classificationResult;
-        const vec3_t* points = winding->m_Points;
-
-        while (count < numPoints) {
-            const double* point = points[count];
-            double dx = point[0] - plane->normal[0];
-            double dy = point[1] - plane->normal[1];
-            double dz = point[2] - plane->normal[2];
-
-            double distance = dx * threshold[0] + dy * threshold[1] + dz * threshold[2];
-
-            if (distance <= 0.01) {
-                *resultPtr = 0;
-            }
-            else {
-                *resultPtr = 1;
-                numPointsOnPlane++;
-            }
-
-            count++;
-            resultPtr++;
-        }
-    }
-
-    return numPointsOnPlane;
-}
-
 void Winding::shiftPoints(unsigned int offset, unsigned int start_index)
 {
 #if 1
@@ -507,14 +481,17 @@ void Winding::getPlane(vec3_t& normal, vec_t& dist) const
 
 void Winding::resize(UINT32 newsize)
 {
-    newsize = (newsize + 3) & ~3;   // groups of 4
+    newsize = (newsize + 7) & 0xFFFFFFF8;
 
     vec3_t* newpoints = new vec3_t[newsize];
     m_NumPoints = min(newsize, m_NumPoints);
-    memcpy(newpoints, m_Points, m_NumPoints);
+
+    if (m_NumPoints)
+       memcpy(newpoints, m_Points, 4 * ((sizeof(vec3_t) * m_NumPoints) >> 2));
+   
     delete[] m_Points;
-    m_Points = newpoints;
     m_MaxPoints = newsize;
+    m_Points = newpoints;
 }
 
 void Winding::addPoint(const vec3_t newpoint)
@@ -660,7 +637,7 @@ bool Winding::Clip(const bool divide, const vec3_t normal, const vec_t dist, Win
     }
 #endif
 
-    maxpts = m_NumPoints + 4;                            // can't use counts[0]+2 because
+    maxpts = m_NumPoints + 8;                            // can't use counts[0]+2 because
     // of fp grouping errors
 
     Winding* f = new Winding(maxpts);
@@ -833,7 +810,7 @@ bool Winding::Clip(const vec3_t normal, const vec_t dist, bool keepon)
         return true;
     }
 
-    unsigned maxpts = m_NumPoints + 4;                            // can't use counts[0]+2 because of fp grouping errors
+    unsigned maxpts = m_NumPoints + 8;                            // can't use counts[0]+2 because of fp grouping errors
     unsigned newNumPoints = 0;
     vec3_t* newPoints = new vec3_t[maxpts];
     memset(newPoints, 0, sizeof(vec3_t) * maxpts);
@@ -1001,4 +978,38 @@ int Winding::WindingOnPlaneSide(const vec3_t normal, const vec_t dist)
         return SIDE_FRONT;
     }
     return SIDE_ON;
+}
+
+int Winding::classifyPointAgainstPlaneEdges(char* sides_buffer, const int max_sides, const plane_s& plane, const vec3_t point)
+{
+    int backSideCount = 0;
+
+    for (unsigned int i = 0; i < m_NumPoints; ++i)
+    {
+        const vec3_t& currentPoint = m_Points[i];
+        const vec3_t& nextPoint = m_Points[(i + 1) % m_NumPoints];
+
+        vec3_t edge;
+        VectorSubtract(currentPoint, nextPoint, edge);
+        VectorNormalize(edge);
+
+        vec3_t cross;
+        CrossProduct(edge, plane.normal, cross);
+        VectorNormalize(cross);
+
+        double dotTestPoint = DotProduct(cross, point);
+        double dotCurrentPoint = DotProduct(cross, currentPoint);
+
+        if (dotTestPoint - dotCurrentPoint <= DIST_EPSILON)
+        {
+            sides_buffer[i] = SIDE_FRONT;
+        }
+        else
+        {
+            sides_buffer[i] = SIDE_BACK;
+            ++backSideCount;
+        }
+    }
+
+    return backSideCount;
 }

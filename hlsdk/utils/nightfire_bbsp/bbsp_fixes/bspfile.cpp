@@ -115,7 +115,7 @@ void PrintBSPFileSizes()
     v9 = ArrayUsage(0x30, "leaves", g_numDLeafs, 32000) + v8;
     v10 = ArrayUsage(4, "markbrushes", g_numDMarkBrushes, 262144) + v9;
     v11 = ArrayUsage(4, "marksurfaces", g_numDMarkSurfaces, 262144) + v10;
-    v12 = ArrayUsage(0x40, "textures", g_numDMaterials, 1024) + v11;
+    v12 = ArrayUsage(0x40, "textures", g_numDTextures, 1024) + v11;
     v13 = ArrayUsage(0x40, "materials", g_numDMaterials, 1024) + v12;
     v14 = ArrayUsage(0x20, "texmatrix", g_numDTexMatrix, 65536) + v13;
     v15 = GlobUsage("lightdata", g_lightdatasize, MAX_MAP_LIGHTDATA) + v14;
@@ -199,7 +199,7 @@ void LoadBSPImage(dheader_t* const header)
     g_numDFaces = CopyLump(LUMP_FACES, g_dFaces, sizeof(dface_t), header);
     g_numDMarkSurfaces = CopyLump(LUMP_MARKSURFACES, g_dmarksurfaces, sizeof(int), header);
     g_numDMarkBrushes = CopyLump(LUMP_MARKBRUSHES, g_dmarkbrushes, sizeof(int), header);
-    g_numDMaterials = CopyLump(LUMP_TEXTURES, g_dtextures, sizeof(texturename_t), header);
+    g_numDTextures = CopyLump(LUMP_TEXTURES, g_dtextures, sizeof(texturename_t), header);
     g_numDMaterials = CopyLump(LUMP_MATERIALS, g_dmaterials, sizeof(texturename_t), header);
     g_numDBrushes = CopyLump(LUMP_BRUSHES, g_dbrushes, sizeof(dbrush_t), header);
     g_numDBrushSides = CopyLump(LUMP_BRUSHSIDES, g_dbrushsides, sizeof(dbrushside_t), header);
@@ -215,21 +215,21 @@ void LoadBSPImage(dheader_t* const header)
     //      
     SwapBSPFile(false);
 
-    g_dmodels_checksum = FastChecksum(g_dmodels, 56 * g_numDModels);
-    g_dverts_checksum = FastChecksum(g_dverts, 12 * g_numDVerts);
-    g_dnormals_checksum = FastChecksum(g_dnormals, 12 * g_numDVerts);
-    g_dindicies_checksum = FastChecksum(g_dindices, 4 * g_numDIndices);
-    g_dplanes_checksum = FastChecksum(g_dplanes, 20 * g_numDPlanes);
-    g_dleafs_checksum = FastChecksum(g_dleafs, 48 * g_numDLeafs);
-    g_dnodes_checksum = FastChecksum(g_dnodes, 36 * g_numDNodes);
-    g_dfaces_checksum = FastChecksum(g_dFaces, 48 * g_numDFaces);
-    g_dmarksurfaces_checksum = FastChecksum(g_dmarksurfaces, 4 * g_numDMarkSurfaces);
-    g_dmarkbrushes_checksum = FastChecksum(g_dmarkbrushes, 4 * g_numDMarkBrushes);
-    g_dtextures_checksum = FastChecksum(g_dtextures, g_numDMaterials << 6);
-    g_dmaterials_checksum = FastChecksum(g_dmaterials, g_numDMaterials << 6);
-    g_dbrushes_checksum = FastChecksum(g_dbrushes, 12 * g_numDBrushes);
-    g_dbrushsides_checksum = FastChecksum(g_dbrushsides, 8 * g_numDBrushSides);
-    g_dtexmatrix_checksum = FastChecksum(g_dtexmatrix, 32 * g_numDTexMatrix);
+    g_dmodels_checksum = FastChecksum(g_dmodels, sizeof(dmodel_t) * g_numDModels);
+    g_dverts_checksum = FastChecksum(g_dverts, sizeof(dvertex_t) * g_numDVerts);
+    g_dnormals_checksum = FastChecksum(g_dnormals, sizeof(dnormal_t) * g_numDVerts);
+    g_dindicies_checksum = FastChecksum(g_dindices, sizeof(int) * g_numDIndices);
+    g_dplanes_checksum = FastChecksum(g_dplanes, sizeof(dplane_t) * g_numDPlanes);
+    g_dleafs_checksum = FastChecksum(g_dleafs, sizeof(dleaf_t) * g_numDLeafs);
+    g_dnodes_checksum = FastChecksum(g_dnodes, sizeof(dnode_t) * g_numDNodes);
+    g_dfaces_checksum = FastChecksum(g_dFaces, sizeof(dface_t) * g_numDFaces);
+    g_dmarksurfaces_checksum = FastChecksum(g_dmarksurfaces, sizeof(int) * g_numDMarkSurfaces);
+    g_dmarkbrushes_checksum = FastChecksum(g_dmarkbrushes, sizeof(int) * g_numDMarkBrushes);
+    g_dtextures_checksum = FastChecksum(g_dtextures[0], g_numDTextures * sizeof(texturename_t));
+    g_dmaterials_checksum = FastChecksum(g_dmaterials[0], g_numDMaterials * sizeof(texturename_t));
+    g_dbrushes_checksum = FastChecksum(g_dbrushes, sizeof(dbrush_t) * g_numDBrushes);
+    g_dbrushsides_checksum = FastChecksum(g_dbrushsides, sizeof(dbrushside_t) * g_numDBrushSides);
+    g_dtexmatrix_checksum = FastChecksum(g_dtexmatrix, sizeof(dtexmatrix_t) * g_numDTexMatrix);
     g_dvisdata_checksum = FastChecksum(g_dvisdata, g_visdatasize);
     g_dlightdata_checksum = FastChecksum(g_dlightdata, g_lightdatasize);
     g_dentdata_checksum = FastChecksum(g_dentdata, g_entdatasize);
@@ -278,7 +278,7 @@ void WriteBSPFile(const char* const filename)
     AddLump(sizeof(int) * g_numDMarkSurfaces, bspfile, LUMP_MARKSURFACES, "LUMP_MARKSURFACES", g_dmarksurfaces, header);
     AddLump(sizeof(int) * g_numDMarkBrushes, bspfile, LUMP_MARKBRUSHES, "LUMP_MARKBRUSHES", g_dmarkbrushes, header);
     AddLump(sizeof(dmodel_t) * g_numDModels, bspfile, LUMP_MODELS, "LUMP_MODELS", g_dmodels, header);
-    AddLump(sizeof(texturename_t) * g_numDMaterials, bspfile, LUMP_TEXTURES, "LUMP_TEXTURES", g_dtextures, header);
+    AddLump(sizeof(texturename_t) * g_numDTextures, bspfile, LUMP_TEXTURES, "LUMP_TEXTURES", g_dtextures, header);
     AddLump(sizeof(texturename_t) * g_numDMaterials, bspfile, LUMP_MATERIALS, "LUMP_MATERIALS", g_dmaterials, header);
     AddLump(sizeof(dtexmatrix_t) * g_numDTexMatrix, bspfile, LUMP_TEXMATRIX, "LUMP_TEXMATRIX", g_dtexmatrix, header);
     AddLump(sizeof(dbrush_t) * g_numDBrushes, bspfile, LUMP_BRUSHES, "LUMP_BRUSHES", g_dbrushes, header);
@@ -412,7 +412,7 @@ void BeginBSPFile()
     g_numDPlanes = 0;
     g_numDVerts = 0;
     g_numDIndices = 0;
-    g_numDMaterials = 0;
+    g_numDTextures = 0;
     g_numDMaterials = 0;
     g_numDTexMatrix = 0;
     g_numDFaces = 0;

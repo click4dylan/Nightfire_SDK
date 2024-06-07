@@ -144,6 +144,7 @@ inline int g_MapVersion = 0;
 //#define g_verbose *(bool*)0x8BE3354
 //#define g_clientid *(int*)0x8BE3358
 // 
+inline unsigned g_numVisLeafs = 0;
 inline unsigned g_numMapsAlloced = 0;
 inline unsigned g_numEnts = 0;
 inline unsigned g_numEPairs = 0;
@@ -156,8 +157,8 @@ inline bool g_bLeaked = false;
 inline bool g_showbevels = false;
 inline unsigned g_numBrushes = 0;
 inline unsigned g_numBrushSides = 0;
-inline unsigned g_numMarkFaces = 0;
-inline unsigned g_numMarkBrushes = 0;
+inline unsigned g_numNodesWithMarkFaces = 0;
+inline unsigned g_numNodesWithMarkBrushes = 0;
 inline unsigned g_NumPortals = 0;
 inline unsigned g_numLeafs = 0;
 inline unsigned g_numDLeafs = 0;
@@ -178,8 +179,8 @@ inline unsigned g_numNodes = 0;
 //#define g_showbevels *(bool*)0x8BE3388
 //#define g_numBrushes *(int*)0x8BE339C
 //#define g_numBrushSides *(int*)0x8BE33A0
-//#define g_numMarkFaces *(int*)0x8BE33A4
-//#define g_numMarkBrushes *(int*)0x8BE33A8
+//#define g_numNodesWithMarkFaces *(int*)0x8BE33A4
+//#define g_numNodesWithMarkBrushes *(int*)0x8BE33A8
 //#define g_NumPortals *(int*)0x8BE3390
 //#define g_numLeafs *(int*)0x42A3E0
 //#define g_numDLeafs *(int*)0x1BE2190
@@ -338,6 +339,7 @@ inline unsigned g_CurrentEntity = 0;
 //#define g_CurrentEntity *(int*)0x5DE06F4
 inline FILE* linefile = nullptr;
 inline FILE* portalfile = nullptr;
+inline FILE* lightingfile = nullptr;
 //#define linefile *(FILE**)0x5DE06F8
 //#define prevleaknode *(portal_t**)0x5DE06FC
 inline portal_t* prevleaknode = nullptr;

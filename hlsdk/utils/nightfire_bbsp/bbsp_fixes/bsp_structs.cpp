@@ -5,24 +5,23 @@
 portal_s::portal_s()
 {
 	winding = nullptr;
-	g_NumPortals += 1;
+	++g_NumPortals;
 }
 
 portal_s::~portal_s()
 {
-	g_NumPortals -= 1;
+	--g_NumPortals;
 	if (winding)
 		delete winding;
 }
 
 node_s::node_s()
 {
-	g_numNodesAllocated += 1;
+	++g_numNodesAllocated;
 }
 
 node_s::~node_s()
 {
-	bool v2 = false;
 	if (children[0])
 		delete children[0];
 	if (children[1])
@@ -40,25 +39,17 @@ node_s::~node_s()
 
 
 	// Free markfaces associated with the node
-	if (markfaces) //TODO: FIXME: SHOULDNT BE HERE
-	{
-		markfaces->clear();
-		delete markfaces;
-	}
+	ClearMarkFaces();
 
 	// Free markbrushes associated with the node
-	if (markbrushes) //TODO: FIXME: SHOULDNT BE HERE
-	{
-		markbrushes->clear();
-		delete markbrushes;
-	}
+	ClearMarkBrushes();
 
 	--g_numNodesAllocated;
 }
 
 entinfo_t::entinfo_t()
 {
-	g_numMapsAlloced += 1;
+	++g_numMapsAlloced;
 }
 
 entinfo_t::~entinfo_t()
@@ -73,20 +64,16 @@ entinfo_t::~entinfo_t()
 		delete entities;
 	}
 
-	g_numMapsAlloced -= 1;
+	--g_numMapsAlloced;
 }
 
 entity_s::entity_s()
 {
-	g_numEnts += 1;
+	++g_numEnts;
 }
 
 entity_s::~entity_s()
 {
-	//FIXME:
-	if (epairs)
-		delete epairs;
-#if 0
 	epair_t* ep = epairs;
 	while (ep)
 	{
@@ -94,18 +81,17 @@ entity_s::~entity_s()
 		delete ep;
 		ep = next;
 	}
-#endif
 
-	if (firstbrush)
+	if (brushes)
 	{
 		for (unsigned int i = 0; i < numbrushes; ++i)
 		{
-			if (firstbrush[i])
-				delete firstbrush[i];
+			if (brushes[i])
+				delete brushes[i];
 		}
-		free(firstbrush);
+		free(brushes);
 	}
-	g_numEnts -= 1;
+	--g_numEnts;
 }
 
 brush_s* entity_s::CreateNewBrush()
@@ -115,12 +101,12 @@ brush_s* entity_s::CreateNewBrush()
 		// Increase the capacity of the brush array
 		const unsigned int newCapacity = max_alloced_brushes + 64;
 		brush_t** newBrushArray = (brush_t**)calloc(1, sizeof(brush_s**) * newCapacity);
-		if (firstbrush) 
+		if (brushes) 
 		{
-			memcpy(newBrushArray, firstbrush, sizeof(brush_s**) * numbrushes);
-			free(firstbrush);
+			memcpy(newBrushArray, brushes, sizeof(brush_s**) * numbrushes);
+			free(brushes);
 		}
-		firstbrush = newBrushArray;
+		brushes = newBrushArray;
 		max_alloced_brushes = newCapacity;
 	}
 
@@ -128,23 +114,23 @@ brush_s* entity_s::CreateNewBrush()
 	brush_t* newBrush = new brush_t;
 	newBrush->entitynum = index;
 	newBrush->brushnum = numbrushes;
-	firstbrush[numbrushes++] = newBrush;
+	brushes[numbrushes++] = newBrush;
 
 	return newBrush;
 }
 
 epair_s::epair_s()
 {
-	g_numEPairs += 1;
+	++g_numEPairs;
 }
 
 epair_s::~epair_s()
 {
-	if (next)
-		delete next;
+	//if (next)
+	//	delete next;
 	if (key)
 		free(key);
 	if (value)
 		free(value);
-	g_numEPairs -= 1;
+	--g_numEPairs;
 }

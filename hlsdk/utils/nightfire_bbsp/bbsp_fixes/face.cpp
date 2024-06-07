@@ -10,6 +10,7 @@
 
 DWORD a = 0x41D3C0;
 
+#ifdef BBSP_USE_CPP
 face_s::~face_s()
 {
     //FreeFaceList
@@ -18,23 +19,25 @@ face_s::~face_s()
     {
         face_s* next_in_chain = n->next;
         free(n);
-        g_numFaces -= 1;
+        --g_numFaces;
         n = next_in_chain;
     }
 
-    g_numFaces -= 1;
+    --g_numFaces;
 }
+#endif
 
 // Default constructor
 face_s::face_s(unsigned int planenum)
-    : planenum(planenum) {
-    g_numFaces += 1;
+    : planenum(planenum) 
+{
+    ++g_numFaces;
 }
 
 face_s::face_s(const face_s& src)
     : planenum(src.planenum), flags(src.flags), texinfo(src.texinfo), brush(src.brush), brushside(src.brushside)
 {
-    g_numFaces += 1;
+    ++g_numFaces;
     memcpy(vecs, src.vecs, sizeof(vecs));
     if (src.winding)
         winding = new Winding(*src.winding);
@@ -45,7 +48,7 @@ face_s::face_s(const face_s& src)
 face_s::face_s(const face_s& src, Winding* src_winding)
     : planenum(src.planenum), flags(src.flags), texinfo(src.texinfo), brush(src.brush), brushside(src.brushside)
 {
-    g_numFaces += 1;
+    ++g_numFaces;
     memcpy(vecs, src.vecs, sizeof(vecs));
     winding = src_winding;
 }
@@ -316,7 +319,7 @@ void StripOutsideFaces(node_t* node, entity_t* ent, unsigned int filterFlag)
     // Loop through all brushes in the entity
     for (unsigned int i = 0; i < numBrushes; ++i)
     {
-        brush_t* brush = ent->firstbrush[brushIndex];
+        brush_t* brush = ent->brushes[brushIndex];
 
         // Check if the filter flag matches the brush's brushflags
         if ((filterFlag & brush->brushflags) != 0)
@@ -373,7 +376,7 @@ void MarkEmptyBrushFaces(unsigned int flag, entity_t* entity)
 
     for (unsigned int brushIndex = 0; brushIndex < entity->numbrushes; ++brushIndex)
     {
-        brush_t* brush = entity->firstbrush[brushIndex];
+        brush_t* brush = entity->brushes[brushIndex];
         if ((flag & brush->brushflags) != 0)
         {
             totalFaces += brush->numsides;
@@ -411,19 +414,22 @@ void FreeBrushFaces(entity_t* entity, unsigned int flag)
 
     for (unsigned int i = 0; brushIndex < numBrushes; i = brushIndex)
     {
-        brush_t* brush = entity->firstbrush[brushIndex];
+        brush_t* brush = entity->brushes[brushIndex];
         if ((flag & brush->brushflags) != 0)
         {
             unsigned int numSides = brush->numsides;
             for (unsigned int sideIndex = 0; sideIndex < numSides; ++sideIndex)
             {
                 side_t* side = brush->brushsides[sideIndex];
+#ifdef BBSP_USE_CPP
                 if (side->face_fragments)
                     delete side->face_fragments;
                 if (side->inverted_face_fragments)
                     delete side->inverted_face_fragments;
-                //FreeFaceList(side->face_fragments);
-                //FreeFaceList(side->inverted_face_fragments);
+#else
+                FreeFaceList(side->face_fragments);
+                FreeFaceList(side->inverted_face_fragments);
+#endif
                 side->face_fragments = NULL;
                 side->inverted_face_fragments = NULL;
             }
@@ -431,19 +437,6 @@ void FreeBrushFaces(entity_t* entity, unsigned int flag)
         ++brushIndex;
     }
 }
-
-// replaced with C++
-#if 0
-void FreeFaceList(face_t* list)
-{
-    while (list)
-    {
-       face_t* next = list->next;
-       FreeFace(list);
-       list = next;
-    }
-}
-#endif
 
 void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inverted, bool is_lighting_tree)
 {
@@ -465,18 +458,23 @@ void FilterFaceIntoTree_r(int depth, node_t* node, side_t* brushside, face_t* li
             brushside->inverted_face_fragments = list;
             list->leaf_node = node;
 
-            unsigned int brush_flags = 0;
-            if (is_in_lighting_stage)
-                brush_flags = list->brush->brushflags & 0xFFFFFF00;
-            int brush_leaf_type = list->brush->leaf_type;
+            unsigned int brush_contents = 0;
 
-            // Set node leaf type as empty and update with brush brushflags
-            node->leaf_type = LEAF_EMPTY_AKA_NOT_OPAQUE; //1
-            node->leaf_type |= (brush_flags | node->leaf_type) & 0xFFFFFF00;
+            if (is_in_lighting_stage)
+                brush_contents = list->brush->brushflags & 0xFFFFFF00;
+
+            unsigned int brush_leaf_type = list->brush->leaf_type;
+
+            if (!node->leaf_type)
+                node->leaf_type = LEAF_EMPTY_AKA_NOT_OPAQUE;
+
+            unsigned int combined_type = (brush_contents | node->leaf_type) & 0xFFFFFF00;
 
             // Update node leaf type if brush leaf type is greater
-            if ((unsigned char)node->leaf_type < (int)(unsigned char)brush_leaf_type)
+            if ((node->leaf_type & 0xFF) < (brush_leaf_type & 0xFF))
                 node->leaf_type = brush_leaf_type;
+
+            node->leaf_type |= combined_type;
         }
         else
         {
@@ -567,7 +565,7 @@ void SetFacesLeafNode(node_t* node, entity_t* entity)
 
     for (unsigned int brushIndex = 0; brushIndex < numBrushes; ++brushIndex)
     {
-        brush_t* brush = entity->firstbrush[brushIndex];
+        brush_t* brush = entity->brushes[brushIndex];
         unsigned int numSides = brush->numsides;
 
         for (unsigned int sideIndex = 0; sideIndex < numSides; ++sideIndex)
@@ -607,7 +605,7 @@ face_t* CopyFaceList(entity_t* ent, unsigned int brushflags)
     // Iterate over all brushes in the entity
     for (unsigned int brushIndex = 0; brushIndex < ent->numbrushes; ++brushIndex)
     {
-        brush_t* brush = ent->firstbrush[brushIndex];
+        brush_t* brush = ent->brushes[brushIndex];
 
         // Check if the brush brushflags match the specified brushflags
         if ((brush->brushflags & brushflags) != 0)
@@ -690,16 +688,17 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
         return;
 
     // Initialize face and check limits
-    dface_t* dface = &g_dFaces[g_numDFaces];
     hlassume(g_numDFaces < MAX_MAP_FACES, assume_MAX_MAP_FACES);
-
     pFace->outputnumber = g_numDFaces;
-    pFace->built_draw_indices_for_face = 1;
-    g_numDFaces += 1;
+    pFace->built_draw_indices_for_face = true;
+    dface_t* dface = &g_dFaces[g_numDFaces++];
+
+    if (strstr(pFace->texinfo->name, "TARMAC"))
+        int test = 1;
 
     // Handle special face brushflags
     if ((pFace->flags & (CONTENTS_NODRAW | CONTENTS_PORTAL | SURF_SKY | CONTENTS_UNKNOWN | CONTENTS_SOLID)) != 0)
-        pFace->winding->m_NumPoints = 0;
+        pFace->winding->ClearNumPoints();
 
     // Set face properties
     dface->plane_index = pFace->planenum;
@@ -729,40 +728,37 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
         {
             hlassume(g_numDVerts < MAX_MAP_VERTS, assume_MAX_MAP_VERTS);
 
+            dnormal_t* normal = &g_dnormals[g_numDVerts];
+            dvertex_t* vertex = &g_dverts[g_numDVerts++];
             plane_t* plane = &gMappedPlanes[pFace->planenum];
 
-            dvertex_t* vertex = &g_dverts[g_numDVerts];
             vertex->point[0] = pFace->winding->m_Points[i][0];
             vertex->point[1] = pFace->winding->m_Points[i][1];
             vertex->point[2] = pFace->winding->m_Points[i][2];
 
-            dnormal_t* normal = &g_dnormals[g_numDVerts];
             normal->normal[0] = plane->normal[0];
             normal->normal[1] = plane->normal[1];
             normal->normal[2] = plane->normal[2];
-
-            ++g_numDVerts;
         }
     }
 
     // Add indices
-    if (numPoints > 2)
+    if (numPoints >= 3)
     {
-        unsigned int numIndices = (numPoints - 2) * 3;
-        hlassume(g_numDIndices < MAX_MAP_INDICES, assume_MAX_MAP_INDICES);
+        unsigned numFaces = pFace->winding->m_NumPoints - 2;
 
+        // Set the face indices
         dface->first_indices_index = g_numDIndices;
-        dface->num_indicies = numIndices;
+        dface->num_indicies = 3 * numFaces;
 
-        for (unsigned int i = 2; i < numPoints; ++i)
+        // Iterate and set indices
+        for (unsigned i = 0; i < numFaces; ++i) 
         {
-            unsigned int index = g_numDIndices;
-            unsigned int* indices = &g_dindices[g_numDIndices];
-            g_dindices[g_numDIndices] = 0;
-            g_numDIndices += 1;
-            g_dindices[g_numDIndices] = i - 1;
-            g_numDIndices += 1;
-            g_dindices[g_numDIndices] = i;
+            hlassume(g_numDIndices < MAX_MAP_INDICES, assume_MAX_MAP_INDICES);
+
+            g_dindices[g_numDIndices++] = 0;
+            g_dindices[g_numDIndices++] = i + 1;
+            g_dindices[g_numDIndices++] = i + 2;
         }
     }
 }
@@ -790,7 +786,7 @@ void MarkFinalFaceFragments(node_t* node, entity_t* ent)
 {
     for (unsigned int i = 0; i < ent->numbrushes; ++i)
     {
-        brush_t* brush = ent->firstbrush[i];
+        brush_t* brush = ent->brushes[i];
         for (unsigned int j = 0; j < brush->numsides; ++j)
         {
             side_t* side = brush->brushsides[j];
@@ -817,7 +813,7 @@ void MarkFaceFragments(node_t* node, entity_t* ent)
 {
     for (unsigned int i = 0; i < ent->numbrushes; ++i)
     {
-        brush_t* brush = ent->firstbrush[i];
+        brush_t* brush = ent->brushes[i];
         for (unsigned int j = 0; j < brush->numsides; ++j)
         {
             side_t* side = brush->brushsides[j];

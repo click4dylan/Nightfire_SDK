@@ -26,10 +26,49 @@ void SetModelBounds(dmodel_t* model, vec3_t& mins, vec3_t& maxs)
     model->maxs[2] = maxs[2];
 }
 
-//todo
+void WriteNodeAndLeafData(int depth, node_t* node)
+{
+    while (node->planenum != -1)
+    {
+        fprintf(
+            lightingfile,
+            "NODE %i %i %i %i\n",
+            node->visleafnum,
+            node->planenum,
+            node->children[0]->visleafnum,
+            node->children[1]->visleafnum);
+
+        WriteNodeAndLeafData(depth + 1, node->children[0]);
+        node = node->children[1];
+        depth++;
+    }
+
+    unsigned int leafType = node->leaf_type;
+    if((leafType & 0xFF) == 0)
+        leafType = (leafType & 0xFFFFFF00) | 1;;
+    fprintf(lightingfile, "LEAF %i %u\n", node->visleafnum, leafType);
+}
+
 void WriteLightingFile(node_t* node)
 {
+    char filename[MAX_PATH];
+    g_numVisLeafs = 0;
+    AssignVisLeafNumbers_r(node);
 
+    safe_snprintf(filename, sizeof(filename), "%s.lbsp", g_Mapname);
+    lightingfile = fopen(filename, "w");
+
+    if (!lightingfile)
+    {
+        Error("Could not open lighting bsp file '%s'\n", filename);
+        return;
+    }
+
+    fprintf(lightingfile, "%i\n", g_numVisLeafs);
+    WriteNodeAndLeafData(0, node);
+
+    fclose(lightingfile);
+    lightingfile = nullptr;
 }
 
 void BuildLightingBSPTree(entity_t* ent)
@@ -232,7 +271,6 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
 #endif
 
     unsigned int planenum;                // Planenum of the current node
-    face_t* original_back_face;  // Original back list
     face_t* front_face_new;      // New front list after splitting
     face_t* back_face_new;       // New back list after splitting
 
@@ -408,7 +446,7 @@ void WriteHullFile(const char* fileNamePrefix, entity_t* entity, int brushFlag, 
     unsigned int numBrushes = entity->numbrushes;
     for (unsigned int brushIndex = 0; brushIndex < numBrushes; ++brushIndex) 
     {
-        brush_t* brush = entity->firstbrush[brushIndex];
+        brush_t* brush = entity->brushes[brushIndex];
         if ((brushFlag & brush->brushflags) != 0) 
         {
             unsigned int numSides = brush->numsides;
@@ -500,21 +538,20 @@ void NumberLeafs_r(int depth, node_t* node)
                 return;
         }
 
-        current_node->visleafnum = num_visleafs;
-        num_visleafs += 1;
+        current_node->visleafnum = num_visleafs++;
+
         if (current_node->leaf_type != LEAF_SOLID_AKA_OPAQUE) 
         {
             portal_t* portals = current_node->portals;
             if (portals) 
             {
-                int visible_portals = num_visportals;
                 do 
                 {
                     node_t* node0 = portals->nodes[0];
                     if (node0 == current_node) 
                     {
                         if (node0->leaf_type != LEAF_SOLID_AKA_OPAQUE && portals->nodes[1]->leaf_type != LEAF_SOLID_AKA_OPAQUE)
-                            ++visible_portals;
+                            ++num_visportals;
                         portals = portals->next[0];
                     }
                     else 
@@ -522,7 +559,6 @@ void NumberLeafs_r(int depth, node_t* node)
                         portals = portals->next[1];
                     }
                 } while (portals);
-                num_visportals = visible_portals;
             }
         }
     }
@@ -549,292 +585,110 @@ void WritePortalfile(node_t* node)
     Log("Writing portal file '%s'\n", g_portfilename);
 }
 
-int classifyPointsAgainstPlane(
-    char* out_128_bytes,
-    plane_t* plane,
-    Winding* winding,
-    vec_t* point)
-{
-#if 1
-    //fixme
-    unsigned int numPoints = winding->m_NumPoints;
-    int numPointsInFront = 0;
-
-    for (unsigned int i = 0; i < numPoints; ++i)
-    {
-        vec3_t* windingPoint = &winding->m_Points[i];
-        vec3_t* nextWindingPoint = &winding->m_Points[(i + 1) % numPoints];
-
-        vec3_t edge = {
-            windingPoint[0] - nextWindingPoint[0],
-            windingPoint[1] - nextWindingPoint[1],
-            windingPoint[2] - nextWindingPoint[2]
-        };
-
-        double dot = DotProduct(edge, plane->normal);
-
-        if (dot <= 0.01)
-            out_128_bytes[i] = 0;
-        else
-        {
-            out_128_bytes[i] = 1;
-            ++numPointsInFront;
-        }
-    }
-
-    return numPointsInFront;
-#else
-    unsigned int numPoints = winding->m_NumPoints;
-    int numPointsClassifiedAsFront = 0;
-    int currentIndex = 0;
-
-    if (numPoints == 0)
-        return 0;
-
-    char* classificationResults = out_128_bytes;
-    vec3_t* points = winding->m_Points;
-
-    for (unsigned int i = 0; i < numPoints; ++i) {
-        vec3_t currentPoint;
-        VectorCopy(points[currentIndex], currentPoint);
-        vec3_t nextPoint;
-        VectorCopy(points[(i + 1) % numPoints], nextPoint);
-
-        vec3_t edgeVector;
-        edgeVector[0] = currentPoint[0] - nextPoint[0];
-        edgeVector[1] = currentPoint[1] - nextPoint[1];
-        edgeVector[2] = currentPoint[2] - nextPoint[2];
-        VectorNormalize(edgeVector);
-
-        vec3_t crossProduct;
-        crossProduct[0] = edgeVector[1] * plane->normal[2] - edgeVector[2] * plane->normal[1];
-        crossProduct[1] = edgeVector[2] * plane->normal[0] - edgeVector[0] * plane->normal[2];
-        crossProduct[2] = edgeVector[0] * plane->normal[1] - edgeVector[1] * plane->normal[0];
-        VectorNormalize(crossProduct);
-
-        double dotProduct = crossProduct[0] * point[0] + crossProduct[1] * point[1] + crossProduct[2] * point[2];
-        double pointPlaneDist = crossProduct[0] * currentPoint[0] + crossProduct[1] * currentPoint[1] + crossProduct[2] * currentPoint[2];
-
-        if (dotProduct - pointPlaneDist <= ON_EPSILON) {
-            classificationResults[i] = SIDE_BACK;
-        }
-        else {
-            classificationResults[i] = SIDE_FRONT;
-            numPointsClassifiedAsFront++;
-        }
-
-        currentIndex++;
-    }
-
-    return numPointsClassifiedAsFront;
-#endif
-}
-
 //ClipSideIntoTree_r/AddWindingToConvexHull
 face_t* CombineFacesByPlane(face_t* face_fragments, face_t* original_face)
 {
-#if 1
-    Winding* initialWinding = new Winding();
-    face_t* transformedFace = new face_t(*original_face, initialWinding);
-    plane_t* plane = &gMappedPlanes[original_face->planenum];
+    face_t* final_face = new face_t(*original_face, new Winding);
+    const plane_t& plane = gMappedPlanes[original_face->planenum];
     bool isFirstValidWinding = true;
 
     for (const face_t* currentFace = face_fragments; currentFace; currentFace = currentFace->next)
     {
-        Winding* currentWinding = currentFace->winding;
-        if (currentWinding->Valid())
+        if (!currentFace->winding->Valid())
+            continue;
+
+        if (isFirstValidWinding)
         {
-            if (isFirstValidWinding)
+            if (final_face->winding)
+                delete final_face->winding;
+            final_face->winding = new Winding(*currentFace->winding);
+            isFirstValidWinding = false;
+            continue;
+        }
+
+        for (unsigned int pointIndex = 0; pointIndex < currentFace->winding->m_NumPoints; ++pointIndex)
+        {
+            char sides[128] { SIDE_FRONT };
+            int numPointsInBack = final_face->winding->classifyPointAgainstPlaneEdges(sides, sizeof(sides), plane, currentFace->winding->m_Points[pointIndex]);
+
+            if (numPointsInBack == 1)
             {
-                if (transformedFace->winding)
-                    delete transformedFace->winding;
-                transformedFace->winding = new Winding(*currentWinding);
-                isFirstValidWinding = false;
-                continue;
+                unsigned int first_back_index;
+                for (first_back_index = 0; first_back_index < final_face->winding->m_NumPoints; ++first_back_index)
+                {
+                    if (sides[first_back_index] != SIDE_FRONT)
+                        break;
+                }
+                final_face->winding->insertPoint(currentFace->winding->m_Points[pointIndex], first_back_index + 1);
             }
-
-            for (unsigned int pointIndex = 0; pointIndex < currentWinding->m_NumPoints; ++pointIndex)
+            else if (numPointsInBack > 1)
             {
-                char pointClassifications[128] = { SIDE_FRONT };
-                int numPointsInFront = classifyPointsAgainstPlane(
-                    pointClassifications, plane, transformedFace->winding, currentWinding->m_Points[pointIndex]);
-
-                unsigned int numPointsInTransformedFace = transformedFace->winding->m_NumPoints;
-
-                if (numPointsInFront == 1)
+                unsigned int first_front_index;
+                for (first_front_index = 0; first_front_index < final_face->winding->m_NumPoints; ++first_front_index)
                 {
-                    for (unsigned int j = 0; j < numPointsInTransformedFace; ++j)
-                    {
-                        if (pointClassifications[j] == SIDE_BACK)
-                        {
-                            transformedFace->winding->insertPoint(currentWinding->m_Points[pointIndex], j + 1);
-                            break;
-                        }
-                    }
+                    if (sides[first_front_index] == SIDE_FRONT)
+                        break;
                 }
-                else if (numPointsInFront > 1)
+
+                unsigned int offset = 0;
+                for (unsigned int k = 0; k < final_face->winding->m_NumPoints; ++k)
                 {
-                    unsigned int offset = 0;
-                    for (unsigned int k = 0; k < numPointsInTransformedFace; ++k)
-                    {
-                        if (pointClassifications[k] == SIDE_FRONT)
-                        {
-                            offset = (k + 1) % numPointsInTransformedFace;
-                            while (pointClassifications[offset] == SIDE_FRONT)
-                            {
-                                offset = (offset + 1) % numPointsInTransformedFace;
-                            }
-                            break;
-                        }
-                    }
-                    transformedFace->winding->shiftPoints(numPointsInFront - 1, (offset + 1) % numPointsInTransformedFace);
-                    transformedFace->winding->insertPoint(currentWinding->m_Points[pointIndex], offset + 1);
+                    offset = (k + first_front_index) % final_face->winding->m_NumPoints;
+                    if (sides[offset] != SIDE_FRONT)
+                        break;
                 }
+                final_face->winding->shiftPoints(numPointsInBack - 1, (offset + 1) % final_face->winding->m_NumPoints);
+                final_face->winding->insertPoint(currentFace->winding->m_Points[pointIndex], offset + 1);
             }
         }
     }
 
-    if (transformedFace->winding->Valid())
+    if (final_face->winding->Valid())
     {
-        transformedFace->winding->RemoveColinearPoints();
-        return transformedFace;
+        final_face->winding->RemoveColinearPoints();
+        return final_face;
     }
     else
     {
-        FreeFace(transformedFace);
-        Winding* fallbackWinding = new Winding();
-        return new face_t(*original_face, fallbackWinding ? fallbackWinding : nullptr);
+        FreeFace(final_face);
+        final_face = new face_t(*original_face, new Winding);
+        return final_face;
     }
-#else
-    // Create a new Winding object for the initial transformation
-    Winding* initialWinding = new Winding();
-    if (!initialWinding) 
-        return nullptr;
-
-    // Duplicate the winding of the input face
-    face_t* transformedFace = new face_t(*original_face, initialWinding);
-    if (!transformedFace) 
-    {
-        delete initialWinding;
-        return nullptr;
-    }
-
-    // Retrieve the plane associated with the input face
-    plane_t* plane = &gMappedPlanes[original_face->planenum];
-    bool isFirstValidWinding = true;
-
-    // Iterate through all reference original_face_list
-    for (face_t* currentFace = face_fragments; currentFace; currentFace = currentFace->next)
-    {
-        Winding* currentWinding = currentFace->winding;
-        if (currentWinding->Valid())
-        {
-            if (isFirstValidWinding)
-            {
-                // For the first valid winding, duplicate it directly
-                if (transformedFace->winding)
-                    delete transformedFace->winding;//transformedFace->winding->~Winding();//delete transformedFace->winding;
-                transformedFace->winding = new Winding(*currentWinding);
-                isFirstValidWinding = false;
-                continue;
-            }
-
-            // For subsequent valid windings, classify and potentially insert points
-            for (unsigned int pointIndex = 0; pointIndex < currentWinding->m_NumPoints; ++pointIndex)
-            {
-                char pointClassifications[128] = { 0 };
-                int numPointsInFront = classifyPointsAgainstPlane(
-                    pointClassifications, plane, transformedFace->winding, currentWinding->m_Points[pointIndex]);
-
-                unsigned int numPointsInTransformedFace = transformedFace->winding->m_NumPoints;
-                if (numPointsInFront == 1)
-                {
-                    for (unsigned int j = 0; j < numPointsInTransformedFace; ++j)
-                    {
-                        if (pointClassifications[j])
-                        {
-                            transformedFace->winding->insertPoint(currentWinding->m_Points[pointIndex], j + 1);  //+ 1 in nightfire because has wrapper for it
-                            break;
-                        }
-                    }
-                }
-                else if (numPointsInFront > 1)
-                {
-                    unsigned int offset = 0;
-                    for (unsigned int k = 0; k < numPointsInTransformedFace; ++k)
-                    {
-                        if (!pointClassifications[k])
-                        {
-                            for (unsigned int m = 0; m < numPointsInTransformedFace; ++m)
-                            {
-                                offset = (m + k) % numPointsInTransformedFace;
-                                if (pointClassifications[offset]) 
-                                    break;
-                            }
-                            break;
-                        }
-                    }
-                    transformedFace->winding->shiftPoints(numPointsInFront - 1, (offset + 1) % numPointsInTransformedFace);
-                    transformedFace->winding->insertPoint(currentWinding->m_Points[pointIndex], offset + 1); //+ 1 in nightfire because has wrapper for it
-                }
-            }
-        }
-    }
-
-    // Check if the transformed face has a valid winding and return accordingly
-    if (transformedFace->winding->Valid())
-    {
-        transformedFace->winding->RemoveColinearPoints();
-        return transformedFace;
-    }
-    else
-    {
-        FreeFace(transformedFace);
-        Winding* fallbackWinding = new Winding();
-        return new face_t(*original_face, fallbackWinding ? fallbackWinding : nullptr);
-    }
-#endif
 }
 
-void GetFinalBrushFaces(entity_t* entity, int processingFlag)
+void GetFinalBrushFaces(entity_t* entity, int brushflags)
 {
     // Measure elapsed time
     I_FloatTime();
 
-    unsigned int numBrushes = entity->numbrushes;
-    unsigned int currentBrushIndex = 0;
-
     // Loop through each brush in the entity
-    for (unsigned int brushIndex = 0; currentBrushIndex < numBrushes; brushIndex = currentBrushIndex)
+    for (unsigned int i = 0; i < entity->numbrushes; ++i)
     {
-        brush_t* brush = entity->firstbrush[currentBrushIndex];
+        brush_t* brush = entity->brushes[i];
 
         // Check if the brush flag matches the processing flag
-        if ((processingFlag & brush->brushflags) != 0)
+        if ((brush->brushflags & brushflags) != 0)
         {
-            unsigned int numSides = brush->numsides;
-
             // Loop through each side of the brush
-            for (unsigned int sideIndex = 0; sideIndex < numSides; ++sideIndex)
+            for (unsigned int s = 0; s < brush->numsides; ++s)
             {
-                side_t* side = brush->brushsides[sideIndex];
+                side_t* side = brush->brushsides[s];
                 
                 if (side->final_face)
                     FreeFace(side->final_face);
 
-                // Process the side's original_face_list based on their flags
-                face_t* finalFace = nullptr;
                 if ((side->original_face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | CONTENTS_NODRAW | CONTENTS_UNKNOWN)) != 0)
-                    finalFace = new face_t(*side->original_face, new Winding);
+                {
+                    // clear face points
+                    side->final_face = new face_t(*side->original_face, new Winding);
+                }
                 else
-                    finalFace = CombineFacesByPlane(side->face_fragments, side->original_face);
-
-                // Store the processed original_face_list as extra original_face_list for the side
-                side->final_face = finalFace;
+                {
+                    // combine fragments
+                    side->final_face = CombineFacesByPlane(side->face_fragments, side->original_face);
+                }
             }
         }
-
-        ++currentBrushIndex;
     }
 }
 
@@ -865,7 +719,7 @@ void WriteTriangleVertices(FILE* file, Winding* winding, int index) {
 void WriteSmdTriangles(FILE* file, entity_t* entity, float tesselation, const char* texture) {
     // Iterate through brushes and generate triangles
     for (int i = 0; i < entity->numbrushes; ++i) {
-        brush_t* brush = entity->firstbrush[i];
+        brush_t* brush = entity->brushes[i];
         for (int j = 0; j < brush->numsides; ++j) {
             face_t* face = brush->brushsides[j]->original_face_list;
             Winding* winding = face->winding;
@@ -945,13 +799,77 @@ void GenerateWaterModel(entity_t* entity) {
 }
 #endif
 
+// FIXME Todo: this isn't the same as the original
+void SnapVerts(entity_t* ent)
+{
+    double startTime = I_FloatTime();
+
+    if (!ent->index)
+        Verbose("SnapVerts ...\n");
+
+#if 0
+    if (dword_8BE33C8) {
+        j__free(dword_8BE33C8);
+    }
+
+    dword_8BE33C8 = nullptr;
+    dword_8BE33CC = 0;
+    dword_8BE33D0 = 0;
+#endif
+
+    for (unsigned int i = 0; i < ent->numbrushes; ++i) 
+    {
+        brush_t* brush = ent->brushes[i];
+        for (unsigned int j = 0; j < brush->numsides; ++j) 
+        {
+            side_t* side = brush->brushsides[j];
+            face_t* final_face = side->final_face;
+            if (final_face && final_face->winding && final_face->winding->Valid()) 
+            {
+                Winding* winding = final_face->winding;
+                for (unsigned int k = 0; k < winding->m_NumPoints; ++k) 
+                {
+                    vec_t* point = winding->m_Points[k];
+                    vec_t x = point[0];
+                    vec_t y = point[1];
+                    vec_t z = point[2];
+                    vec_t distance = sqrt(x * x + y * y + z * z);
+                    // Snap vertices within a small threshold
+                    if (distance < 0.1) 
+                    {
+                        // Snap the vertex
+                        point[0] = round(x);
+                        point[1] = round(y);
+                        point[2] = round(z);
+                    }
+                }
+            }
+        }
+    }
+
+#if 0
+    // Free memory
+    if (dword_8BE33C8) {
+        j__free(dword_8BE33C8);
+    }
+    dword_8BE33C8 = nullptr;
+    dword_8BE33CC = 0;
+    dword_8BE33D0 = 0;
+#endif
+
+    if (!ent->index) 
+    {
+        Verbose("SnapVerts : ");
+        double endTime = I_FloatTime();
+        LogTimeElapsed(endTime - startTime);
+    }
+}
+
 void ModelBSP(entity_t* entity, dmodel_t* model, int modelbsp_index)
 {
-    int firstleaf = g_numDLeafs;
-    int firstface = g_numDFaces;
     model->headnode[3] = 0;
-    model->firstleaf = firstleaf;
-    model->firstface = firstface;
+    model->firstleaf = g_numDLeafs;
+    model->firstface = g_numDFaces;
     //GenerateWaterModel(entity);
     const char* classname = ValueForKey(entity, "classname");
     Verbose("===ModelBSP (%d) (entity %d : %s)===\n", modelbsp_index, entity->index, classname);
@@ -964,7 +882,7 @@ void ModelBSP(entity_t* entity, dmodel_t* model, int modelbsp_index)
     StripOutsideFaces(node, entity, CONTENTS_DETAIL | CONTENTS_BSP);
     MarkEmptyBrushFaces(CONTENTS_DETAIL | CONTENTS_BSP, entity);
     GetFinalBrushFaces(entity, CONTENTS_DETAIL | CONTENTS_BSP);
-    //SnapVerts(entity);
+    SnapVerts(entity);
     SetAllFacesLeafNode(0, entity);
 
     delete node;
@@ -996,8 +914,6 @@ void ModelBSP(entity_t* entity, dmodel_t* model, int modelbsp_index)
 
 void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
 {
-    int firstleaf; // Represents the index of the first leaf node in the BSP tree
-    int firstface; // Represents the index of the first face in the BSP tree
     node_t* headnode; // Points to the head node of the BSP tree
     face_t* inverted_face_fragments; // Stores inverted original_face_list
     face_t* bsp_backfaces; // Stores backfaces
@@ -1005,11 +921,9 @@ void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
     face_t* bsp_frontfaces; // Stores frontfaces
 
     // Initializing variables
-    firstleaf = g_numDLeafs;
     dmodel->headnode[3] = g_numDNodes;
-    firstface = g_numDFaces;
-    dmodel->firstleaf = firstleaf;
-    dmodel->firstface = firstface;
+    dmodel->firstleaf = g_numDLeafs;
+    dmodel->firstface = g_numDFaces;
 
     // Build BSP tree
     BuildLightingBSPTree(ent);
@@ -1111,7 +1025,7 @@ void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
         GetFinalBrushFaces(ent, CONTENTS_DETAIL | CONTENTS_BSP);
 
         // Snap vertices
-        //SnapVerts(ent);
+        SnapVerts(ent);
 
         // Write hull files
         WriteHullFile(".p2", ent, CONTENTS_BSP, 1, 0);

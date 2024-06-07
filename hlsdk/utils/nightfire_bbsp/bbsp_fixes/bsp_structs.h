@@ -4,11 +4,19 @@
 #include "winding.h"
 #include <set>
 
-enum leaf_types_t
+enum leaf_types_t : unsigned
 {
     LEAF_EMPTY_AKA_NOT_OPAQUE = 1, //references original_face, player can enter
     LEAF_SOLID_AKA_OPAQUE = 2, //references no surfaces, player cannot enter
 };
+
+/*
+struct LeafType
+{
+    unsigned int type : 8 = 0;
+    unsigned int flags : 30 = 0;
+};
+*/
 
 enum surfaceflags_t
 {
@@ -106,7 +114,7 @@ typedef struct entity_s
     unsigned int index{};
     vec3_t origin{};
     epair_t* epairs{};
-    struct brush_s** firstbrush{};
+    struct brush_s** brushes{};
     unsigned int numbrushes{};
     unsigned int max_alloced_brushes{};
     entity_s();
@@ -227,12 +235,14 @@ typedef struct face_s
     struct node_s* leaf_node = nullptr;
     int unknown4 = 0;
 
+#ifdef BBSP_USE_CPP
     ~face_s();
+#else
+    ~face_s() = delete;
+#endif
 
     face_s(unsigned int planenum);
-
     face_s(const face_s& src);
-
     face_s(const face_s& src, Winding* src_winding);
 
 } face_t;
@@ -336,7 +346,7 @@ typedef struct node_s
     vec3_t mins{};
     vec3_t maxs{};
     portal_t* portals{};
-    int leaf_type{};
+    unsigned int leaf_type{};
     struct node_s* children[2]{}; // only valid for decision nodes, 0 is left, 1 is right
     bool valid{};
     unsigned int visleafnum{}; // -1 = solid
@@ -345,6 +355,8 @@ typedef struct node_s
     unsigned int occupied{}; // light number in leaf for outside filling
     int unused2{};
 
+    void ClearMarkFaces();
+    void ClearMarkBrushes();
     bool IsPortalLeaf();
 
     node_s();
@@ -361,7 +373,7 @@ typedef struct side_s
     face_t* inverted_face_fragments{};
     face_t* final_face{};
     struct brush_s* parent_brush{};
-    bool built_draw_indices_for_face{};
+    bool built_draw_indices_for_side{};
     unsigned int draw_brush_side_index{};
 
     side_s();
@@ -403,7 +415,7 @@ typedef struct brush_s
     side_t** brushsides = nullptr;
     unsigned numsides = 0;
     unsigned int sidecapacity = 0;
-    int leaf_type = 0;
+    unsigned int leaf_type = 0;
     unsigned int brushflags = 0;
     bool built_draw_brush = 0;
     unsigned int output_num = 0;

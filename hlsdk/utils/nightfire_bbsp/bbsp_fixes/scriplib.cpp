@@ -8,7 +8,7 @@ char            g_TXcommand;
 
 typedef struct
 {
-    char            filename[_MAX_PATH];
+    char            filename[MAX_PATH];
     char* buffer;
     char* script_p;
     char* end_p;

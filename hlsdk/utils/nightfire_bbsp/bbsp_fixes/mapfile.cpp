@@ -28,12 +28,12 @@ void FreeEntity(entity_t* ent)
             delete ent->epairs;
         for (unsigned i = 0; i < ent->numbrushes; ++i)
         {
-            if (ent->firstbrush[i])
-                delete ent->firstbrush[i];
+            if (ent->brushes[i])
+                delete ent->brushes[i];
         }
-        free(ent->firstbrush);
+        free(ent->brushes);
         free(ent);
-        g_numEnts -= 1;
+        --g_numEnts;
     }
 }
 #endif
@@ -53,12 +53,11 @@ void FreeMap(entinfo_t* ent)
 }
 #endif
 
-int GetNumEngineEntities(entinfo_t* mapfile)
+unsigned int GetNumEngineEntities(entinfo_t* mapfile)
 {
-    int engineEntityCount = 0;
-    unsigned int totalEntities = mapfile->numentities;
+    unsigned int engineEntityCount = 0;
 
-    for (unsigned int entityIndex = 0; entityIndex < totalEntities; ++entityIndex)
+    for (unsigned int entityIndex = 0; entityIndex < mapfile->numentities; ++entityIndex)
     {
         entity_t* entity = mapfile->entities[entityIndex];
         const char* className = ValueForKey(entity, "classname");
@@ -86,16 +85,11 @@ int GetNumEngineEntities(entinfo_t* mapfile)
 
 void CheckBrushForWater(entity_t* mapent)
 {
-    const char* classname = ValueForKey(mapent, "classname");
-    unsigned int result = _stricmp(classname, "func_water");
-
-    if (!result)
+    if (!_stricmp(ValueForKey(mapent, "classname"), "func_water"))
     {
-        unsigned int numbrushes = mapent->numbrushes;
-        for (unsigned int i = 0; i < numbrushes; ++i)
+        for (unsigned int i = 0; i < mapent->numbrushes; ++i)
         {
-            brush_t* brush = mapent->firstbrush[i];
-            brush->brushflags |= CONTENTS_WATER;
+            mapent->brushes[i]->brushflags |= CONTENTS_WATER;
         }
     }
 }
@@ -107,17 +101,13 @@ unsigned int GetNumBrushes(entity_t* entity)
 
 unsigned int GetNumDetailBrushes(entity_t* entity)
 {
-    unsigned int numbrushes = entity->numbrushes;
     unsigned int detailBrushCount = 0;
-    brush_t** currentBrush = entity->firstbrush;
 
-    for (unsigned int i = 0; i < numbrushes; ++i)
+    for (unsigned int i = 0; i < entity->numbrushes; ++i)
     {
-        if ((*currentBrush)->brushflags & CONTENTS_DETAIL)
-        {
+        brush_t* brush = entity->brushes[i];
+        if (brush->brushflags & CONTENTS_DETAIL)
             ++detailBrushCount;
-        }
-        ++currentBrush;
     }
 
     return detailBrushCount;
@@ -125,14 +115,12 @@ unsigned int GetNumDetailBrushes(entity_t* entity)
 
 unsigned int GetNumFaces(entity_t* entity)
 {
-    unsigned int numbrushes = entity->numbrushes;
     unsigned int totalFaces = 0;
-    brush_t** currentBrush = entity->firstbrush;
 
-    for (unsigned int i = 0; i < numbrushes; ++i)
+    for (unsigned int i = 0; i < entity->numbrushes; ++i)
     {
-        totalFaces += (*currentBrush)->numsides;
-        ++currentBrush;
+        brush_t* brush = entity->brushes[i];
+        totalFaces += brush->numsides;
     }
 
     return totalFaces;
@@ -140,17 +128,13 @@ unsigned int GetNumFaces(entity_t* entity)
 
 unsigned int GetNumDetailFaces(entity_t* entity)
 {
-    unsigned int numbrushes = entity->numbrushes;
     unsigned int totalDetailFaces = 0;
-    brush_t** currentBrush = entity->firstbrush;
 
-    for (unsigned int i = 0; i < numbrushes; ++i)
+    for (unsigned int i = 0; i < entity->numbrushes; ++i)
     {
-        if ((*currentBrush)->brushflags & CONTENTS_DETAIL)
-        {
-            totalDetailFaces += (*currentBrush)->numsides;
-        }
-        ++currentBrush;
+        brush_t* brush = entity->brushes[i];
+        if (brush->brushflags & CONTENTS_DETAIL)
+            totalDetailFaces += brush->numsides;
     }
 
     return totalDetailFaces;
@@ -350,7 +334,7 @@ void ParseBrush(entity_t *mapent)
     // Process brushes with CONTENTS_ORIGIN
     for (brushIndex = 0; brushIndex < numBrushes; ++brushIndex) 
     {
-        brush = mapent->firstbrush[brushIndex];
+        brush = mapent->brushes[brushIndex];
         if (brush->brushflags & CONTENTS_ORIGIN) 
         {
             CreateBrush(brush, mapent);
@@ -372,7 +356,7 @@ void ParseBrush(entity_t *mapent)
     // Create all brushes
     for (brushIndex = 0; brushIndex < numBrushes; ++brushIndex) 
     {
-        CreateBrush(mapent->firstbrush[brushIndex], mapent);
+        CreateBrush(mapent->brushes[brushIndex], mapent);
     }
 
     // Calculate model_center if "light_origin" key exists
@@ -380,7 +364,7 @@ void ParseBrush(entity_t *mapent)
     {
         for (brushIndex = 0; brushIndex < numBrushes; ++brushIndex) 
         {
-            brush = mapent->firstbrush[brushIndex];
+            brush = mapent->brushes[brushIndex];
             if (!(brush->brushflags & CONTENTS_ORIGIN)) 
             {
                 p_bounds = &brush->bounds;
@@ -396,9 +380,9 @@ void ParseBrush(entity_t *mapent)
     }
 
     // Check if entity contains only an origin brush
-    if (mapent->numbrushes == 1 && (mapent->firstbrush[0]->brushflags & CONTENTS_ORIGIN)) 
+    if (mapent->numbrushes == 1 && (mapent->brushes[0]->brushflags & CONTENTS_ORIGIN)) 
     {
-        brush = mapent->firstbrush[0];
+        brush = mapent->brushes[0];
         Error("Entity %i, contains ONLY an origin brush near (%.0f,%.0f,%.0f)\n",
               mapent->index, brush->bounds.m_Mins[0], brush->bounds.m_Mins[1], brush->bounds.m_Mins[2]);
     }
@@ -421,7 +405,7 @@ void ExportBevels(entinfo_t* entinfo)
         entity_t* entity = entinfo->entities[i];
         for (unsigned int j = 0; j < entity->numbrushes; ++j) 
         {
-            brush_t* brush = entity->firstbrush[j];
+            brush_t* brush = entity->brushes[j];
             fprintf(file, "{\n");
 
             for (unsigned int k = 0; k < brush->numsides; ++k) 
@@ -820,33 +804,29 @@ void ParseLightmapInfo(brush_t* brush, side_s* brush_side)
 void HandleBrushFlags(brush_t* brush)
 {
     if (brush->brushflags & CONTENTS_ORIGIN)
-    {
         HandleOriginBrush(brush);
-    }
-    else
+   
+    //FIXME
+    if (((brush->brushflags >> 8) & (CONTENTS_UNKNOWN | CONTENTS_SOLID)) == 0)
     {
-        //FIXME
-        if (((brush->brushflags >> 8) & (CONTENTS_UNKNOWN | CONTENTS_SOLID)) == 0)
-        {
-            brush->brushflags |= CONTENTS_BSP;
-        }
+        brush->brushflags |= CONTENTS_BSP;
+    }
 
-        bool found_keep = false;
-        for (unsigned int i = 0; i < brush->numsides; ++i) 
+    bool found_keep = false;
+    for (unsigned int i = 0; i < brush->numsides; ++i) 
+    {
+        if ((brush->brushsides[i]->td.surfaceflags & FLAG_KEEP))
         {
-            if ((brush->brushsides[i]->td.surfaceflags & FLAG_KEEP))
-            {
-                found_keep = true;
-                break;
-            }
+            found_keep = true;
+            break;
         }
-        if (found_keep)
+    }
+    if (found_keep)
+    {
+        for (unsigned int j = 0; j < brush->numsides; ++j)
         {
-            for (unsigned int j = 0; j < brush->numsides; ++j)
-            {
-                if (!(brush->brushsides[j]->td.surfaceflags & FLAG_KEEP))
-                    brush->brushsides[j]->td.surfaceflags = CONTENTS_NODRAW;
-            }
+            if (!(brush->brushsides[j]->td.surfaceflags & FLAG_KEEP))
+                brush->brushsides[j]->td.surfaceflags = CONTENTS_NODRAW;
         }
     }
 }
@@ -855,12 +835,11 @@ void HandleOriginBrush(brush_t* brush)
 {
     brush->brushflags = CONTENTS_ORIGIN;
     brush->leaf_type = LEAF_EMPTY_AKA_NOT_OPAQUE;
-    unsigned int numsides = brush->numsides;
 
-    for (unsigned int i = 0; i < numsides; ++i)
+    for (unsigned int i = 0; i < brush->numsides; ++i)
     {
         side_t* side = brush->brushsides[i];
-        memset(side, 0, sizeof(side_t));
+        side->td = brush_texture_t();
         side->td.surfaceflags = CONTENTS_NODRAW;
         safe_strncpy(side->td.name, "special/origin", 64);
     }

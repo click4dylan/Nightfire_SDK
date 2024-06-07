@@ -6,3 +6,4 @@ extern node_t* PointInLeaf(node_t* node, const vec3_t point);
 extern void MarkLeafOccupancyAndCheckLeaks(node_t* currentNode, unsigned int occupancyValue);
 extern void CountLeaves(int level, node_t* node);
 extern void PrintLeafMetrics(node_t* node, const char* name);
+extern void AssignVisLeafNumbers_r(node_t* node);

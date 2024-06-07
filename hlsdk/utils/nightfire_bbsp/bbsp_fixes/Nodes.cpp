@@ -13,6 +13,28 @@
 #include "portals.h"
 #include "planes.h"
 
+void node_t::ClearMarkFaces()
+{
+    if (markfaces)
+    {
+        markfaces->clear();
+        delete markfaces;
+        markfaces = nullptr;
+        --g_numNodesWithMarkFaces;
+    }
+}
+
+void node_t::ClearMarkBrushes()
+{
+    if (markbrushes)
+    {
+        markbrushes->clear();
+        delete markbrushes;
+        markbrushes = nullptr;
+        --g_numNodesWithMarkBrushes;
+    }
+}
+
 bool node_t::IsPortalLeaf()
 {
     return !valid && children[0] == nullptr && children[1] == nullptr;
@@ -26,8 +48,7 @@ void WriteDrawNodes_r(int depth, const node_t* const node)
 
     // emit a node
     hlassume(g_numDNodes < MAX_MAP_NODES, assume_MAX_MAP_NODES);
-    n = &g_dnodes[g_numDNodes];
-    g_numDNodes += 1;
+    n = &g_dnodes[g_numDNodes++];
 
     VectorCopy(node->mins, n->mins);
     VectorCopy(node->maxs, n->maxs);
@@ -63,7 +84,7 @@ void WriteDrawNodes_r(int depth, const node_t* const node)
         }
         else
         {
-            n->children[i] = g_numDLeafs;
+            n->children[i] = g_numDNodes;
             WriteDrawNodes_r(depth + 1, node->children[i]);
         }
     }
@@ -115,7 +136,7 @@ void CalcNodeBoundsFromBrushes(node_t* node, entity_t* ent)
     for (unsigned int i = 0; i < ent->numbrushes; ++i)
     {
         // Calculate bounds from the current brush
-        CalcBrushBounds(node->maxs, node->mins, ent->firstbrush[i]);
+        CalcBrushBounds(node->maxs, node->mins, ent->brushes[i]);
     }
 
     // Check if the calculated bounds are invalid
@@ -191,9 +212,9 @@ void CountNodesAndLeafsByPlane(int level, node_t* node)
     {
         // It's a node
         if (node->leaf_type == LEAF_EMPTY_AKA_NOT_OPAQUE)
-            g_numEmptyNodes+=1;
+           ++g_numEmptyNodes;
         else if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
-            g_numSolidNodes+=1;
+            ++g_numSolidNodes;
         CountNodesAndLeafsByPlane(++level, node->children[0]);
         CountNodesAndLeafsByPlane(++level, node->children[1]);
     }
@@ -201,9 +222,9 @@ void CountNodesAndLeafsByPlane(int level, node_t* node)
     {
         // It's a leaf
         if (node->leaf_type == LEAF_EMPTY_AKA_NOT_OPAQUE)
-            g_numEmptyLeafs+=1;
+            ++g_numEmptyLeafs;
         else if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
-            g_numSolidLeafs+=1;
+            ++g_numSolidLeafs;
     }
 }
 
@@ -212,9 +233,9 @@ void CountNodesAndLeafsByChildren(int level, node_t* node)
     if (node->children[0])
     {
         if (node->leaf_type == LEAF_EMPTY_AKA_NOT_OPAQUE)
-            g_numEmptyNodes += 1;
+            ++g_numEmptyNodes;
         else if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
-            g_numSolidNodes += 1;
+            ++g_numSolidNodes;
 
         if (node->children[0])
             CountNodesAndLeafsByChildren(++level, node->children[0]);
@@ -224,9 +245,9 @@ void CountNodesAndLeafsByChildren(int level, node_t* node)
     else
     {
         if (node->leaf_type == LEAF_EMPTY_AKA_NOT_OPAQUE)
-            g_numEmptyLeafs += 1;
+            ++g_numEmptyLeafs;
         else if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
-            g_numSolidLeafs += 1;
+            ++g_numSolidLeafs;
     }
 }
 
@@ -266,7 +287,7 @@ void SetAllFacesLeafNode(node_t* leafNode, entity_t* entity)
 
     for (unsigned int brushIndex = 0; brushIndex < numBrushes; ++brushIndex)
     {
-        brush_t* brush = entity->firstbrush[brushIndex];
+        brush_t* brush = entity->brushes[brushIndex];
         unsigned int numSides = brush->numsides;
 
         for (unsigned int sideIndex = 0; sideIndex < numSides; ++sideIndex)

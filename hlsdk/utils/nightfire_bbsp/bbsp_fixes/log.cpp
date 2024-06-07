@@ -8,7 +8,7 @@
 #include "hlassert.h"
 
 const char* g_Program = "Uninitialized variable ::g_Program";
-char            g_Mapname[_MAX_PATH] = "Uninitialized variable ::g_Mapname";
+char            g_Mapname[MAX_PATH] = "Uninitialized variable ::g_Mapname";
 developer_level_t g_developer = DEFAULT_DEVELOPER;
 bool            g_verbose = DEFAULT_VERBOSE;
 bool            g_log = DEFAULT_LOG;
@@ -313,8 +313,8 @@ void PrintAllocationData(const char* a1)
     Developer(DEVELOPER_LEVEL_MESSAGE, " %5d num brushes\n", g_numBrushes);
     Developer(DEVELOPER_LEVEL_MESSAGE, " %5d num brushsides\n", g_numBrushSides);
     Developer(DEVELOPER_LEVEL_MESSAGE, " %5d num windings\n", g_numWindings);
-    Developer(DEVELOPER_LEVEL_MESSAGE, " %5d num markfaces\n", g_numMarkFaces);
-    Developer(DEVELOPER_LEVEL_MESSAGE, " %5d num markbrushes\n", g_numMarkBrushes);
+    Developer(DEVELOPER_LEVEL_MESSAGE, " %5d num markfaces\n", g_numNodesWithMarkFaces);
+    Developer(DEVELOPER_LEVEL_MESSAGE, " %5d num markbrushes\n", g_numNodesWithMarkBrushes);
     Developer(DEVELOPER_LEVEL_MESSAGE, "\n");
 }
 
@@ -400,10 +400,10 @@ void LogError(const char* const message)
 {
     if (g_log && CompileLog)
     {
-        char            logfilename[_MAX_PATH];
+        char            logfilename[MAX_PATH];
         FILE* ErrorLog = NULL;
 
-        safe_snprintf(logfilename, _MAX_PATH, "%s.err", g_Mapname);
+        safe_snprintf(logfilename, MAX_PATH, "%s.err", g_Mapname);
         ErrorLog = fopen(logfilename, "a");
 
         if (ErrorLog)

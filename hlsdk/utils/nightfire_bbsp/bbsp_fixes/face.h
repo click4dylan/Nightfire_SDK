@@ -6,10 +6,20 @@
 inline void FreeFace(face_t* face)
 {
 #if 1
+#ifdef BBSP_USE_CPP
     if (!face)
         return;
     face->next = nullptr;
     delete face;
+#else
+    if (!face)
+        return;
+    if (face->winding)
+        delete face->winding;
+    face->winding = nullptr;
+    free(face);
+    --g_numFaces;
+#endif
 #else
     DWORD adr = 0x41CA70;
     __asm
@@ -20,10 +30,26 @@ inline void FreeFace(face_t* face)
 #endif
 }
 
+// replaced with C++
+#ifndef BBSP_USE_CPP
+inline void FreeFaceList(face_t* list)
+{
+    while (list)
+    {
+        face_t* next = list->next;
+        FreeFace(list);
+        list = next;
+    }
+}
+#endif
+
 //replaced by C++
 #if 0
 inline face_t* DuplicateFaceSharedWinding(face_t* src, Winding* winding)
 {
+#if 1
+
+#else
     face_t* result;
     DWORD adr = 0x41CEE0;
     Winding* winding_val = winding;
@@ -37,10 +63,14 @@ inline face_t* DuplicateFaceSharedWinding(face_t* src, Winding* winding)
         mov result, eax
     }
     return result;
+#endif
 }
 
 inline face_t* DuplicateFaceUniqueWinding(face_t* src)
 {
+#if 1
+
+#else
     face_t* result;
     DWORD adr = 0x41CEB0;
     __asm
@@ -50,6 +80,7 @@ inline face_t* DuplicateFaceUniqueWinding(face_t* src)
         mov result, eax
     }
     return result;
+#endif
 }
 #endif
 

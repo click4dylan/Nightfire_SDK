@@ -15,12 +15,12 @@
 
 void WriteDrawLeaf(node_t* node) 
 {
-    int numdleafs = g_numDLeafs;
-    dleaf_t* leaf = &g_dleafs[numdleafs];
-    g_numDLeafs += 1;
-    //todo: check this in ida
-    int leaf_type = static_cast<int>(node->leaf_type);
-    leaf->contents = (leaf_type == LEAF_EMPTY_AKA_NOT_OPAQUE) ? 1 : leaf_type;
+    dleaf_t* leaf = &g_dleafs[g_numDLeafs++];
+    
+    leaf->contents = node->leaf_type & 0xFF;
+    if (!leaf->contents)
+        leaf->contents = LEAF_EMPTY_AKA_NOT_OPAQUE;
+
     leaf->mins[0] = node->mins[0];
     leaf->mins[1] = node->mins[1];
     leaf->mins[2] = node->mins[2];
@@ -36,19 +36,16 @@ void WriteDrawLeaf(node_t* node)
     {
         leaf->firstmarksurface = g_numDMarkSurfaces;
 
-        for (auto iter = node->markfaces->begin(); iter != node->markfaces->end(); ++iter) 
+        for (const auto& markface : *node->markfaces) 
         {
-            face_t* face = *iter;
-            if ((face->flags & (CONTENTS_BSP | CONTENTS_NODRAW | CONTENTS_PORTAL | CONTENTS_UNKNOWN | CONTENTS_SOLID)) == 0) 
+            if ((markface->flags & (CONTENTS_BSP | CONTENTS_NODRAW | CONTENTS_PORTAL | CONTENTS_UNKNOWN | CONTENTS_SOLID)) == 0)
             {
-                WriteFace_AkaBuildDrawIndicesForFace(face);
-                g_dmarksurfaces[g_numDMarkSurfaces] = face->outputnumber;
-                g_numDMarkSurfaces += 1;
+                WriteFace_AkaBuildDrawIndicesForFace(markface);
+                g_dmarksurfaces[g_numDMarkSurfaces++] = markface->outputnumber;
             }
         }
 
-        delete node->markfaces;
-        node->markfaces = nullptr;
+        node->ClearMarkFaces();
 
         leaf->nummarksurfaces = g_numDMarkSurfaces - leaf->firstmarksurface;
     }
@@ -60,18 +57,15 @@ void WriteDrawLeaf(node_t* node)
     {
         leaf->firstdrawmarkbrush_index = g_numDMarkBrushes;
 
-        for (auto iter = node->markbrushes->begin(); iter != node->markbrushes->end(); ++iter)
+        for (const auto& markbrush : *node->markbrushes)
         {
-            brush_t* brush = *iter;
-            if ((brush->brushflags & (CONTENTS_HINTSKIP | CONTENTS_ORIGIN)) == 0) 
+            if ((markbrush->brushflags & (CONTENTS_HINTSKIP | CONTENTS_ORIGIN)) == 0)
             {
-                WriteDrawBrushes(brush);
-                g_dmarkbrushes[g_numDMarkBrushes] = brush->output_num;
-                g_numDMarkBrushes += 1;
+                WriteDrawBrush(markbrush);
+                g_dmarkbrushes[g_numDMarkBrushes++] = markbrush->output_num;
             }
         }
-        delete node->markbrushes;
-        node->markbrushes = nullptr;
+        node->ClearMarkBrushes();
 
         leaf->numdrawmarkbrushes = g_numDMarkBrushes - leaf->firstdrawmarkbrush_index;
     }
@@ -174,4 +168,15 @@ void PrintLeafMetrics(node_t* node, const char* name)
     Verbose("%5i solid leafs\n", g_numSolidLeafs2);
     Verbose("%5i occupied leafs\n", g_numOccupiedLeafs);
     Verbose("%5i flooded leafs\n", g_numFloodedLeafs);
+}
+
+void AssignVisLeafNumbers_r(node_t* node)
+{
+    while (node->planenum != -1)
+    {
+        node->visleafnum = g_numVisLeafs++;
+        AssignVisLeafNumbers_r(node->children[0]);
+        node = node->children[1];
+    }
+    node->visleafnum = g_numVisLeafs++;
 }

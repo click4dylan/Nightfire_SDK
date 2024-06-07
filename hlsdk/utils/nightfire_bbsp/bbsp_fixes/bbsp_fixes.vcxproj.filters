@@ -16,6 +16,9 @@
     <Filter Include="Source Files\common">
       <UniqueIdentifier>{6b65757c-e8b5-40ee-bab3-d3ac919f4e3f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\debugging">
+      <UniqueIdentifier>{cf480061-51d7-4e9a-a837-fa17d6e60675}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h">
@@ -86,6 +89,12 @@
     </ClInclude>
     <ClInclude Include="messages.h">
       <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="BBSP_Caller.h">
+      <Filter>Source Files\debugging</Filter>
+    </ClInclude>
+    <ClInclude Include="bytepatcher.h">
+      <Filter>Source Files\debugging</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

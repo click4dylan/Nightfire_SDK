@@ -28,7 +28,7 @@ void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags)
 
     for (unsigned int brushIndex = 0; brushIndex < ent->numbrushes; ++brushIndex)
     {
-        brush_t* brush = ent->firstbrush[brushIndex];
+        brush_t* brush = ent->brushes[brushIndex];
 
         if ((brush->brushflags & brushflags) != 0)
         {
@@ -49,7 +49,7 @@ void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags)
 
 brush_s::brush_s()
 {
-    g_numBrushes += 1;
+    ++g_numBrushes;
 }
 
 brush_s::~brush_s()
@@ -59,7 +59,7 @@ brush_s::~brush_s()
         if (brushsides[i])
             delete brushsides[i];
     }
-    g_numBrushes -= 1;
+    --g_numBrushes;
 }
 
 side_t* brush_s::CreateNewBrushSide()
@@ -107,11 +107,12 @@ void brush_t::FreeSides()
 
 side_s::side_s()
 {
-    g_numBrushSides += 1;
+    ++g_numBrushSides;
 }
 
 side_s::~side_s()
 {
+#ifdef BBSP_USE_CPP
     if (inverted_face_fragments)
         delete inverted_face_fragments;
     if (face_fragments)
@@ -126,51 +127,51 @@ side_s::~side_s()
         final_face->next = nullptr;
         delete final_face; //FIXME: don't loop through each face, fixed
     }
+#else
+    FreeFaceList(inverted_face_fragments);
+    FreeFaceList(face_fragments);
+    FreeFace(original_face);
+    FreeFace(final_face);
+#endif
 
-    g_numBrushSides -= 1;
+    --g_numBrushSides;
 }
 
 void WriteDrawBrushSide(side_t* side)
 {
-    if (!side->built_draw_indices_for_face)
+    if (!side->built_draw_indices_for_side)
     {
         face_t* final_face = side->final_face;
         side->draw_brush_side_index = g_numDBrushSides;
-        side->built_draw_indices_for_face = 1;
+        side->built_draw_indices_for_side = true;
         WriteFace_AkaBuildDrawIndicesForFace(final_face);
         side->original_face->outputnumber = final_face->built_draw_indices_for_face;
         side->original_face->outputnumber = final_face->outputnumber;
-        dbrushside_t* out_brushside = &g_dbrushsides[g_numDBrushSides];
         hlassume(g_numDBrushSides < MAX_MAP_BRUSHSIDES, assume_MAX_MAP_SIDES);
+        dbrushside_t* out_brushside = &g_dbrushsides[g_numDBrushSides++];
         out_brushside->face = final_face->outputnumber;
         out_brushside->plane = final_face->planenum;
-        g_numDBrushSides += 1;
     }
 }
 
-void WriteDrawBrushes(brush_t* brush)
+void WriteDrawBrush(brush_t* brush)
 {
     if (!brush->built_draw_brush)
     {
-        int currentBrushIndex = g_numDBrushes;
-
         // Check if the current number of brushes exceeds the maximum limit
         hlassume(g_numDBrushes < MAX_MAP_BRUSHES, assume_MAX_MAP_BRUSHES);
 
         // Set output number and mark the brush as processed
-        brush->output_num = currentBrushIndex;
+        brush->output_num = g_numDBrushes;
         brush->built_draw_brush = true;
 
         // Get the current draw brush from the global array
-        dbrush_t* currentDBrush = &g_dbrushes[currentBrushIndex];
+        dbrush_t* currentDBrush = &g_dbrushes[g_numDBrushes++];
 
         // Set the attributes of the draw brush
         currentDBrush->flags = brush->brushflags ^ (unsigned __int8)(brush->leaf_type ^ brush->brushflags);
         currentDBrush->firstbrushside = g_numDBrushSides;
         currentDBrush->numbrushsides = brush->numsides;
-
-        // Increment the global number of draw brushes
-        g_numDBrushes += 1;
 
         // Process each brush side
         for (unsigned int i = 0; i < brush->numsides; ++i)

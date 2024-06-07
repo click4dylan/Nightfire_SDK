@@ -4,7 +4,7 @@
 //extern void FreeEntity(entity_t* ent);
 //extern void FreeMap(entinfo_t* ent);
 extern entinfo_t* LoadMapFile(const char* filename);
-extern int GetNumEngineEntities(entinfo_t* mapfile);
+extern unsigned int GetNumEngineEntities(entinfo_t* mapfile);
 extern void  CheckBrushForWater(entity_t* mapent);
 extern unsigned int GetNumDetailFaces(entity_t* entity);
 extern unsigned int GetNumFaces(entity_t* entity);
