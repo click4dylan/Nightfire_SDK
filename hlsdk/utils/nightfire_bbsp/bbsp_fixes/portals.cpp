@@ -11,7 +11,6 @@
 #include "bspfile.h"
 #include "log.h"
 
-//TODO: FIXME: this is broken
 void MarkLeakTrail(portal_t* portal)
 {
     portal_t* n1 = prevleaknode;
