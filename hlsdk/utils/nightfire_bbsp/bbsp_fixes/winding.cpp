@@ -109,7 +109,9 @@ void Winding::RemoveColinearPoints()
 Winding::~Winding()
 {
     --g_numWindings;
-    delete[] m_Points;
+    if (m_Points)
+        delete[] m_Points;
+    m_Points = nullptr;
 }
 
 Winding::Winding(const Winding& other)
@@ -386,62 +388,37 @@ void Winding::initFromPlane(const vec3_t normal, const vec_t dist)
 
 void Winding::shiftPoints(unsigned int offset, unsigned int start_index)
 {
-#if 1
-    if (offset == 0 || start_index >= m_NumPoints)
-        return; // No shift needed
+    unsigned int adjusted_start = start_index + offset;
 
-    // Adjust offset if it exceeds the number of points
-    offset %= m_NumPoints;
-
-    // Calculate the new number of points after shifting
-    unsigned int new_num_points = m_NumPoints - offset;
-
-    // Shift points in the winding array
-    if (new_num_points > 0)
+    // If the adjusted start index exceeds the number of points
+    if (adjusted_start > m_NumPoints)
     {
-        // Move points to their new positions
-        memmove(&m_Points[start_index], &m_Points[(start_index + offset) % m_NumPoints], sizeof(vec3_t) * new_num_points);
+        start_index = 0;
+        unsigned int temp_num_points = m_NumPoints;
 
-        // Update the number of points
-        m_NumPoints = new_num_points;
-    }
-    else
-    {
-        // If all points are shifted out, set the number of points to zero
-        m_NumPoints = 0;
-    }
-
-    //fixme
-    //unsigned int numPoints = m_NumPoints;
-    //if (numPoints == 0 || startIndex == 0)
-    //    return;
-    //
-    //startIndex = startIndex % numPoints;
-    //std::rotate(m_Points, m_Points + shiftAmount, m_Points + numPoints);
-    //std::rotate(m_Points + numPoints - startIndex, m_Points + numPoints, m_Points + numPoints);
-#else
-    unsigned int adjustedStartIndex = startIndex % m_NumPoints; // Adjust start index to be within range
-    unsigned int adjustedShiftAmount = shiftAmount % m_NumPoints; // Ensure shift amount doesn't exceed winding size
-
-    if (adjustedStartIndex + adjustedShiftAmount > m_NumPoints)
-    {
-        // Adjust start index and shift amount
-        adjustedShiftAmount = m_NumPoints - adjustedStartIndex;
-    }
-
-    // Shift points by copying them
-    if (adjustedShiftAmount > 0)
-    {
-        unsigned int remainingPoints = m_NumPoints - adjustedStartIndex - adjustedShiftAmount;
-        if (remainingPoints > 0)
+        do
         {
-            memmove(m_Points[startIndex], m_Points[startIndex + adjustedShiftAmount], 24 * remainingPoints);
-        }
+            adjusted_start -= temp_num_points;
+            temp_num_points = adjusted_start + temp_num_points - offset;
+            offset = adjusted_start;
+        } while (adjusted_start > temp_num_points);
+
+        m_NumPoints = temp_num_points;
     }
 
-    // Update the number of points
-    m_NumPoints -= adjustedShiftAmount;
-#endif
+    unsigned int points_to_move = m_NumPoints - adjusted_start;
+
+    // If there are points to move, perform the memory copy
+    if (points_to_move > 0)
+    {
+        // Calculate the destination and source pointers for memcpy
+        vec3_t* dest = &m_Points[start_index];
+        vec3_t* src = &m_Points[start_index + offset];
+        std::memcpy(dest, src, sizeof(vec3_t) * points_to_move);
+    }
+
+    // Update the number of points in the winding
+    m_NumPoints -= offset;
 }
 
 void Winding::Invert()
@@ -484,12 +461,18 @@ void Winding::resize(UINT32 newsize)
     newsize = (newsize + 7) & 0xFFFFFFF8;
 
     vec3_t* newpoints = new vec3_t[newsize];
-    m_NumPoints = min(newsize, m_NumPoints);
+
+    if (!newpoints)
+        DebugBreak(); //dylan added
+
+    if (m_NumPoints >= newsize)
+        m_NumPoints = newsize;
 
     if (m_NumPoints)
        memcpy(newpoints, m_Points, 4 * ((sizeof(vec3_t) * m_NumPoints) >> 2));
    
-    delete[] m_Points;
+    if (m_Points)
+        delete[] m_Points;
     m_MaxPoints = newsize;
     m_Points = newpoints;
 }
@@ -553,8 +536,8 @@ bool Winding::Clip(const vec3_t normal, const vec_t dist, Winding** front, Windi
 
 bool Winding::Clip(const bool divide, const vec3_t normal, const vec_t dist, Winding** front, Winding** back)
 {
-    vec_t           dists[MAX_POINTS_ON_WINDING + 4];
-    int             sides[MAX_POINTS_ON_WINDING + 4];
+    vec_t           dists[MAX_POINTS_ON_WINDING + 8];
+    int             sides[MAX_POINTS_ON_WINDING + 8];
     int             counts[3];
     vec_t           dot;
     unsigned int    i, j;
@@ -799,9 +782,11 @@ bool Winding::Clip(const vec3_t normal, const vec_t dist, bool keepon)
 
     if (!counts[0])
     {
-        delete[] m_Points;
+        if (m_Points)
+            delete[] m_Points;
         m_Points = NULL;
         m_NumPoints = 0;
+        m_MaxPoints = 0;
         return false;
     }
 
@@ -812,12 +797,12 @@ bool Winding::Clip(const vec3_t normal, const vec_t dist, bool keepon)
 
     unsigned maxpts = m_NumPoints + 8;                            // can't use counts[0]+2 because of fp grouping errors
     unsigned newNumPoints = 0;
-    vec3_t* newPoints = new vec3_t[maxpts];
-    memset(newPoints, 0, sizeof(vec3_t) * maxpts);
+    vec3_t newPoints[MAX_POINTS_ON_WINDING];
+    memset(newPoints, 0, sizeof(newPoints));
 
     for (i = 0; i < m_NumPoints; i++)
     {
-        vec_t* p1 = m_Points[i];
+        const vec_t* p1 = m_Points[i];
 
         if (sides[i] == SIDE_ON)
         {
@@ -893,8 +878,10 @@ bool Winding::Clip(const vec3_t normal, const vec_t dist, bool keepon)
         Error("Winding::Clip : points exceeded estimate");
     }
 
-    delete[] m_Points;
-    m_Points = newPoints;
+    if (newNumPoints > m_MaxPoints)
+        resize(newNumPoints);
+
+    memcpy(m_Points, newPoints, 4 * ((sizeof(vec3_t) * newNumPoints) >> 2));
     m_NumPoints = newNumPoints;
 
     RemoveColinearPoints();
@@ -922,18 +909,22 @@ bool Winding::Chop(const vec3_t normal, const vec_t dist, bool keep_front)
 
     if (f)
     {
-        delete[] m_Points;
+        if (m_Points)
+            delete[] m_Points;
         m_NumPoints = f->m_NumPoints;
+        m_MaxPoints = f->m_MaxPoints;
         m_Points = f->m_Points;
-        f->m_Points = NULL;
+        f->m_Points = nullptr;
         delete f;
         return true;
     }
     else
     {
+        m_MaxPoints = 0;
         m_NumPoints = 0;
-        delete[] m_Points;
-        m_Points = NULL;
+        if (m_Points)
+            delete[] m_Points;
+        m_Points = nullptr;
         return false;
     }
 }

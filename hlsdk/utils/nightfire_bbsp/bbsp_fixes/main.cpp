@@ -203,6 +203,10 @@ void __stdcall UnlinkFiles()
 
 int __cdecl main(int argc, const char** argv, const char** envp)
 {
+#ifdef _DEBUG
+    _CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
+#endif
+
     double startTime, endTime;
     entinfo_t* entinfo;
 

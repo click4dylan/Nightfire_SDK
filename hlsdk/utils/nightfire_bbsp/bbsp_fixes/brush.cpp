@@ -247,8 +247,6 @@ void AddEdgeBevel(brush_t* brush, vec_t* normal, vec_t* points)
     plane_s currentPlane;
     int direction, axis;
     vec_t dist;
-    unsigned int sideIndex, numSides = brush->numsides;
-    side_t** brushSides = brush->brushsides;
 
     for (axis = 0; axis < 3; ++axis) 
     {
@@ -263,9 +261,11 @@ void AddEdgeBevel(brush_t* brush, vec_t* normal, vec_t* points)
             {
                 dist = DotProduct(currentPlane.normal, points);
 
-                for (sideIndex = 0; sideIndex < numSides; ++sideIndex) 
+                unsigned sideIndex;
+
+                for (sideIndex = 0; sideIndex < brush->numsides; ++sideIndex) 
                 {
-                    face_t* originalFace = brushSides[sideIndex]->original_face;
+                    face_t* originalFace = brush->brushsides[sideIndex]->original_face;
                     if (originalFace && !(originalFace->flags & CONTENTS_BSP)) 
                     {
                         if (originalFace->winding)
@@ -278,7 +278,7 @@ void AddEdgeBevel(brush_t* brush, vec_t* normal, vec_t* points)
                 }
 
                 // If the plane is not part of the brush, add it
-                if (sideIndex == numSides && !FindDuplicatePlane(&currentPlane, brush)) 
+                if (sideIndex == brush->numsides && !FindDuplicatePlane(&currentPlane, brush)) 
                    AddHullPlane(brush, currentPlane.normal, dist);
             }
         }

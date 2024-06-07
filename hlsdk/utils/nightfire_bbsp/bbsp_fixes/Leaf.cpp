@@ -97,41 +97,31 @@ bool PlaceOccupant(const vec3_t point, node_t* headnode, unsigned int entindex)
     return true;
 }
 
-void MarkLeafOccupancyAndCheckLeaks(node_t* currentNode, unsigned int occupancyValue)
+void MarkLeafOccupancyAndCheckLeaks(node_t* headnode, unsigned int occupancyValue)
 {
-    // Check if the current node is the same as the global current node.
-    if (currentNode == g_OutsideNode)
+    if (headnode == g_OutsideNode) 
     {
-        g_bLeaked = 1; // Mark as a leak.
+        g_bLeaked = 1;
+        return;
     }
-    // If the current node is not occupied and is not a solid leaf node.
-    else if (!currentNode->occupied && currentNode->leaf_type != LEAF_SOLID_AKA_OPAQUE)
+
+    if (!headnode->occupied && headnode->leaf_type != LEAF_SOLID_AKA_OPAQUE) 
     {
-        // Mark the current node as occupied with the provided value.
-        currentNode->occupied = occupancyValue;
+        headnode->occupied = occupancyValue;
 
-        // Traverse through the portals of the current node recursively.
-        portal_t* portals = currentNode->portals;
-        while (portals)
+        for (portal_t* portal = headnode->portals; portal != nullptr; portal = portal->next[portal->nodes[1] == headnode]) 
         {
-            // Determine the next portal based on the current node.
-            int nextNodeIndex = (portals->nodes[1] == currentNode) ? 0 : 1;
-            portal_t* nextPortal = portals->next[nextNodeIndex];
+            if (portal->nodes[0] == headnode)
+                MarkLeafOccupancyAndCheckLeaks(portal->nodes[1], occupancyValue);
+            else
+                MarkLeafOccupancyAndCheckLeaks(portal->nodes[0], occupancyValue);
 
-            // Recursively check the next node.
-            MarkLeafOccupancyAndCheckLeaks(portals->nodes[nextNodeIndex], occupancyValue);
-
-            // If a leak is detected, break out of the loop.
-            if (g_bLeaked)
-                break;
-
-            // Move to the next portal.
-            portals = nextPortal;
+            if (g_bLeaked) 
+            {
+                MarkLeakTrail(portal);
+                return;
+            }
         }
-
-        // If a leak is detected, mark the leak trail.
-        if (g_bLeaked && portals)
-            MarkLeakTrail(portals);
     }
 }
 

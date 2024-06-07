@@ -309,25 +309,21 @@ void SplitFaces(
     ++g_TimesCalledSplitFaces;
 }
 
-void StripOutsideFaces(node_t* node, entity_t* ent, unsigned int filterFlag)
+void StripOutsideFaces(node_t* node, entity_t* ent, unsigned int brushflags)
 {
-    unsigned int brushIndex = 0;
-    unsigned int numBrushes = ent->numbrushes;
     unsigned int keptFragments = 0;
     unsigned int discardedFragments = 0;
 
     // Loop through all brushes in the entity
-    for (unsigned int i = 0; i < numBrushes; ++i)
+    for (unsigned int i = 0; i < ent->numbrushes; ++i)
     {
-        brush_t* brush = ent->brushes[brushIndex];
+        brush_t* brush = ent->brushes[i];
 
         // Check if the filter flag matches the brush's brushflags
-        if ((filterFlag & brush->brushflags) != 0)
+        if ((brush->brushflags & brushflags) != 0)
         {
-            unsigned int numSides = brush->numsides;
-
             // Loop through all sides of the brush
-            for (unsigned int j = 0; j < numSides; ++j)
+            for (unsigned int j = 0; j < brush->numsides; ++j)
             {
                 side_t* brushSide = brush->brushsides[j];
                 face_t* faceFragments = brushSide->face_fragments;
@@ -360,8 +356,6 @@ void StripOutsideFaces(node_t* node, entity_t* ent, unsigned int filterFlag)
                 brushSide->face_fragments = keptFaceFragments;
             }
         }
-
-        ++brushIndex;
     }
 
     // Output verbose information about kept and discarded originalFace fragments
@@ -377,7 +371,7 @@ void MarkEmptyBrushFaces(unsigned int flag, entity_t* entity)
     for (unsigned int brushIndex = 0; brushIndex < entity->numbrushes; ++brushIndex)
     {
         brush_t* brush = entity->brushes[brushIndex];
-        if ((flag & brush->brushflags) != 0)
+        if ((brush->brushflags & flag) != 0)
         {
             totalFaces += brush->numsides;
 
@@ -409,18 +403,14 @@ void MarkEmptyBrushFaces(unsigned int flag, entity_t* entity)
 
 void FreeBrushFaces(entity_t* entity, unsigned int flag)
 {
-    unsigned int numBrushes = entity->numbrushes;
-    unsigned int brushIndex = 0;
-
-    for (unsigned int i = 0; brushIndex < numBrushes; i = brushIndex)
+    for (unsigned int i = 0; i < entity->numbrushes; ++i)
     {
-        brush_t* brush = entity->brushes[brushIndex];
-        if ((flag & brush->brushflags) != 0)
+        brush_t* brush = entity->brushes[i];
+        if ((brush->brushflags & flag) != 0)
         {
-            unsigned int numSides = brush->numsides;
-            for (unsigned int sideIndex = 0; sideIndex < numSides; ++sideIndex)
+            for (unsigned int s = 0; s < brush->numsides; ++s)
             {
-                side_t* side = brush->brushsides[sideIndex];
+                side_t* side = brush->brushsides[s];
 #ifdef BBSP_USE_CPP
                 if (side->face_fragments)
                     delete side->face_fragments;
@@ -430,11 +420,10 @@ void FreeBrushFaces(entity_t* entity, unsigned int flag)
                 FreeFaceList(side->face_fragments);
                 FreeFaceList(side->inverted_face_fragments);
 #endif
-                side->face_fragments = NULL;
-                side->inverted_face_fragments = NULL;
+                side->face_fragments = nullptr;
+                side->inverted_face_fragments = nullptr;
             }
         }
-        ++brushIndex;
     }
 }
 
@@ -693,9 +682,6 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
     pFace->built_draw_indices_for_face = true;
     dface_t* dface = &g_dFaces[g_numDFaces++];
 
-    if (strstr(pFace->texinfo->name, "TARMAC"))
-        int test = 1;
-
     // Handle special face brushflags
     if ((pFace->flags & (CONTENTS_NODRAW | CONTENTS_PORTAL | SURF_SKY | CONTENTS_UNKNOWN | CONTENTS_SOLID)) != 0)
         pFace->winding->ClearNumPoints();
@@ -745,7 +731,7 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
     // Add indices
     if (numPoints >= 3)
     {
-        unsigned numFaces = pFace->winding->m_NumPoints - 2;
+        unsigned numFaces = numPoints - 2;
 
         // Set the face indices
         dface->first_indices_index = g_numDIndices;

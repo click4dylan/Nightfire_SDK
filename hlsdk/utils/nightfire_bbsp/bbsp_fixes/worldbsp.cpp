@@ -324,7 +324,7 @@ void PrintLeakInfoIfLeaked(entinfo_t* entinfo, int pass_num)
         GetVectorForKey(entinfo->entities[g_CurrentEntity], "origin", origin);
         val_for_key = ValueForKey(entinfo->entities[g_CurrentEntity], "classname");
         Warning("=== LEAK (pass %d) ===\nEntity %s @ (%4.0f,%4.0f,%4.0f)", pass_num, val_for_key, origin[0], origin[1], origin[2]);
-        Fatal(assume_LEAK, "\n"
+        PrintOnce("\n"
             "  A LEAK is a hole in the map, where the inside of it is exposed to the\n"
             "(unwanted) outside region.  The entity listed in the error is just a helpful\n"
             "indication of where the beginning of the leak pointfile starts, so the\n"

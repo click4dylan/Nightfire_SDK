@@ -11,59 +11,89 @@
 #include "bspfile.h"
 #include "log.h"
 
-void WriteLeakTrailPoint(const vec3_t point1, const vec3_t point2)
-{
-    fprintf(linefile, "%f %f %f - %f %f %f\n", point1[0], point1[1], point1[2], point2[0], point2[1], point2[2]);
-    fprintf(pointfile, "%f %f %f\n", point1[0], point1[1], point1[2]);
-}
-
-void MarkLeakTrail(portal_t* n2)
+//TODO: FIXME: this is broken
+void MarkLeakTrail(portal_t* portal)
 {
     portal_t* n1 = prevleaknode;
-    vec3_t p2, p1, dir;
+    portal_t* previousPortal = prevleaknode;
+    prevleaknode = portal;
 
-    prevleaknode = n2;
-
-    if (!n2)
+    if (!portal)
     {
-        if (!n1)
-            return;
-        entity_t* ent = (g_EntInfo)->entities[g_CurrentEntity];
-        const char* entityOriginStr = ValueForKey(ent, "origin");
-        vec3_t origin;
-        if (!strlen(entityOriginStr) || sscanf(entityOriginStr, "%lf %lf %lf", &origin[0], &origin[1], &origin[2]) != 3)
+        if (!previousPortal)
             return;
 
-        n1->winding->getCenter(p1);
-        WriteLeakTrailPoint(origin, p1);
+        vec3_t entityOrigin;
+        const char* entityOriginStr = ValueForKey(g_EntInfo->entities[g_CurrentEntity], "origin");
+
+        if (!strlen(entityOriginStr) || sscanf(entityOriginStr, "%lf %lf %lf", &entityOrigin[0], &entityOrigin[1], &entityOrigin[2]) != 3)
+            return;
+
+        vec3_t centerPreviousPortal;
+        previousPortal->winding->getCenter(centerPreviousPortal);
+
+        fprintf(linefile, "%f %f %f - %f %f %f\n",
+            entityOrigin[0], entityOrigin[1], entityOrigin[2],
+            centerPreviousPortal[0], centerPreviousPortal[1], centerPreviousPortal[2]);
+
+        fprintf(pointfile, "%f %f %f\n", entityOrigin[0], entityOrigin[1], entityOrigin[2]);
+
+        vec3_t direction;
+        for (int i = 0; i < 3; ++i)
+            direction[i] = centerPreviousPortal[i] - entityOrigin[i];
+
+        double length = VectorLength(direction);
+        VectorNormalize(direction);
+
+        while (length > 2.0)
+        {
+            for (int i = 0; i < 3; ++i)
+                entityOrigin[i] += direction[i] * 2;
+
+            fprintf(pointfile, "%f %f %f\n", entityOrigin[0], entityOrigin[1], entityOrigin[2]);
+            length -= 2.0;
+        }
         return;
     }
 
-    double area = n2->winding->getArea();
-    Developer(DEVELOPER_LEVEL_SPAM, "Flowing through portal %p : area %f : \n", n2, area);
+    Winding* winding = portal->winding;
+    double area = winding->getArea();
+    Developer(DEVELOPER_LEVEL_SPAM, "Flowing through portal %p : area %f : \n", portal, area);
 
-    for (unsigned pointIndex = 0; pointIndex < n2->winding->m_NumPoints; ++pointIndex)
+    for (unsigned int i = 0; i < winding->m_NumPoints; ++i)
     {
-        Developer(DEVELOPER_LEVEL_SPAM, "(%f %f %f) ", n2->winding->m_Points[pointIndex][0], n2->winding->m_Points[pointIndex][1], n2->winding->m_Points[pointIndex][2]);
+        Developer(DEVELOPER_LEVEL_SPAM, "(%f %f %f) ", winding->m_Points[i][0], winding->m_Points[i][1], winding->m_Points[i][2]);
     }
-
     Developer(DEVELOPER_LEVEL_SPAM, "\n");
 
-    if (n1)
+    if (previousPortal)
     {
-        n2->winding->getCenter(p2);
-        n1->winding->getCenter(p1);
+        vec3_t centerCurrentPortal;
+        vec3_t centerPreviousPortal;
 
-        VectorSubtract(p2, p1, dir);
-        vec_t len = VectorLength(dir);
-        VectorNormalize(dir);
+        winding->getCenter(centerCurrentPortal);
+        previousPortal->winding->getCenter(centerPreviousPortal);
 
-        while (len > 2)
+        fprintf(linefile, "%f %f %f - %f %f %f\n",
+            centerCurrentPortal[0], centerCurrentPortal[1], centerCurrentPortal[2],
+            centerPreviousPortal[0], centerPreviousPortal[1], centerPreviousPortal[2]);
+
+        fprintf(pointfile, "%f %f %f\n", centerCurrentPortal[0], centerCurrentPortal[1], centerCurrentPortal[2]);
+
+        vec3_t direction;
+        for (int i = 0; i < 3; ++i)
+            direction[i] = centerPreviousPortal[i] - centerCurrentPortal[i];
+
+        double length = VectorLength(direction);
+        VectorNormalize(direction);
+
+        while (length > 2.0)
         {
-            fprintf(pointfile, "%f %f %f\n", p1[0], p1[1], p1[2]);
-            for (int i = 0; i < 3; i++)
-                p1[i] += dir[i] * 2;
-            len -= 2;
+            for (int i = 0; i < 3; ++i)
+                centerCurrentPortal[i] += direction[i] * 2;
+
+            fprintf(pointfile, "%f %f %f\n", centerCurrentPortal[0], centerCurrentPortal[1], centerCurrentPortal[2]);
+            length -= 2.0;
         }
     }
 }

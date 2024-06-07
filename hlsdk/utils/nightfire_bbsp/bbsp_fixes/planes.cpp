@@ -314,18 +314,18 @@ void AddHullPlane(brush_t* brush, vec3_t normal, vec_t dist)
     side_t* newBrushSide = brush->CreateNewBrushSide();
 
     // Find the integer plane number
-    int intPlane = FindIntPlane(normal, dist);
+    unsigned int intPlane = FindIntPlane(normal, dist);
 
     // Assign the integer plane number to the new brush side
     newBrushSide->plane_num = intPlane;
 
     // Allocate originalFace and winding
-    face_t* originalFace = new face_t(intPlane);
+    newBrushSide->original_face = new face_t(intPlane);
 
     // Assign the winding to the original face
-    originalFace->winding = new Winding;
-    originalFace->brush = brush;
-    originalFace->brushside = newBrushSide;
+    newBrushSide->original_face->winding = new Winding;
+    newBrushSide->original_face->brush = brush;
+    newBrushSide->original_face->brushside = newBrushSide;
 
     // Copy default values to brush side texture data
     safe_strncpy(newBrushSide->td.name, "special/bevel", sizeof(newBrushSide->td.name));
@@ -335,10 +335,10 @@ void AddHullPlane(brush_t* brush, vec3_t normal, vec_t dist)
     newBrushSide->td.surfaceflags = FLAG_BEVEL;
 
     // Copy default values to original face texture data
-    originalFace->flags = FLAG_BEVEL;
-    memset(originalFace->vecs, 0, sizeof(originalFace->vecs));
-    originalFace->vecs[0][2] = 1.0;
-    originalFace->vecs[1][2] = 1.0;
+    newBrushSide->original_face->flags = FLAG_BEVEL;
+    memset(newBrushSide->original_face->vecs, 0, sizeof(newBrushSide->original_face->vecs));
+    newBrushSide->original_face->vecs[0][2] = 1.0;
+    newBrushSide->original_face->vecs[1][2] = 1.0;
 
     // Set texinfo for brush texture
     newBrushSide->original_face->texinfo = TexinfoForBrushTexture(newBrushSide, vec3_origin);
