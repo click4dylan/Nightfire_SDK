@@ -44,7 +44,6 @@ void WriteDrawNodes_r(int depth, const node_t* const node)
 {
     dnode_t* n;
     int             i;
-    face_t* f;
 
     // emit a node
     hlassume(g_numDNodes < MAX_MAP_NODES, assume_MAX_MAP_NODES);

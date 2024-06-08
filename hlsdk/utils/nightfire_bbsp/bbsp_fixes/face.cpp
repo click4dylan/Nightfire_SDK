@@ -720,13 +720,8 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
             dvertex_t* vertex = &g_dverts[g_numDVerts++];
             plane_t* plane = &gMappedPlanes[pFace->planenum];
 
-            vertex->point[0] = pFace->winding->m_Points[i][0];
-            vertex->point[1] = pFace->winding->m_Points[i][1];
-            vertex->point[2] = pFace->winding->m_Points[i][2];
-
-            normal->normal[0] = plane->normal[0];
-            normal->normal[1] = plane->normal[1];
-            normal->normal[2] = plane->normal[2];
+            VectorCopy(pFace->winding->m_Points[i], vertex->point);
+            VectorCopy(plane->normal, normal->normal);
         }
     }
 

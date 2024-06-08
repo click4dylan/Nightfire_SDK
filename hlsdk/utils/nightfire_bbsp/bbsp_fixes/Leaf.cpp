@@ -21,14 +21,10 @@ void WriteDrawLeaf(node_t* node)
     if (!leaf->contents)
         leaf->contents = LEAF_EMPTY_AKA_NOT_OPAQUE;
 
-    leaf->mins[0] = node->mins[0];
-    leaf->mins[1] = node->mins[1];
-    leaf->mins[2] = node->mins[2];
-    leaf->maxs[0] = node->maxs[0];
-    leaf->maxs[1] = node->maxs[1];
-    leaf->maxs[2] = node->maxs[2];
+    VectorCopy(node->mins, leaf->mins);
+    VectorCopy(node->maxs, leaf->maxs);
+ 
     leaf->visofs = -1;
-
     leaf->firstmarksurface = 0;
     leaf->nummarksurfaces = 0;
 

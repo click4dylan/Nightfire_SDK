@@ -20,12 +20,8 @@
 
 void SetModelBounds(dmodel_t* model, vec3_t& mins, vec3_t& maxs)
 {
-    model->mins[0] = mins[0];
-    model->mins[1] = mins[1];
-    model->mins[2] = mins[2];
-    model->maxs[0] = maxs[0];
-    model->maxs[1] = maxs[1];
-    model->maxs[2] = maxs[2];
+    VectorCopy(mins, model->mins);
+    VectorCopy(maxs, model->maxs);
 }
 
 void WriteLightingNodeAndLeafData(int depth, node_t* node)
