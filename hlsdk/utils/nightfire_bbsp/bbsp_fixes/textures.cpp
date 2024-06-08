@@ -199,6 +199,10 @@ void GetLightmapProjections(vec3_t out_s, face_t* face, vec3_t out_t)
         vec_t lightmap_scale = face->brushside->td.lightmapscale;
         if (lightmap_scale < (double)g_blscale)
             lightmap_scale = (double)g_blscale;
+#ifdef MAX_LIGHTMAP_SCALE
+        if (lightmap_scale > MAX_LIGHTMAP_SCALE)
+            lightmap_scale = MAX_LIGHTMAP_SCALE;
+#endif
 
         mins[0] = 999999.0;
         mins[1] = 999999.0;
@@ -228,7 +232,7 @@ void GetLightmapProjections(vec3_t out_s, face_t* face, vec3_t out_t)
         {
             mins[i] = floor(mins[i]);
             maxs[i] = ceil(maxs[i]);
-            if (maxs[i] - mins[i] >= 128.0)
+            if (maxs[i] - mins[i] >= 128.0) //FIXME: todo, ideal value for this?
             {
                 in_range = false;
                 break;
@@ -330,6 +334,16 @@ texinfo_t* TexinfoForBrushTexture(side_t* side, const vec3_t origin)
     // Compute tx.vecs[0][3] and tx.vecs[1][3]  translations
     tx.vecs[0][3] = side->td.ushift + DotProduct(origin, tx.vecs[0]);
     tx.vecs[1][3] = side->td.vshift + DotProduct(origin, tx.vecs[1]);
+
+#ifdef HL2_LUXEL_METHOD
+    vec_t lightmapscale_inverse = 1.0 / side->td.lightmapscale;
+
+    VectorScale(side->td.uaxis, lightmapscale_inverse, tx.lightmapVecsLuxelsPerWorldUnits[0]);
+    VectorScale(side->td.vaxis, lightmapscale_inverse, tx.lightmapVecsLuxelsPerWorldUnits[1]);
+
+    tx.lightmapVecsLuxelsPerWorldUnits[0][3] = side->td.ushift + DotProduct(origin, tx.lightmapVecsLuxelsPerWorldUnits[0]);
+    tx.lightmapVecsLuxelsPerWorldUnits[1][3] = side->td.vshift + DotProduct(origin, tx.lightmapVecsLuxelsPerWorldUnits[1]);
+#endif
 
     // Check if texinfo already exists
     for (unsigned int texinfo_index = 0; texinfo_index < g_numtexinfo; ++texinfo_index) 

@@ -238,6 +238,7 @@ void Settings()
     const char* noclipSetting;
     const char* nofillSetting;
     const char* notjuncSetting;
+    const char* nosubdivSetting;
     const char* lightingSetting;
 
     if (g_info)
@@ -290,10 +291,29 @@ void Settings()
         notjuncSetting = g_notjunc ? "on" : "off";
         Log("notjunc             [ %7s ] [ %7s ]\n", notjuncSetting, "off");
 
+#ifdef SUBDIVIDE
+        nosubdivSetting = g_nosubdiv ? "on" : "off";
+        Log("nosubdiv            [ %7s ] [ %7s ]\n", nosubdivSetting, "off");
+
+        Log("subdivide size      [ %7d ] [ %7d ] (Min %d) (Max %d)\n", g_subdivide_size, 256, 1, 65536);
+#endif
+
         lightingSetting = g_lighting ? "on" : "off";
         Log("build lighting bsp  [ %7s ] [ %7s ]\n", lightingSetting, "on");
 
+#ifdef UNCLAMP_MAX_NODE_SIZE
+        Log("max node size       [ %7d ] [ %7d ] (Min %d) (Max %d)\n", g_MaxNodeSize, 1024, 64, 65536);
+#else
         Log("max node size       [ %7d ] [ %7d ] (Min %d) (Max %d)\n", g_MaxNodeSize, 1024, 64, 4096);
+#endif
+
+#ifdef VARIABLE_LIGHTING_MAX_NODE_SIZE
+#ifdef UNCLAMP_MAX_NODE_SIZE
+        Log("max L node size     [ %7d ] [ %7d ] (Min %d) (Max %d)\n", g_LightingMaxNodeSize, 512, 64, 65536);
+#else
+        Log("max L node size     [ %7d ] [ %7d ] (Min %d) (Max %d)\n", g_LightingMaxNodeSize, 512, 64, 4096);
+#endif
+#endif
         Log("base lightmap scale [ %7d ] [ %7d ]\n", g_blscale, 16);
         Log("inc lightmap scale  [ %7d ] [ %7d ]\n", g_ilscale, 16);
         Log("\n\n");

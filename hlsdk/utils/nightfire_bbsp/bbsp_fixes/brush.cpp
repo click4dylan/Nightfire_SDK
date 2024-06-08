@@ -40,7 +40,11 @@ void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags)
                 if ((original_face->flags & CONTENTS_BSP) == 0) 
                 {
                     face_t* newFace = new face_t(*original_face);
+#ifdef SUBDIVIDE
+                    FilterFacesIntoTree(newFace, node, false, false);
+#else
                     FilterFaceIntoTree_r(0, node, side, newFace, false, false);
+#endif
                 }
             }
         }
@@ -77,6 +81,11 @@ side_t* brush_s::CreateNewBrushSide()
             memcpy(newBrushSides, brushsides, sizeof(side_t**) * numsides);
             free(brushsides);
         }
+        
+#ifdef _DEBUG
+        if (!newBrushSides)
+            DebugBreak();
+#endif
 
         // Update brush sides with the new array and capacity
         brushsides = newBrushSides;
@@ -100,7 +109,7 @@ void brush_t::FreeSides()
         if (brushsides[i])
             delete brushsides[i];
     }
-    brushsides = nullptr;
+    *brushsides = nullptr;
     numsides = 0;
 }
 

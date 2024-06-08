@@ -39,7 +39,6 @@ struct texturename_t
 #define MAX_MAP_BRUSHSIDES 196602
 #define MAX_MAP_TEXINFO 262144
 #define MAX_MAP_TEXMATRIX 65536
-#define g_subdivide_size 256
 #define MAX_MAP_MARKSURFACES 262144
 #define MAX_MAP_MARKBRUSHES 262144
 #define MAX_MAP_TEXTURES 1024
@@ -73,6 +72,9 @@ inline unsigned int g_NumWaterModels = 0;
 inline bool g_info = DEFAULT_INFO;
 inline bool g_chart = DEFAULT_CHART;
 inline int g_MaxNodeSize = 1024;
+#ifdef VARIABLE_LIGHTING_MAX_NODE_SIZE
+inline int g_LightingMaxNodeSize = 512;
+#endif
 inline int g_blscale = 16;
 inline int g_ilscale = 16;
 inline bool g_lighting = true;
@@ -148,6 +150,10 @@ inline unsigned g_numVisLeafs = 0;
 inline unsigned g_numMapsAlloced = 0;
 inline unsigned g_numEnts = 0;
 inline unsigned g_numEPairs = 0;
+#ifdef SUBDIVIDE
+inline int g_subdivide_size = 256;
+inline bool g_nosubdiv = false;
+#endif
 inline bool g_nofill = false;
 inline bool g_notjunc = false;
 inline bool g_noclip = false;
@@ -306,6 +312,10 @@ inline unsigned g_numDIndices = 0;
 inline dbrushside_t g_dbrushsides[MAX_MAP_BRUSHSIDES];
 inline char g_dvisdata[MAX_MAP_VISIBILITY];
 inline char g_dlightdata[MAX_MAP_LIGHTDATA];
+
+#ifdef ENFORCE_MAX_LIGHTMAP_SCALE
+#define MAX_LIGHTMAP_SCALE 8
+#endif
 //#define g_dtexmatrix ((dtexmatrix_t*)0x1CE21A0)
 //#define g_numDTexMatrix *(int*)0x5C601E0
 //#define g_dnormals ((dnormal_t*)0x45501D0)

@@ -87,7 +87,7 @@ inline face_t* DuplicateFaceUniqueWinding(face_t* src)
 extern bool SplitFace(face_t* face, unsigned int plane, face_t** front, face_t** back);
 extern void SplitFace(face_t* in, const vec3_t normal, const vec_t dist, face_t** front, face_t** back);
 extern void SplitFaces(face_t* original_face, unsigned int node_planenum, int depth, face_t** dest_front_face, face_t** dest_back_face );
-extern bool SplitFacesByNodePlane(face_t* face, unsigned int planenum, face_t** front, face_t** back);
+extern bool SplitFaceByNodePlane(face_t* face, unsigned int planenum, face_t** front, face_t** back);
 extern void StripOutsideFaces(node_t* node, entity_t* ent, unsigned int brushflags);
 extern void MarkEmptyBrushFaces(unsigned int flag, entity_t* entity);
 extern void FreeBrushFaces(entity_t* entity, unsigned int flag);

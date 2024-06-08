@@ -7,6 +7,7 @@
 #include "globals.h"
 #include "textures.h"
 #include "log.h"
+#include "planes.h"
 
 DWORD a = 0x41D3C0;
 
@@ -43,6 +44,9 @@ face_s::face_s(const face_s& src)
         winding = new Winding(*src.winding);
     else
         winding = nullptr;
+#ifdef SUBDIVIDE
+    subdivided = src.subdivided;
+#endif
 }
 
 face_s::face_s(const face_s& src, Winding* src_winding)
@@ -51,9 +55,12 @@ face_s::face_s(const face_s& src, Winding* src_winding)
     ++g_numFaces;
     memcpy(vecs, src.vecs, sizeof(vecs));
     winding = src_winding;
+#ifdef SUBDIVIDE
+    subdivided = src.subdivided;
+#endif
 }
 
-bool SplitFacesByNodePlane(face_t* face, unsigned int planenum, face_t** front, face_t** back)
+bool SplitFaceByNodePlane(face_t* face, unsigned int planenum, face_t** front, face_t** back)
 {
 #if 1
     *front = nullptr;
@@ -160,6 +167,10 @@ void SplitFace(face_t* in, const vec3_t normal, const vec_t dist, face_t** front
     {
         if (in->winding->Valid())
         {
+            //unsigned int plane_test = FindIntPlane(normal, dist);
+            //if (in->planenum == plane_test || in->planenum == (plane_test ^ 1))
+            //    return;
+
             Winding* new_front = nullptr;
             Winding* new_back = nullptr;
             in->winding->Divide(normal, dist, &new_front, &new_back);
@@ -209,32 +220,10 @@ void SplitFaces(
     front = 0;
     back = 0;
 
-#if 0
-    // subdivide large original_face
-    face_t** prevptr = &list;
-    face_t* f;
-    while (1)
-    {
-        f = *prevptr;
-        if (!f)
-        {
-            break;
-        }
-        if (strstr(f->texinfo->name, "lagzone"))
-        {
-            int breakpoint = 1;
-        }
-        SubdivideFace(f, prevptr);
-        f = *prevptr;
-        prevptr = &f->next;
-    }
-
-    //list = original_face;
-#endif
-
 
     // Processing each list in the array
-    if (original_face) {
+    if (original_face) 
+    {
         do {
             planenum = face->planenum; // Getting the plane number of the list
             next = face->next;         // Getting the next list in the array
@@ -242,55 +231,25 @@ void SplitFaces(
 
             // If the list is coplanar or back-facing, free the list
             // fixme: q3 doesn't free opposite planes
-            if (planenum == node_planenum || planenum == (node_planenum ^ 1))
+            if (planenum == node_planenum  || planenum == (node_planenum ^ 1))
             {
                 FreeFace(face);
             }
             else {
                 // Otherwise, split the list and update front/back counters
-
-
-#if 0
-    // subdivide large original_face
-                face_t** prevptr = &list;
-                face_t* f;
-                while (1)
-                {
-                    f = *prevptr;
-                    if (!f || !f->winding)
-                    {
-                        break;
-                    }
-
-                    SubdivideFace(f, prevptr);
-                    f = *prevptr;
-                    prevptr = &f->next;
-                }
-
-                //list = original_face;
-#endif
-#if 0
-                plane_t newplane = gMappedPlanes[node_planenum];
-                newplane.dist = 512;
-                SplitFace(list, newplane, &original_face, &back_face);
-
-                if (original_face)
-                    list = original_face;
-#endif
-                //int plane_test = ChoosePlaneFromList(g_Node, list);
-                //int old_planenum = node_planenum;
-
                 SplitFace(face, node_planenum, &front_face, &back_face);
                 FreeFace(face); // Freeing the original list
 
-                if (front_face) {
+                if (front_face) 
+                {
                     ++front; // Incrementing front list counter
                     // Adding the front list to the front list list
                     front_face->next = *dest_front_face;
                     *dest_front_face = front_face;
                 }
 
-                if (back_face) {
+                if (back_face) 
+                {
                     ++back; // Incrementing back list counter
                     // Adding the back list to the back list list
                     back_face->next = *dest_back_face;
@@ -429,6 +388,43 @@ void FreeBrushFaces(entity_t* entity, unsigned int flag)
 
 void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inverted, bool is_lighting_tree)
 {
+    // subdivide large faces
+#ifdef SUBDIVIDE
+    if (!g_nosubdiv)
+    {
+        face_t** prevptr = &list;
+        face_t* f;
+        while (1)
+        {
+            f = *prevptr;
+            if (!f || !f->winding)
+            {
+                break;
+            }
+
+            SubdivideFace(f, prevptr);
+            f = *prevptr;
+            prevptr = &f->next;
+        }
+    }
+
+/*
+    // print subdivide metrics
+    int num_faces = 0;
+    int num_subdivided = 0;
+    int num_corrugated = 0;
+    for (face_t* f = list; f; f = f->next)
+    {
+        if (f->subdivided)
+            ++num_subdivided;
+        if (!_stricmp(f->brushside->td.name, "2/CORRUGATED"))
+            ++num_corrugated;
+        ++num_faces;
+    }
+*/
+
+#endif
+
     while (list)
     {
         face_t* next = list->next;
@@ -475,16 +471,16 @@ void FilterFaceIntoTree_r(int depth, node_t* node, side_t* brushside, face_t* li
     }
     else
     {
-        face_t* front_of_node_face_list;
-        face_t* back_of_node_face_list;
+        face_t* front_face = nullptr;
+        face_t* back_face = nullptr;
 
-        if (SplitFacesByNodePlane(list, node->planenum, &front_of_node_face_list, &back_of_node_face_list))
+        if (SplitFaceByNodePlane(list, node->planenum, &front_face, &back_face))
             FreeFace(list);
 
-        if (front_of_node_face_list)
-            FilterFaceIntoTree_r(++depth, node->children[0], brushside, front_of_node_face_list, face_windings_are_inverted, is_in_lighting_stage);
-        if (back_of_node_face_list)
-            FilterFaceIntoTree_r(++depth, node->children[1], brushside, back_of_node_face_list, face_windings_are_inverted, is_in_lighting_stage);
+        if (front_face)
+            FilterFaceIntoTree_r(++depth, node->children[0], brushside, front_face, face_windings_are_inverted, is_in_lighting_stage);
+        if (back_face)
+            FilterFaceIntoTree_r(++depth, node->children[1], brushside, back_face, face_windings_are_inverted, is_in_lighting_stage);
     }
 }
 
@@ -694,12 +690,17 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
     dface->tex_info_projection_index = GetProjectionIndex(pFace->texinfo->vecs[0], pFace->texinfo->vecs[1]);
 
     // Get lightmap projections
+//FIXME: todo: i think brad.exe needs a rebuild for this to work properly
+//#ifdef HL2_LUXEL_METHOD
+//    dface->lightmap_info_projection_index = GetProjectionIndex(pFace->texinfo->lightmapVecsLuxelsPerWorldUnits[0], pFace->texinfo->lightmapVecsLuxelsPerWorldUnits[1]);
+//#else
     double s[4], t[4];
     GetLightmapProjections(s, pFace, t);
     s[3] = 0.0f;
     t[3] = 0.0f;
 
     dface->lightmap_info_projection_index = GetProjectionIndex(s, t);
+//#endif
 
     unsigned int numPoints = pFace->winding->m_NumPoints;
     dface->first_vertex_index = g_numDVerts;
@@ -776,13 +777,20 @@ void MarkFinalFaceFragments(node_t* node, entity_t* ent)
         for (unsigned int j = 0; j < brush->numsides; ++j)
         {
             side_t* side = brush->brushsides[j];
-            face_t* face_fragments = side->face_fragments;
-            while (face_fragments)
+            face_t* face_fragment = side->face_fragments;
+            while (face_fragment)
             {
-                face_t* next = face_fragments->next;
-                MarkFace(face_fragments->leaf_node, side->final_face);
-                MarkBrush(face_fragments->leaf_node, brush);
-                face_fragments = next;
+                face_t* next = face_fragment->next;
+#ifdef SUBDIVIDE
+                if (side->final_face->winding->m_NumPoints == 0)
+                    MarkFace(face_fragment->leaf_node, side->final_face);
+                else
+                    MarkFace(face_fragment->leaf_node, face_fragment);
+#else
+                MarkFace(face_fragment->leaf_node, side->final_face);
+#endif
+                MarkBrush(face_fragment->leaf_node, brush);
+                face_fragment = next;
             }
             face_t* inverted_face_fragments = side->inverted_face_fragments;
             while (inverted_face_fragments)
@@ -816,10 +824,12 @@ void MarkFaceFragments(node_t* node, entity_t* ent)
 }
 
 // not used in nightfire
+#ifdef SUBDIVIDE
 void SubdivideFace(face_t* f, face_t** prevptr)
 {
     vec_t           mins, maxs;
     vec_t           v;
+    vec_t           luxelsPerWorldUnit;
     int             axis;
     unsigned int             i;
     plane_t        plane;
@@ -867,7 +877,6 @@ void SubdivideFace(face_t* f, face_t** prevptr)
 #endif
 #endif
 
-#if 1
     for (axis = 0; axis < 2; axis++)
     {
         while (1)
@@ -875,9 +884,15 @@ void SubdivideFace(face_t* f, face_t** prevptr)
             mins = 999999;
             maxs = -999999;
 
+#ifdef HL2_LUXEL_METHOD
+            VectorCopy(tex->lightmapVecsLuxelsPerWorldUnits[axis], temp); //hl2 method
+#else
+            VectorCopy(tex->vecs[axis], temp); //hl1 method
+#endif
+
             for (i = 0; i < f->winding->m_NumPoints; i++)
             {
-                v = DotProduct(f->winding->m_Points[i], tex->vecs[axis]);
+                v = DotProduct(f->winding->m_Points[i], temp);
                 if (v < mins)
                 {
                     mins = v;
@@ -896,12 +911,15 @@ void SubdivideFace(face_t* f, face_t** prevptr)
             // split it
             //subdivides++;
 
-            VectorCopy(tex->vecs[axis], temp);
-
-            v = VectorNormalize(temp);
+            luxelsPerWorldUnit = VectorNormalize(temp);
 
             VectorCopy(temp, plane.normal);
-            plane.dist = (mins + g_subdivide_size - 16) / v;
+#ifdef HL2_LUXEL_METHOD
+            plane.dist = (mins + g_subdivide_size - 1) / luxelsPerWorldUnit; //hl2 method
+#else
+            plane.dist = (mins + g_subdivide_size - 16) / luxelsPerWorldUnit; //hl1 method
+#endif
+
             next = f->next;
             SplitFace(f, plane.normal, plane.dist, &front, &back);
             if (!front || !back)
@@ -911,10 +929,15 @@ void SubdivideFace(face_t* f, face_t** prevptr)
                 break;
             }
             *prevptr = back;
+
+            // for debugging
+            front->subdivided = true;
+            back->subdivided = true;
+
             back->next = front;
             front->next = next;
             f = back;
         }
     }
-#endif
 }
+#endif

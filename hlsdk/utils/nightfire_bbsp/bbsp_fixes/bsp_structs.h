@@ -8,6 +8,9 @@ enum leaf_types_t : unsigned
 {
     LEAF_EMPTY_AKA_NOT_OPAQUE = 1, //references original_face, player can enter
     LEAF_SOLID_AKA_OPAQUE = 2, //references no surfaces, player cannot enter
+#ifdef BBSP_BLOCKLIGHT_SUPPORT
+    LEAF_BLOCKLIGHT
+#endif
 };
 
 /*
@@ -50,6 +53,8 @@ enum surfaceflags_t
 // special textures flags
 #define SURFACEFLAG_HINT    (CONTENTS_SOLID | CONTENTS_NODRAW)                                      // 33 (0x00000021)
 #define BRUSHFLAG_HINT     (CONTENTS_BSP | CONTENTS_HINTSKIP)                                       // 4352 (0x00001100)
+#define SURFACEFLAG_NODRAW (CONTENTS_NODRAW)                                                        // 32 (0x00000020)
+#define BRUSHFLAG_NODRAW 0
 #define SURFACEFLAG_BSP     (CONTENTS_SOLID | CONTENTS_NODRAW)                                      // 33 (0x00000021)
 #define BRUSHFLAG_BSP      CONTENTS_BSP                                                             // 256 (0x00000100)
 #define SURFACEFLAG_PORTAL  (CONTENTS_SOLID | CONTENTS_PORTAL | CONTENTS_NODRAW)                    // 49 (0x00000031)
@@ -78,6 +83,16 @@ enum surfaceflags_t
 #define BRUSHFLAG_TRIGGER (CONTENTS_DETAIL | CONTENTS_TRIGGER)                                      // 2621440 (0x00200200)
 #define SURFACEFLAG_LIQUIDS (CONTENTS_PLAYERCLIP | FLAG_NODECALS)                                   // 327680 (0x00050000)
 #define BRUSHFLAG_LIQUIDS  CONTENTS_WATER                                                           // 1048576 (0x00100000)
+
+//new
+#ifdef BBSP_NULL_SUPPORT
+#define SURFACEFLAG_NULL (CONTENTS_NODRAW | CONTENTS_DETAIL)
+#define BRUSHFLAG_NULL 0
+#endif
+#ifdef BBSP_BLOCKLIGHT_SUPPORT
+#define SURFACEFLAG_BLOCKLIGHT (CONTENTS_NODRAW | FLAG_NODECALS | CONTENTS_PLAYERCLIP)
+#define BRUSHFLAG_BLOCKLIGHT 0
+#endif
 
 typedef struct dleaf_s
 {
@@ -175,6 +190,10 @@ struct brush_texture_t
     char material[64]{};
     vec_t lightmaprotation{};
     vec_t lightmapscale{};
+#ifdef SUBDIVIDE
+    vec3_t ulightmapaxis{};
+    vec3_t vlightmapaxis{};
+#endif
 };
 
 struct texinfo_t
@@ -184,6 +203,9 @@ struct texinfo_t
     int unused{};
     unsigned int flags{};
     int unused2[2]{};
+#ifdef HL2_LUXEL_METHOD
+    double lightmapVecsLuxelsPerWorldUnits[2][4]{};
+#endif
     bool operator== (const texinfo_t& other) const
     {
         if (!strcmp(name, other.name) && flags == other.flags)
@@ -194,6 +216,10 @@ struct texinfo_t
                 {
                     if (vecs[j][k] != other.vecs[j][k])
                         return false;
+#ifdef HL2_LUXEL_METHOD
+                    if (lightmapVecsLuxelsPerWorldUnits[j][k] != other.lightmapVecsLuxelsPerWorldUnits[j][k])
+                        return false;
+#endif
                 }
             }
             return true;
@@ -234,6 +260,9 @@ typedef struct face_s
     double vecs[2][4]{};
     struct node_s* leaf_node = nullptr;
     int unknown4 = 0;
+#ifdef SUBDIVIDE
+    bool subdivided = false;
+#endif
 
 #ifdef BBSP_USE_CPP
     ~face_s();

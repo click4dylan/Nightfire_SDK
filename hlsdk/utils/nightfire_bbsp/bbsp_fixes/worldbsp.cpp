@@ -85,7 +85,11 @@ void BuildLightingBSPTree(entity_t* ent)
     {
         // Store original max node size and set it to 512
         originalMaxNodeSize = static_cast<double>(g_MaxNodeSize);
+#ifdef VARIABLE_LIGHTING_MAX_NODE_SIZE
+        g_MaxNodeSize = g_LightingMaxNodeSize;
+#else
         g_MaxNodeSize = 512;
+#endif
 
         // Record the start time
         startTime = I_FloatTime();
@@ -247,29 +251,6 @@ void BuildBSPTree(bool makeNodePortals, node_t* node, face_t* bspFaces)
 
 void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make_node_portals)
 {
-#if 0
-    if (g_MakeNodePortals)
-    {
-        // subdivide large original_face
-        face_t** prevptr = &original_face;
-        face_t* f;
-        while (1)
-        {
-            f = *prevptr;
-            if (!f || !f->winding)
-            {
-                break;
-            }
-
-            SubdivideFace(f, prevptr);
-            f = *prevptr;
-            prevptr = &f->next;
-        }
-
-        //list = original_face;
-    }
-#endif
-
     unsigned int planenum;                // Planenum of the current node
     face_t* front_face_new;      // New front list after splitting
     face_t* back_face_new;       // New back list after splitting
@@ -292,6 +273,28 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
         node->planenum = planenum & 0xFFFFFFFE;
         ++g_numNodes;
 
+#ifdef SUBDIVIDE
+        //TODO fixme: is it necessary to subdivide in this function?
+        if (!g_nosubdiv)
+        {
+            // subdivide large faces
+            face_t** prevptr = &original_face;
+            face_t* f;
+            while (1)
+            {
+                f = *prevptr;
+                if (!f || !f->winding)
+                {
+                    break;
+                }
+
+                SubdivideFace(f, prevptr);
+                f = *prevptr;
+                prevptr = &f->next;
+            }
+        }
+#endif
+
         // Splitting the original_face into front and back
         SplitFaces(original_face, planenum & 0xFFFFFFFE, bspdepth, &front_face_new, &back_face_new);
 
@@ -302,7 +305,8 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
         // compute bounds
         CalcNodeChildBounds(planenum & 0xFFFFFFFE, node);
 
-        if (make_node_portals) {
+        if (make_node_portals) 
+        {
             // Making the current node a portal node and splitting its portals
             MakeNodePortal(node);
             SplitNodePortals(node);
@@ -684,7 +688,7 @@ void GetFinalBrushFaces(entity_t* entity, int brushflags)
                 }
                 else
                 {
-                    // combine fragments
+                    // combine fragments into one giant face
                     side->final_face = CombineFacesByPlane(side->face_fragments, side->original_face);
                 }
             }

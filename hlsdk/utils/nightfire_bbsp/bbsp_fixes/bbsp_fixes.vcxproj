@@ -141,7 +141,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;BBSPFIXES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;BBSPFIXES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;BBSP_NULL_SUPPORT;BBSP_BLOCKLIGHT_SUPPORT;SUBDIVIDE;UNCLAMP_LIGHTMAP_SCALE;UNCLAMP_MAX_NODE_SIZE;VARIABLE_LIGHTING_MAX_NODE_SIZE;ENFORCE_MAX_LIGHTMAP_SCALE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>

@@ -283,14 +283,11 @@ void PrintNodeMetricsByChildren(node_t* node)
 
 void SetAllFacesLeafNode(node_t* leafNode, entity_t* entity)
 {
-    unsigned int numBrushes = entity->numbrushes;
-
-    for (unsigned int brushIndex = 0; brushIndex < numBrushes; ++brushIndex)
+    for (unsigned int brushIndex = 0; brushIndex < entity->numbrushes; ++brushIndex)
     {
         brush_t* brush = entity->brushes[brushIndex];
-        unsigned int numSides = brush->numsides;
 
-        for (unsigned int sideIndex = 0; sideIndex < numSides; ++sideIndex)
+        for (unsigned int sideIndex = 0; sideIndex < brush->numsides; ++sideIndex)
         {
             side_t* side = brush->brushsides[sideIndex];
 

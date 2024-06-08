@@ -627,7 +627,7 @@ BrushFlags : 0x00200200
 const special_texture_t g_SpecialTextures[] = {
     {"special/bsp", LEAF_SOLID_AKA_OPAQUE, SURFACEFLAG_BSP, BRUSHFLAG_BSP},
     {"special/portal", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_PORTAL, BRUSHFLAG_PORTAL},
-    {"special/nodraw", LEAF_SOLID_AKA_OPAQUE, SURFACEFLAG_BSP, BRUSHFLAG_BSP},
+    {"special/nodraw", LEAF_SOLID_AKA_OPAQUE, SURFACEFLAG_NODRAW, BRUSHFLAG_NODRAW},
     {"special/hint", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_HINT, BRUSHFLAG_HINT},
     {"special/skip", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_SKIP, BRUSHFLAG_SKIP},
     {"special/opaque", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_OPAQUE, BRUSHFLAG_OPAQUE},
@@ -640,6 +640,14 @@ const special_texture_t g_SpecialTextures[] = {
     {"special/sky", LEAF_SOLID_AKA_OPAQUE, SURFACEFLAG_SKY, BRUSHFLAG_SKY},
     {"special/aaatrigger", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_AAATRIGGER, BRUSHFLAG_AAATRIGGER},
     {"special/trigger", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_TRIGGER, BRUSHFLAG_TRIGGER},
+
+    //NEW
+#ifdef BBSP_NULL_SUPPORT
+    {"special/null", LEAF_SOLID_AKA_OPAQUE, SURFACEFLAG_NULL, BRUSHFLAG_NULL},
+#endif
+#ifdef BBSP_BLOCKLIGHT_SUPPORT
+    {"special/blocklight", LEAF_BLOCKLIGHT, SURFACEFLAG_BLOCKLIGHT, BRUSHFLAG_BLOCKLIGHT},
+#endif
 
     // add new things above this or it will break GetDefaultFlagsForTextureName
     {"special/liquids", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_LIQUIDS, BRUSHFLAG_LIQUIDS}
@@ -654,12 +662,12 @@ void GetDefaultFlagsForTextureName(
     // Loop through special textures
     for (unsigned int i = 0; i < ARRAYSIZE(g_SpecialTextures) - 1; ++i)
     {
-        if (!strcmp(texture, g_SpecialTextures[i].name))
+        if (!_stricmp(texture, g_SpecialTextures[i].name))
         {
             *leaf_type = g_SpecialTextures[i].leaf_type;
             *render_flags = g_SpecialTextures[i].renderflags;
             *brush_flags = g_SpecialTextures[i].brushflags;
-            break;
+            return;
         }
     }
 

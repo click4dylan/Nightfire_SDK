@@ -13,7 +13,13 @@ void __declspec(noreturn) Usage()
     Log("    -onlyents      : do an entity update from .map to .bsp\n");
     Log("    -leakonly      : Run BSP only enough to check for LEAKs\n");
     Log("    -subdivide #   : Sets the face subdivide size\n");
+#ifdef SUBDIVIDE
+    Log("    -nosubdiv      : Disables face subdivision\n");
+#endif
     Log("    -maxnodesize # : Sets the maximum portal node size\n\n");
+#ifdef VARIABLE_LIGHTING_MAX_NODE_SIZE
+    Log("    -lightingmaxnodesize # : Sets the maximum lighting portal node size\n\n");
+#endif
     Log("    -showbevels    : export a .map with the expand brush generated bevels\n");
     Log("    -notjunc       : Don't break edges on t-junctions     (not for final runs)\n");
     Log("    -noclip        : Don't process the clipping hull      (not for final runs)\n");
@@ -56,6 +62,25 @@ void ProcessArguments(int argc, const char** argv)
         {
             g_notjunc = 1;
         }
+#ifdef SUBDIVIDE
+        else if (!_stricmp(argv[i], "-nosubdiv"))
+        {
+            g_nosubdiv = 1;
+        }
+        else if (!_stricmp(argv[i], "-subdivide"))
+        {
+            if (++i >= argc)
+            {
+                Usage();
+            }
+            g_subdivide_size = atol(argv[i]);
+            if (g_subdivide_size < 1)
+            {
+                Log("Expected value of at least 1 for '-subdivide'\n");
+                Usage();
+            }
+        }
+#endif
         else if (!_stricmp(argv[i], "-noclip"))
         {
             g_noclip = 1;
@@ -108,6 +133,29 @@ void ProcessArguments(int argc, const char** argv)
         {
             g_lighting = 0;
         }
+#ifdef VARIABLE_LIGHTING_MAX_NODE_SIZE
+        else if (!_stricmp(argv[i], "-lightingmaxnodesize"))
+        {
+            if (++i >= argc)
+            {
+                Usage();
+            }
+            g_LightingMaxNodeSize = atol(argv[i]);
+#ifdef UNCLAMP_MAX_NODE_SIZE
+            if (g_LightingMaxNodeSize < 64 || g_LightingMaxNodeSize > 65536)
+            {
+                Warning("Lighting node size must be between 64 and 65536. Using default value 65536.");
+                g_LightingMaxNodeSize = 65536;
+            }
+#else
+            if (g_LightingMaxNodeSize < 64 || g_LightingMaxNodeSize > 4096)
+            {
+                Warning("Lighting node size must be between 64 and 4096. Using default value 4096.");
+                g_LightingMaxNodeSize = 4096;
+            }
+#endif
+        }
+#endif
         else if (!_stricmp(argv[i], "-maxnodesize"))
         {
             if (++i >= argc)
@@ -115,11 +163,19 @@ void ProcessArguments(int argc, const char** argv)
                 Usage();
             }
             g_MaxNodeSize = atol(argv[i]);
+#ifdef UNCLAMP_MAX_NODE_SIZE
+            if (g_MaxNodeSize < 64 || g_MaxNodeSize > 65536)
+            {
+                Warning("Node size must be between 64 and 65536. Using default value 65536.");
+                g_MaxNodeSize = 65536;
+            }
+#else
             if (g_MaxNodeSize < 64 || g_MaxNodeSize > 4096)
             {
                 Warning("Node size must be between 64 and 4096. Using default value 4096.");
                 g_MaxNodeSize = 4096;
             }
+#endif
         }
         else if (!_stricmp(argv[i], "-blscale"))
         {
@@ -128,11 +184,19 @@ void ProcessArguments(int argc, const char** argv)
                 Usage();
             }
             g_blscale = atol(argv[i]);
+#ifdef UNCLAMP_LIGHTMAP_SCALE
+            if (g_blscale < 1)
+            {
+                Log("Expected value of at least 1 for '-blscale'\n");
+                Usage();
+            }
+#else
             if (g_blscale < 16)
             {
                 Log("Expected value of at least 16 for '-blscale'\n");
                 Usage();
             }
+#endif
         }
         else if (!_stricmp(argv[i], "-ilscale"))
         {
@@ -141,11 +205,20 @@ void ProcessArguments(int argc, const char** argv)
                 Usage();
             }
             g_ilscale = atol(argv[i]);
+
+#ifdef UNCLAMP_LIGHTMAP_SCALE
+            if (g_ilscale < 1)
+            {
+                Log("Expected value of at least 1 for '-ilscale'\n");
+                Usage();
+            }
+#else
             if (g_ilscale < 16)
             {
                 Log("Expected value of at least 16 for '-ilscale'\n");
                 Usage();
             }
+#endif
         }
         else if (!_stricmp(argv[i], "-onlyents"))
         {
