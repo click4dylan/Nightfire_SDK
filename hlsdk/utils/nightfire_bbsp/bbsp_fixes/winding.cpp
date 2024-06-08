@@ -568,7 +568,7 @@ bool Winding::Clip(const bool divide, const vec3_t normal, const vec_t dist, Win
     sides[i] = sides[0];
     dists[i] = dists[0];
 
-#if 1
+#if 0
     // nightfire behavior
     if (!counts[0] && !counts[1])
     {
@@ -669,7 +669,7 @@ bool Winding::Clip(const bool divide, const vec3_t normal, const vec_t dist, Win
         }
         vec_t* p2 = m_Points[tmp];
         dot = dists[i] / (dists[i] - dists[i + 1]);
-#if 0
+#if 1
         // TODO FIXME: this is nightfire logic! 
         for (j = 0; j < 3; j++)
         {                                                  // avoid round off error when possible

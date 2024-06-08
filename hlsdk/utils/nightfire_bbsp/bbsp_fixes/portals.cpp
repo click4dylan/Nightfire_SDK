@@ -10,10 +10,36 @@
 #include "portals.h"
 #include "bspfile.h"
 #include "log.h"
+#include "planes.h"
+#include "Nodes.h"
+
+void PrintPortalConnection(vec3_t start, vec3_t end)
+{
+    fprintf(linefile, "%f %f %f - %f %f %f\n",
+        start[0], start[1], start[2],
+        end[0], end[1], end[2]);
+
+    fprintf(pointfile, "%f %f %f\n", start[0], start[1], start[2]);
+
+    vec3_t direction;
+    VectorSubtract(end, start, direction);
+
+    vec_t length = VectorLength(direction);
+    VectorNormalize(direction);
+
+    while (length > 2.0)
+    {
+        fprintf(pointfile, "%f %f %f\n", start[0], start[1], start[2]);
+
+        for (int i = 0; i < 3; ++i)
+            start[i] += direction[i] * 2;
+
+        length -= 2.0;
+    }
+}
 
 void MarkLeakTrail(portal_t* portal)
 {
-    portal_t* n1 = prevleaknode;
     portal_t* previousPortal = prevleaknode;
     prevleaknode = portal;
 
@@ -23,7 +49,7 @@ void MarkLeakTrail(portal_t* portal)
             return;
 
         vec3_t entityOrigin;
-        const char* entityOriginStr = ValueForKey(g_EntInfo->entities[g_CurrentEntity], "origin");
+        const char* entityOriginStr = ValueForKey(g_EntInfo->entities[g_LeakEntity], "origin");
 
         if (!strlen(entityOriginStr) || sscanf(entityOriginStr, "%lf %lf %lf", &entityOrigin[0], &entityOrigin[1], &entityOrigin[2]) != 3)
             return;
@@ -31,33 +57,12 @@ void MarkLeakTrail(portal_t* portal)
         vec3_t centerPreviousPortal;
         previousPortal->winding->getCenter(centerPreviousPortal);
 
-        fprintf(linefile, "%f %f %f - %f %f %f\n",
-            entityOrigin[0], entityOrigin[1], entityOrigin[2],
-            centerPreviousPortal[0], centerPreviousPortal[1], centerPreviousPortal[2]);
-
-        fprintf(pointfile, "%f %f %f\n", entityOrigin[0], entityOrigin[1], entityOrigin[2]);
-
-        vec3_t direction;
-        for (int i = 0; i < 3; ++i)
-            direction[i] = centerPreviousPortal[i] - entityOrigin[i];
-
-        double length = VectorLength(direction);
-        VectorNormalize(direction);
-
-        while (length > 2.0)
-        {
-            for (int i = 0; i < 3; ++i)
-                entityOrigin[i] += direction[i] * 2;
-
-            fprintf(pointfile, "%f %f %f\n", entityOrigin[0], entityOrigin[1], entityOrigin[2]);
-            length -= 2.0;
-        }
+        PrintPortalConnection(entityOrigin, centerPreviousPortal);
         return;
     }
 
-    Winding* winding = portal->winding;
-    double area = winding->getArea();
-    Developer(DEVELOPER_LEVEL_SPAM, "Flowing through portal %p : area %f : \n", portal, area);
+    const Winding* winding = portal->winding;
+    Developer(DEVELOPER_LEVEL_SPAM, "Flowing through portal %p : area %f : \n", portal, winding->getArea());
 
     for (unsigned int i = 0; i < winding->m_NumPoints; ++i)
     {
@@ -73,27 +78,7 @@ void MarkLeakTrail(portal_t* portal)
         winding->getCenter(centerCurrentPortal);
         previousPortal->winding->getCenter(centerPreviousPortal);
 
-        fprintf(linefile, "%f %f %f - %f %f %f\n",
-            centerCurrentPortal[0], centerCurrentPortal[1], centerCurrentPortal[2],
-            centerPreviousPortal[0], centerPreviousPortal[1], centerPreviousPortal[2]);
-
-        fprintf(pointfile, "%f %f %f\n", centerCurrentPortal[0], centerCurrentPortal[1], centerCurrentPortal[2]);
-
-        vec3_t direction;
-        for (int i = 0; i < 3; ++i)
-            direction[i] = centerPreviousPortal[i] - centerCurrentPortal[i];
-
-        double length = VectorLength(direction);
-        VectorNormalize(direction);
-
-        while (length > 2.0)
-        {
-            for (int i = 0; i < 3; ++i)
-                centerCurrentPortal[i] += direction[i] * 2;
-
-            fprintf(pointfile, "%f %f %f\n", centerCurrentPortal[0], centerCurrentPortal[1], centerCurrentPortal[2]);
-            length -= 2.0;
-        }
+        PrintPortalConnection(centerCurrentPortal, centerPreviousPortal);
     }
 }
 
@@ -140,5 +125,140 @@ void RemovePortalFromNode(portal_t* portal, node_t* l)
     {
         *pp = portal->next[1];
         portal->nodes[1] = NULL;
+    }
+}
+
+void WritePortalFile_r(int depth, node_t* headnode)
+{
+    if (!headnode)
+        return;
+
+    // Traverse the BSP tree until a leaf node is reached
+    while (headnode->planenum != -1)
+    {
+        depth++;
+        WritePortalFile_r(depth, headnode->children[0]);
+        headnode = headnode->children[1];
+        if (!headnode)
+            return;
+    }
+
+    // Process portals of the leaf node
+    portal_t* portals = headnode->portals;
+    while (portals)
+    {
+        Winding* winding = portals->winding;
+        if (winding->Valid())
+        {
+            node_t* node0 = portals->nodes[0];
+            node_t* node1 = portals->nodes[1];
+            if (node0 == headnode && node0->leaf_type != LEAF_SOLID_AKA_OPAQUE && node1->leaf_type != LEAF_SOLID_AKA_OPAQUE)
+            {
+                plane_t* plane = &gMappedPlanes[portals->planenum];
+                vec3_t winding_normal;
+                vec_t winding_dist;
+                portals->winding->getPlane(winding_normal, winding_dist);
+
+                if (DotProduct(winding_normal, plane->normal) >= 0.99)
+                    fprintf(portalfile, "%i %u %i %i ", portals->planenum, winding->m_NumPoints, node0->visleafnum, node1->visleafnum);
+                else
+                    fprintf(portalfile, "%i %u %i %i ", portals->planenum ^ 1, winding->m_NumPoints, node1->visleafnum, node0->visleafnum);
+                for (unsigned int i = 0; i < winding->m_NumPoints; ++i)
+                    fprintf(portalfile, "(%f %f %f) ", winding->m_Points[i][0], winding->m_Points[i][1], winding->m_Points[i][2]);
+                fprintf(portalfile, "\n");
+            }
+        }
+        if (portals->nodes[0] == headnode)
+            portals = portals->next[0];
+        else
+            portals = portals->next[1];
+    }
+}
+
+void WritePortalfile(node_t* node)
+{
+    num_visleafs = 0;
+    num_visportals = 0;
+    NumberLeafs_r(0, node);
+
+    portalfile = fopen(g_portfilename, "w");
+    if (!portalfile)
+    {
+        Error("Error writing portal file %s", g_portfilename);
+        return;
+    }
+
+    fprintf(portalfile, "ZPRT 1\n");
+    fprintf(portalfile, "%i %i\n", num_visleafs, num_visportals);
+    WritePortalFile_r(0, node);
+
+    fclose(portalfile);
+    Log("Writing portal file '%s'\n", g_portfilename);
+}
+
+void MakeHeadnodePortals(node_t* node)
+{
+    vec3_t bounds[2];
+
+    // pad with some space so there will never be null volume leafs
+    for (int i = 0; i < 3; ++i)
+    {
+        bounds[0][i] = node->mins[i] - SIDESPACE;
+        bounds[1][i] = node->maxs[i] + SIDESPACE;
+    }
+
+    // Create a solid leaf node
+    g_OutsideNode = new node_t;
+    g_OutsideNode->leaf_type = LEAF_SOLID_AKA_OPAQUE;
+    g_OutsideNode->planenum = -1;
+
+    // Create portals
+    portal_t* portals[6];
+    unsigned int planes[6];
+
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 2; ++j)
+        {
+            int n = j * 3 + i;
+
+            vec3_t normal{};
+            vec_t dist;
+            if (j)
+            {
+                normal[i] = -1;
+                dist = -bounds[j][i];
+            }
+            else
+            {
+                normal[i] = 1;
+                dist = bounds[j][i];
+            }
+
+            unsigned int plane_num = FindIntPlane(normal, dist);
+            plane_t* plane = &gMappedPlanes[plane_num];
+
+            portal_t* portal = new portal_t;
+            portal->planenum = plane_num;
+            portal->winding = new Winding(*plane);
+            portals[n] = portal;
+            planes[n] = plane_num;
+
+            // Add portal to nodes
+            AddPortalToNodes(portal, node, g_OutsideNode);
+        }
+    }
+
+    // clip the basewindings by all the other planes
+    for (int i = 0; i < 6; ++i)
+    {
+        for (int j = 0; j < 6; ++j)
+        {
+            if (j == i)
+                continue;
+
+            plane_t* plane = &gMappedPlanes[planes[j]];
+            portals[i]->winding->Clip(plane->normal, plane->dist, true);
+        }
     }
 }

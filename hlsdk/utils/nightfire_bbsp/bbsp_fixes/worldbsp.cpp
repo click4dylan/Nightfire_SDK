@@ -15,6 +15,8 @@
 #include "worldbsp.h"
 #include "bspfile.h"
 #include "planes.h"
+#include "portals.h"
+#include "outside.h"
 
 void SetModelBounds(dmodel_t* model, vec3_t& mins, vec3_t& maxs)
 {
@@ -26,7 +28,7 @@ void SetModelBounds(dmodel_t* model, vec3_t& mins, vec3_t& maxs)
     model->maxs[2] = maxs[2];
 }
 
-void WriteNodeAndLeafData(int depth, node_t* node)
+void WriteLightingNodeAndLeafData(int depth, node_t* node)
 {
     while (node->planenum != -1)
     {
@@ -38,7 +40,7 @@ void WriteNodeAndLeafData(int depth, node_t* node)
             node->children[0]->visleafnum,
             node->children[1]->visleafnum);
 
-        WriteNodeAndLeafData(depth + 1, node->children[0]);
+        WriteLightingNodeAndLeafData(depth + 1, node->children[0]);
         node = node->children[1];
         depth++;
     }
@@ -65,7 +67,7 @@ void WriteLightingFile(node_t* node)
     }
 
     fprintf(lightingfile, "%i\n", g_numVisLeafs);
-    WriteNodeAndLeafData(0, node);
+    WriteLightingNodeAndLeafData(0, node);
 
     fclose(lightingfile);
     lightingfile = nullptr;
@@ -142,85 +144,6 @@ bool CalcWorldBounds(const vec3_t& mins, const vec3_t& maxs)
     return mins[0] < maxs[0] && mins[1] < maxs[1] && mins[2] < maxs[2];
 }
 
-void ExpandBounds(vec3_t& minBounds, vec3_t& maxBounds, const vec3_t& point) 
-{
-    for (int i = 0; i < 3; ++i) 
-    {
-        if (point[i] < minBounds[i])
-            minBounds[i] = point[i];
-
-        if (point[i] > maxBounds[i])
-            maxBounds[i] = point[i];
-    }
-}
-
-void MakeHeadnodePortals(node_t* node)
-{
-    vec3_t bounds[2];
-
-    // pad with some space so there will never be null volume leafs
-    for (int i = 0; i < 3; ++i)
-    {
-        bounds[0][i] = node->mins[i] - SIDESPACE;
-        bounds[1][i] = node->maxs[i] + SIDESPACE;
-    }
-
-    // Create a solid leaf node
-    g_OutsideNode = new node_t;
-    g_OutsideNode->leaf_type = LEAF_SOLID_AKA_OPAQUE;
-    g_OutsideNode->planenum = -1;
-
-    // Create portals
-    portal_t* portals[6];
-    unsigned int planes[6];
-
-    for (int i = 0; i < 3; ++i)
-    {
-        for (int j = 0; j < 2; ++j)
-        {
-            int n = j * 3 + i;
-
-            vec3_t normal{};
-            vec_t dist;
-            if (j)
-            {
-                normal[i] = -1;
-                dist = -bounds[j][i];
-            }
-            else
-            {
-                normal[i] = 1;
-                dist = bounds[j][i];
-            }
-
-            unsigned int plane_num = FindIntPlane(normal, dist);
-            plane_t* plane = &gMappedPlanes[plane_num];
-
-            portal_t* portal = new portal_t;
-            portal->planenum = plane_num;
-            portal->winding = new Winding(*plane);
-            portals[n] = portal;
-            planes[n] = plane_num;
-
-            // Add portal to nodes
-            AddPortalToNodes(portal, node, g_OutsideNode);
-        }
-    }
-
-    // clip the basewindings by all the other planes
-    for (int i = 0; i < 6; ++i)
-    {
-        for (int j = 0; j < 6; ++j)
-        {
-            if (j == i)
-                continue;
-
-            plane_t* plane = &gMappedPlanes[planes[j]];
-            portals[i]->winding->Clip(plane->normal, plane->dist, true);
-        }
-    }
-}
-
 void BuildBSPTree(bool makeNodePortals, node_t* node, face_t* bspFaces) 
 {
     double startTime = I_FloatTime();
@@ -263,12 +186,14 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
     // If the node size is within a maximum size, choose a plane from a list, otherwise choose a middle plane.
     planenum = CalcNodePlane(node, bspdepth, original_face);
 
-    if (planenum == -1) {
+    if (planenum == -1) 
+    {
         // If planenum is -1, it means the node has no bounds, mark it as a leaf
         node->planenum = -1;
         ++g_numLeafs;
     }
-    else {
+    else 
+    {
         // Otherwise, split the original_face based on the selected plane
         node->planenum = planenum & 0xFFFFFFFE;
         ++g_numNodes;
@@ -318,137 +243,16 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
     }
 }
 
-void PrintLeakInfoIfLeaked(entinfo_t* entinfo, int pass_num)
-{
-    const char* val_for_key;
-    vec3_t origin;
-
-    if (g_bLeaked)
-    {
-        GetVectorForKey(entinfo->entities[g_CurrentEntity], "origin", origin);
-        val_for_key = ValueForKey(entinfo->entities[g_CurrentEntity], "classname");
-        Warning("=== LEAK (pass %d) ===\nEntity %s @ (%4.0f,%4.0f,%4.0f)", pass_num, val_for_key, origin[0], origin[1], origin[2]);
-        PrintOnce("\n"
-            "  A LEAK is a hole in the map, where the inside of it is exposed to the\n"
-            "(unwanted) outside region.  The entity listed in the error is just a helpful\n"
-            "indication of where the beginning of the leak pointfile starts, so the\n"
-            "beginning of the line can be quickly found and traced to until reaching the\n"
-            "outside. Unless this entity is accidentally on the outside of the map, it\n"
-            "probably should not be deleted.  Some complex rotating objects entities need\n"
-            "their origins outside the map.  To deal with these, just enclose the origin\n"
-            "brush with a solid world brush\n");
-        if (!g_bLeaked)
-            Log("Leak pointfile generated\n\n");
-        if (g_bLeakOnly)
-            Error("Stopped by leak.");
-    }
-}
-
-node_t* FillOutside(entinfo_t* entinfo, node_t* node, int pass_num) 
-{
-    g_EntInfo = entinfo;
-    g_bLeaked = false;
-    bool inside = false;
-
-    Verbose("----- FillOutside ----\n");
-    pointfile = fopen(g_pointfilename, "w");
-    if (!pointfile)
-        Error("Couldn't open pointfile '%s'\n", g_pointfilename);
-    linefile = fopen(g_linefilename, "w");
-    if (!linefile)
-        Error("Couldn't open linefile '%s'\n", g_linefilename);
-
-    PrintLeafMetrics(node, "Original tree");
-
-    for (unsigned int i = 1; i < entinfo->numentities; ++i)
-    {
-        if (g_bLeaked)
-            break;
-
-        entity_t* entity = entinfo->entities[i];
-        vec_t origin[3];
-        GetVectorForKey(entity, "origin", origin);
-        const char* cl = ValueForKey(entity, "classname");
-
-        if (!entity->numbrushes)
-        {
-            // Check if origin is close to (0, 0, 0)
-            //FIXME: zhlt in hl1 had a fix for this!  if (*ValueForKey(&g_entities[i], "origin")) //--vluzacn
-            if (!VectorCompare(origin, vec3_origin))
-            {
-                origin[2] += 1;                            // so objects on floor are ok
-
-                // nudge playerstart around if needed so clipping hulls always have a valid point
-                if (!strcmp(cl, "info_player_start"))
-                {
-                    int             x, y;
-
-                    for (x = -16; x <= 16; x += 16)
-                    {
-                        for (y = -16; y <= 16; y += 16)
-                        {
-                            origin[0] += x;
-                            origin[1] += y;
-                            if (PlaceOccupant(origin, node, i))
-                            {
-                                inside = true;
-                                goto gotit;
-                            }
-                            origin[0] -= x;
-                            origin[1] -= y;
-                        }
-                    }
-                gotit:;
-                }
-                else
-                {
-                    if (PlaceOccupant(origin, node, i))
-                        inside = true;
-                }
-            }
-        }
-    }
-
-    if (inside)
-    {
-        PrintLeakInfoIfLeaked(entinfo, pass_num);
-        fclose(pointfile);
-        fclose(linefile);
-        pointfile = NULL;
-        linefile = NULL;
-        if (!g_bLeaked) 
-        {
-            CalcInternalNodes(node);
-            PrintLeafMetrics(node, "fill");
-            node = ClearOutFaces(node);
-        }
-        PrintLeafMetrics(node, "final");
-    }
-    else 
-    {
-        Warning("No entities exist in world, no filling performed");
-        fclose(pointfile);
-        fclose(linefile);
-        pointfile = NULL;
-        linefile = NULL;
-        _unlink(g_pointfilename);
-        _unlink(g_linefilename);
-    }
-
-    return node;
-}
-
 void WriteHullFile(const char* fileNamePrefix, entity_t* entity, int brushFlag, char appendMode, char writeFlag) 
 {
-    char fileName[264];
-    safe_snprintf(fileName, 0x104u, "%s%s", g_Mapname, fileNamePrefix);
+    char fileName[MAX_PATH];
+    safe_snprintf(fileName, MAX_PATH, "%s%s", g_Mapname, fileNamePrefix);
     const char* mode = (appendMode) ? "a+" : "w";
     FILE* file = fopen(fileName, mode);
     if (!file)
         Error("Could not open hullfile '%s' for writing\n", fileName);
 
-    unsigned int numBrushes = entity->numbrushes;
-    for (unsigned int brushIndex = 0; brushIndex < numBrushes; ++brushIndex) 
+    for (unsigned int brushIndex = 0; brushIndex < entity->numbrushes; ++brushIndex)
     {
         brush_t* brush = entity->brushes[brushIndex];
         if ((brushFlag & brush->brushflags) != 0) 
@@ -480,222 +284,9 @@ void WriteHullFile(const char* fileNamePrefix, entity_t* entity, int brushFlag, 
     fclose(file);
 }
 
-void WritePortalFile_r(int depth, node_t* headnode) {
-    if (!headnode)
-        return;
 
-    // Traverse the BSP tree until a leaf node is reached
-    while (headnode->planenum != -1) 
-    {
-        depth++;
-        WritePortalFile_r(depth, headnode->children[0]);
-        headnode = headnode->children[1];
-        if (!headnode)
-            return;
-    }
-
-    // Process portals of the leaf node
-    portal_t* portals = headnode->portals;
-    while (portals) 
-    {
-        Winding* winding = portals->winding;
-        if (winding->Valid()) 
-        {
-            node_t* node0 = portals->nodes[0];
-            node_t* node1 = portals->nodes[1];
-            if (node0 == headnode && node0->leaf_type != LEAF_SOLID_AKA_OPAQUE && node1->leaf_type != LEAF_SOLID_AKA_OPAQUE) 
-            {
-                plane_t* plane = &gMappedPlanes[portals->planenum];
-                vec3_t winding_normal;
-                vec_t winding_dist;
-                portals->winding->getPlane(winding_normal, winding_dist);
-
-                if (DotProduct(winding_normal, plane->normal) >= 0.99)
-                    fprintf(portalfile, "%i %u %i %i ", portals->planenum, winding->m_NumPoints, node0->visleafnum, node1->visleafnum);
-                else
-                    fprintf(portalfile, "%i %u %i %i ", portals->planenum ^ 1, winding->m_NumPoints, node1->visleafnum, node0->visleafnum);
-                for (unsigned int i = 0; i < winding->m_NumPoints; ++i)
-                    fprintf(portalfile, "(%f %f %f) ", winding->m_Points[i][0], winding->m_Points[i][1], winding->m_Points[i][2]);
-                fprintf(portalfile, "\n");
-            }
-        }
-        if (portals->nodes[0] == headnode)
-            portals = portals->next[0];
-        else
-            portals = portals->next[1];
-    }
-}
-
-void NumberLeafs_r(int depth, node_t* node)
-{
-    node_t* current_node = node;
-    int current_depth = depth;
-
-    if (current_node) 
-    {
-        while (current_node->planenum != -1) 
-        {
-            NumberLeafs_r(++current_depth, current_node->children[0]);
-            current_node = current_node->children[1];
-            ++current_depth;
-            if (!current_node)
-                return;
-        }
-
-        current_node->visleafnum = num_visleafs++;
-
-        if (current_node->leaf_type != LEAF_SOLID_AKA_OPAQUE) 
-        {
-            portal_t* portals = current_node->portals;
-            if (portals) 
-            {
-                do 
-                {
-                    node_t* node0 = portals->nodes[0];
-                    if (node0 == current_node) 
-                    {
-                        if (node0->leaf_type != LEAF_SOLID_AKA_OPAQUE && portals->nodes[1]->leaf_type != LEAF_SOLID_AKA_OPAQUE)
-                            ++num_visportals;
-                        portals = portals->next[0];
-                    }
-                    else 
-                    {
-                        portals = portals->next[1];
-                    }
-                } while (portals);
-            }
-        }
-    }
-}
-
-void WritePortalfile(node_t* node) 
-{
-    num_visleafs = 0;
-    num_visportals = 0;
-    NumberLeafs_r(0, node);
-
-    portalfile = fopen(g_portfilename, "w");
-    if (!portalfile)
-    {
-        Error("Error writing portal file %s", g_portfilename);
-        return;
-    }
-
-    fprintf(portalfile, "ZPRT 1\n");
-    fprintf(portalfile, "%i %i\n", num_visleafs, num_visportals);
-    WritePortalFile_r(0, node);
-
-    fclose(portalfile);
-    Log("Writing portal file '%s'\n", g_portfilename);
-}
-
-//ClipSideIntoTree_r/AddWindingToConvexHull
-face_t* CombineFacesByPlane(face_t* face_fragments, face_t* original_face)
-{
-    face_t* final_face = new face_t(*original_face, new Winding);
-    const plane_t& plane = gMappedPlanes[original_face->planenum];
-    bool isFirstValidWinding = true;
-
-    for (const face_t* currentFace = face_fragments; currentFace; currentFace = currentFace->next)
-    {
-        if (!currentFace->winding->Valid())
-            continue;
-
-        if (isFirstValidWinding)
-        {
-            if (final_face->winding)
-                delete final_face->winding;
-            final_face->winding = new Winding(*currentFace->winding);
-            isFirstValidWinding = false;
-            continue;
-        }
-
-        for (unsigned int pointIndex = 0; pointIndex < currentFace->winding->m_NumPoints; ++pointIndex)
-        {
-            char sides[128] { SIDE_FRONT };
-            int numPointsInBack = final_face->winding->classifyPointAgainstPlaneEdges(sides, sizeof(sides), plane, currentFace->winding->m_Points[pointIndex]);
-
-            if (numPointsInBack == 1)
-            {
-                unsigned int first_back_index;
-                for (first_back_index = 0; first_back_index < final_face->winding->m_NumPoints; ++first_back_index)
-                {
-                    if (sides[first_back_index] != SIDE_FRONT)
-                        break;
-                }
-                final_face->winding->insertPoint(currentFace->winding->m_Points[pointIndex], first_back_index + 1);
-            }
-            else if (numPointsInBack > 1)
-            {
-                unsigned int first_front_index;
-                for (first_front_index = 0; first_front_index < final_face->winding->m_NumPoints; ++first_front_index)
-                {
-                    if (sides[first_front_index] == SIDE_FRONT)
-                        break;
-                }
-
-                unsigned int offset = 0;
-                for (unsigned int k = 0; k < final_face->winding->m_NumPoints; ++k)
-                {
-                    offset = (k + first_front_index) % final_face->winding->m_NumPoints;
-                    if (sides[offset] != SIDE_FRONT)
-                        break;
-                }
-                final_face->winding->shiftPoints(numPointsInBack - 1, (offset + 1) % final_face->winding->m_NumPoints);
-                final_face->winding->insertPoint(currentFace->winding->m_Points[pointIndex], offset + 1);
-            }
-        }
-    }
-
-    if (final_face->winding->Valid())
-    {
-        final_face->winding->RemoveColinearPoints();
-        return final_face;
-    }
-    else
-    {
-        FreeFace(final_face);
-        final_face = new face_t(*original_face, new Winding);
-        return final_face;
-    }
-}
-
-void GetFinalBrushFaces(entity_t* entity, int brushflags)
-{
-    // Measure elapsed time
-    I_FloatTime();
-
-    // Loop through each brush in the entity
-    for (unsigned int i = 0; i < entity->numbrushes; ++i)
-    {
-        brush_t* brush = entity->brushes[i];
-
-        // Check if the brush flag matches the processing flag
-        if ((brush->brushflags & brushflags) != 0)
-        {
-            // Loop through each side of the brush
-            for (unsigned int s = 0; s < brush->numsides; ++s)
-            {
-                side_t* side = brush->brushsides[s];
-                
-                if (side->final_face)
-                    FreeFace(side->final_face);
-
-                if ((side->original_face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | CONTENTS_NODRAW | CONTENTS_UNKNOWN)) != 0)
-                {
-                    // clear face points
-                    side->final_face = new face_t(*side->original_face, new Winding);
-                }
-                else
-                {
-                    // combine fragments into one giant face
-                    side->final_face = CombineFacesByPlane(side->face_fragments, side->original_face);
-                }
-            }
-        }
-    }
-}
-
+//TODO: water model generation
+#if 0
 void WriteSmdSkeletonData(FILE* file) {
     fprintf(file, "version 1\n");
     fprintf(file, "nodes\n");
@@ -707,7 +298,6 @@ void WriteSmdSkeletonData(FILE* file) {
     fprintf(file, "end\n");
 }
 
-#if 0
 void WriteTriangleVertices(FILE* file, Winding* winding, int index) {
     vec3_t v[3];
     winding->GetTriangleVertices(index, v);
@@ -874,6 +464,7 @@ void ModelBSP(entity_t* entity, dmodel_t* model, int modelbsp_index)
     model->headnode[3] = 0;
     model->firstleaf = g_numDLeafs;
     model->firstface = g_numDFaces;
+    //TODO
     //GenerateWaterModel(entity);
     const char* classname = ValueForKey(entity, "classname");
     Verbose("===ModelBSP (%d) (entity %d : %s)===\n", modelbsp_index, entity->index, classname);
@@ -934,14 +525,7 @@ void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
     bsp_faces = CopyFaceList(ent, CONTENTS_BSP);
     headnode = new node_t;
     CalcNodeBoundsFromFaces(headnode, bsp_faces);
-    Verbose(
-        "  inital world bounds : (%.0f %.0f %.0f), (%.0f %.0f %.0f)\n",
-        headnode->mins[0],
-        headnode->mins[1],
-        headnode->mins[2],
-        headnode->maxs[0],
-        headnode->maxs[1],
-        headnode->maxs[2]);
+    Verbose("  inital world bounds : (%.0f %.0f %.0f), (%.0f %.0f %.0f)\n", headnode->mins[0], headnode->mins[1], headnode->mins[2], headnode->maxs[0], headnode->maxs[1], headnode->maxs[2]);
 
     // Check if world bounds are valid
     if (CalcWorldBounds(headnode->mins, headnode->maxs))

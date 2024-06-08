@@ -41,7 +41,10 @@ void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags)
                 {
                     face_t* newFace = new face_t(*original_face);
 #ifdef SUBDIVIDE
-                    FilterFacesIntoTree(newFace, node, false, false);
+                    if (!g_nosubdiv)
+                        FilterFacesIntoTree(newFace, node, false, false);
+                    else
+                        FilterFaceIntoTree_r(0, node, side, newFace, false, false);
 #else
                     FilterFaceIntoTree_r(0, node, side, newFace, false, false);
 #endif
@@ -154,7 +157,7 @@ void WriteDrawBrushSide(side_t* side)
         side->draw_brush_side_index = g_numDBrushSides;
         side->built_draw_indices_for_side = true;
         WriteFace_AkaBuildDrawIndicesForFace(final_face);
-        side->original_face->outputnumber = final_face->built_draw_indices_for_face;
+        side->original_face->outputnumber = final_face->built_draw_indices_for_face; //?
         side->original_face->outputnumber = final_face->outputnumber;
         hlassume(g_numDBrushSides < MAX_MAP_BRUSHSIDES, assume_MAX_MAP_SIDES);
         dbrushside_t* out_brushside = &g_dbrushsides[g_numDBrushSides++];
@@ -317,18 +320,16 @@ void SortBrushSidesByCanonicalOrder(brush_t* brush)
     }
 }
 
-#if 1
 void AddBrushBevels(brush_t* buildBrush) 
 {
     int axis, dir;
-    unsigned int i, j, k, l, order;
+    unsigned int i, j, k, order;
     side_t sidetemp;
-    side_t** s, * s2;
-    Winding* w, * w2;
+    side_t** s;
+    Winding* w;
     vec3_t normal;
     vec_t dist;
-    vec3_t vec, vec2;
-    vec_t d, minBack;
+    vec3_t vec;
 
     //
     // add the axial planes
@@ -529,185 +530,6 @@ void AddBrushBevels(brush_t* buildBrush)
 
     SortBrushSidesByCanonicalOrder(buildBrush);
 }
-#endif
-
-#if 0
-
-void AddNewPlanesToBrush(brush_t* brush, vec3_t directionVector, vec3_t points)
-{
-    plane_t newPlane;
-    vec3_t axisVector;
-    double normalLength;
-    double planeDistance;
-    side_t** brushSides;
-    face_t* originalFace;
-    Winding* winding;
-    unsigned int sideIndex;
-    int planeDistOffset;
-    bool sideOn;
-
-    for (int axis = 0; axis < 3; axis++)
-    {
-        for (planeDistOffset = -1; planeDistOffset <= 1; planeDistOffset += 2)
-        {
-            memset(&newPlane, 0, sizeof(newPlane));
-            newPlane.dist = static_cast<double>(planeDistOffset);
-
-            memset(axisVector, 0, sizeof(axisVector));
-            axisVector[axis] = 1.0;
-
-            CrossProduct(axisVector, directionVector, newPlane.normal);
-            normalLength = VectorNormalize(newPlane.normal);
-            if (normalLength == 0.0)
-                continue;
-
-            planeDistance = DotProduct(newPlane.normal, points);
-
-            sideOn = true;
-            brushSides = brush->brushsides;
-            for (sideIndex = 0; sideIndex < brush->numsides; sideIndex++)
-            {
-                originalFace = (*brushSides)->original_face;
-                if (originalFace && !(originalFace->brushflags & CONTENTS_BSP) && originalFace->winding)
-                {
-                    int side = originalFace->winding->WindingOnPlaneSide(newPlane.normal, planeDistance + 0.1);
-                    if (side != SIDE_FRONT && side != SIDE_BACK)
-                    {
-                        sideOn = false;
-                        break;
-                    }
-                }
-                brushSides++;
-            }
-
-            if (sideOn)
-            {
-                if (!DoesVectorExistInBrush(newPlane.normal, brush))
-                    AddHullPlane(brush, newPlane.normal, planeDistance, brush);
-            }
-        }
-    }
-}
-
-void** SwapPointers(void** first, void** second) {
-    void* temp = *second;
-    *second = *first;
-    *first = temp;
-    return second;
-}
-
-void SortBrushSidesByClosestAxis(brush_t* brush)
-{
-    unsigned int numsides = brush->numsides;
-    unsigned int i, j;
-
-    for (i = 0; i < numsides - 1; ++i)
-    {
-        for (j = 0; j < numsides - i - 1; ++j)
-        {
-            side_t* firstSide = brush->brushsides[j];
-            side_t* secondSide = brush->brushsides[j + 1];
-
-            if (gMappedPlanes[firstSide->plane_num].closest_axis >
-                gMappedPlanes[secondSide->plane_num].closest_axis)
-            {
-                // Swap sides
-                SwapPointers((void**)&brush->brushsides[j], (void**)&brush->brushsides[j + 1]);
-            }
-        }
-    }
-}
-
-
-void ExpandBrush(brush_t* brush)
-{
-    brush_t* currentBrush = brush; // Initialize the current brush to the input brush
-    unsigned int numsides = brush->numsides; // Number of sides in the brush
-    unsigned int i, j; // Loop counters
-
-    // Loop through the three dimensions
-    for (i = 0; i < 3; ++i)
-    {
-        int axis = (i == 1) ? 1 : 0; // Set the axis to X (0) or Y (1)
-
-        // Loop through the two expansion values (-1 and 1)
-        for (int expansionValue = -1; expansionValue <= 1; expansionValue += 2)
-        {
-            bool foundMatchingSide = false; // Flag to check if a matching side is found
-
-            // Loop through the sides of the brush
-            for (j = 0; j < numsides; ++j)
-            {
-                side_t* currentSide = currentBrush->brushsides[j]; // Get the current side
-                double sideNormal = gMappedPlanes[currentSide->plane_num].normal[i]; // Get the normal component of the side along the current axis
-
-                // Check if the side's normal matches the expansion value
-                if (sideNormal == expansionValue)
-                {
-                    foundMatchingSide = true;
-                    break;
-                }
-            }
-
-            // If no matching side is found, add a new hull plane
-            if (!foundMatchingSide)
-            {
-                vec3_t normal = { 0 }; // Initialize normal vector
-                normal[i] = expansionValue; // Set the normal component corresponding to the current axis
-
-                // Calculate plane position based on bounds
-                vec_t planePos = (expansionValue == 1) ? brush->bounds.m_Maxs[axis] : -brush->bounds.m_Mins[axis];
-
-                // Add new hull plane to the brush
-                AddHullPlane(brush, normal, planePos);
-            }
-
-            // Reset the current brush reference
-            currentBrush = brush;
-        }
-    }
-
-    // If the number of sides is not 6, perform additional operations
-    if (currentBrush->numsides != 6)
-    {
-        // Loop through the sides of the brush
-        for (i = 0; i < numsides; ++i)
-        {
-            side_t* currentSide = currentBrush->brushsides[i]; // Get the current side
-            face_t* originalFace = currentSide->original_face; // Get the original face of the side
-
-            // Check if the original face exists and is not a BSP face
-            if (originalFace && !(originalFace->brushflags & CONTENTS_BSP))
-            {
-                Winding* winding = originalFace->winding; // Get the winding of the original face
-
-                // Check if the winding is valid
-                if (winding && winding->Valid())
-                {
-                    unsigned int numPoints = winding->m_NumPoints; // Number of points in the winding
-
-                    // Loop through the points of the winding
-                    for (j = 0; j < numPoints; ++j)
-                    {
-                        unsigned int nextIndex = (j + 1) % numPoints; // Get the index of the next point
-                        vec3_t normal = { 0 }; // Initialize normal vector
-
-                        // Calculate the normalized plane vector difference
-                        if (NormalizePlaneVectorDifference(nextIndex, j, (int)winding, normal) && !SetPlaneNormal((plane_s*)normal, (vec_t*)normal, 0.00001))
-                        {
-                            // Add new planes to the brush
-                            AddNewPlanesToBrush(brush, normal, winding->m_Points[j]);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Sort brush sides by closest axis
-        SortBrushSidesByClosestAxis(currentBrush);
-    }
-}
-#endif
 
 // replaced with C++
 #if 0

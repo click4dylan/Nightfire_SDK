@@ -314,7 +314,7 @@ inline char g_dvisdata[MAX_MAP_VISIBILITY];
 inline char g_dlightdata[MAX_MAP_LIGHTDATA];
 
 #ifdef ENFORCE_MAX_LIGHTMAP_SCALE
-#define MAX_LIGHTMAP_SCALE 8
+#define MAX_LIGHTMAP_SCALE 16
 #endif
 //#define g_dtexmatrix ((dtexmatrix_t*)0x1CE21A0)
 //#define g_numDTexMatrix *(int*)0x5C601E0
@@ -345,8 +345,8 @@ inline FILE* pointfile = nullptr;
 //#define pointfile *(FILE**)0x5DE06EC
 inline entinfo_t* g_EntInfo = nullptr;
 //#define g_EntInfo *(entinfo_t**)0x5DE06F0
-inline unsigned g_CurrentEntity = 0;
-//#define g_CurrentEntity *(int*)0x5DE06F4
+inline unsigned g_LeakEntity = 0;
+//#define g_LeakEntity *(int*)0x5DE06F4
 inline FILE* linefile = nullptr;
 inline FILE* portalfile = nullptr;
 inline FILE* lightingfile = nullptr;

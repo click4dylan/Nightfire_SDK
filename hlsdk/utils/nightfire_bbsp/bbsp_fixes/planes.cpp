@@ -290,7 +290,7 @@ int IsDifferentPlane(const plane_s* a1, const plane_s* a2)
     return -1;
 }
 
-unsigned int PlaneFromPoints(const vec3_t const p0, const vec3_t const p1, const vec3_t const p2)
+unsigned int PlaneFromPoints(const vec3_t p0, const vec3_t p1, const vec3_t p2)
 {
     vec3_t t1, t2, normal;
     vec_t dist;

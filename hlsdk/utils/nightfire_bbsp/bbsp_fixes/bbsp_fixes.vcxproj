@@ -243,6 +243,7 @@
     <ClInclude Include="mapfile.h" />
     <ClInclude Include="messages.h" />
     <ClInclude Include="Nodes.h" />
+    <ClInclude Include="outside.h" />
     <ClInclude Include="planes.h" />
     <ClInclude Include="portals.h" />
     <ClInclude Include="scriplib.h" />
@@ -267,6 +268,7 @@
     <ClCompile Include="mapfile.cpp" />
     <ClCompile Include="messages.cpp" />
     <ClCompile Include="Nodes.cpp" />
+    <ClCompile Include="outside.cpp" />
     <ClCompile Include="planes.cpp" />
     <ClCompile Include="portals.cpp" />
     <ClCompile Include="scriplib.cpp" />

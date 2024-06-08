@@ -8,6 +8,7 @@
 #include "textures.h"
 #include "log.h"
 #include "planes.h"
+#include "cmdlib.h"
 
 DWORD a = 0x41D3C0;
 
@@ -782,7 +783,7 @@ void MarkFinalFaceFragments(node_t* node, entity_t* ent)
             {
                 face_t* next = face_fragment->next;
 #ifdef SUBDIVIDE
-                if (side->final_face->winding->m_NumPoints == 0)
+                if (g_nosubdiv || side->final_face->winding->m_NumPoints == 0)
                     MarkFace(face_fragment->leaf_node, side->final_face);
                 else
                     MarkFace(face_fragment->leaf_node, face_fragment);
@@ -941,3 +942,110 @@ void SubdivideFace(face_t* f, face_t** prevptr)
     }
 }
 #endif
+
+//ClipSideIntoTree_r/AddWindingToConvexHull
+face_t* CombineFacesByPlane(face_t* face_fragments, face_t* original_face)
+{
+    face_t* final_face = new face_t(*original_face, new Winding);
+    const plane_t& plane = gMappedPlanes[original_face->planenum];
+    bool isFirstValidWinding = true;
+
+    for (const face_t* currentFace = face_fragments; currentFace; currentFace = currentFace->next)
+    {
+        if (!currentFace->winding->Valid())
+            continue;
+
+        if (isFirstValidWinding)
+        {
+            if (final_face->winding)
+                delete final_face->winding;
+            final_face->winding = new Winding(*currentFace->winding);
+            isFirstValidWinding = false;
+            continue;
+        }
+
+        for (unsigned int pointIndex = 0; pointIndex < currentFace->winding->m_NumPoints; ++pointIndex)
+        {
+            char sides[128]{ SIDE_FRONT };
+            int numPointsInBack = final_face->winding->classifyPointAgainstPlaneEdges(sides, sizeof(sides), plane, currentFace->winding->m_Points[pointIndex]);
+
+            if (numPointsInBack == 1)
+            {
+                unsigned int first_back_index;
+                for (first_back_index = 0; first_back_index < final_face->winding->m_NumPoints; ++first_back_index)
+                {
+                    if (sides[first_back_index] != SIDE_FRONT)
+                        break;
+                }
+                final_face->winding->insertPoint(currentFace->winding->m_Points[pointIndex], first_back_index + 1);
+            }
+            else if (numPointsInBack > 1)
+            {
+                unsigned int first_front_index;
+                for (first_front_index = 0; first_front_index < final_face->winding->m_NumPoints; ++first_front_index)
+                {
+                    if (sides[first_front_index] == SIDE_FRONT)
+                        break;
+                }
+
+                unsigned int offset = 0;
+                for (unsigned int k = 0; k < final_face->winding->m_NumPoints; ++k)
+                {
+                    offset = (k + first_front_index) % final_face->winding->m_NumPoints;
+                    if (sides[offset] != SIDE_FRONT)
+                        break;
+                }
+                final_face->winding->shiftPoints(numPointsInBack - 1, (offset + 1) % final_face->winding->m_NumPoints);
+                final_face->winding->insertPoint(currentFace->winding->m_Points[pointIndex], offset + 1);
+            }
+        }
+    }
+
+    if (final_face->winding->Valid())
+    {
+        final_face->winding->RemoveColinearPoints();
+        return final_face;
+    }
+    else
+    {
+        FreeFace(final_face);
+        final_face = new face_t(*original_face, new Winding);
+        return final_face;
+    }
+}
+
+void GetFinalBrushFaces(entity_t* entity, int brushflags)
+{
+    // Measure elapsed time
+    I_FloatTime();
+
+    // Loop through each brush in the entity
+    for (unsigned int i = 0; i < entity->numbrushes; ++i)
+    {
+        brush_t* brush = entity->brushes[i];
+
+        // Check if the brush flag matches the processing flag
+        if ((brush->brushflags & brushflags) != 0)
+        {
+            // Loop through each side of the brush
+            for (unsigned int s = 0; s < brush->numsides; ++s)
+            {
+                side_t* side = brush->brushsides[s];
+
+                if (side->final_face)
+                    FreeFace(side->final_face);
+
+                if ((side->original_face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | CONTENTS_NODRAW | CONTENTS_UNKNOWN)) != 0)
+                {
+                    // clear face points
+                    side->final_face = new face_t(*side->original_face, new Winding);
+                }
+                else
+                {
+                    // combine fragments into one giant face
+                    side->final_face = CombineFacesByPlane(side->face_fragments, side->original_face);
+                }
+            }
+        }
+    }
+}

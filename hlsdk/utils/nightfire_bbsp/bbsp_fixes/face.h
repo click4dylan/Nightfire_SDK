@@ -106,3 +106,5 @@ extern void MarkFaceFragments(node_t* node, entity_t* ent);
 extern void MarkFace(node_t* leaf_node, face_t* face);
 extern void MarkBrush(node_t* leaf_node, brush_t* brush);
 extern void SubdivideFace(face_t* f, face_t** prevptr);
+extern face_t* CombineFacesByPlane(face_t* face_fragments, face_t* original_face);
+extern void GetFinalBrushFaces(entity_t* entity, int brushflags);

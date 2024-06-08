@@ -436,17 +436,12 @@ void AddPortalToNodes(portal_t* p, node_t* front, node_t* back)
 
 unsigned int CalcNodePlane(node_t* node, int bsp_depth, face_t* face)
 {
-    int maxsize = g_MaxNodeSize;
-    if (maxsize != 1024)
-        int islightingtree = 1;
+    //if (g_MaxNodeSize != 1024)
+    //    int islightingtree = 1;
 
-    int axis; // esi
-    vec3_t bounds; // [esp+10h] [ebp-1Ch]
-
-    axis = 0;
-    bounds[0] = node->maxs[0] - node->mins[0];
-    bounds[1] = node->maxs[1] - node->mins[1];
-    bounds[2] = node->maxs[2] - node->mins[2];
+    int axis = 0;
+    vec3_t bounds;
+    VectorSubtract(node->maxs, node->mins, bounds);
 
     while (bounds[axis] <= (double)g_MaxNodeSize)
     {

@@ -91,7 +91,7 @@ bool PlaceOccupant(const vec3_t point, node_t* headnode, unsigned int entindex)
     MarkLeafOccupancyAndCheckLeaks(n, entindex);
     if (g_bLeaked)
     {
-        g_CurrentEntity = entindex;
+        g_LeakEntity = entindex;
         MarkLeakTrail(nullptr);
     }
     return true;
@@ -101,7 +101,7 @@ void MarkLeafOccupancyAndCheckLeaks(node_t* headnode, unsigned int occupancyValu
 {
     if (headnode == g_OutsideNode) 
     {
-        g_bLeaked = 1;
+        g_bLeaked = true;
         return;
     }
 
@@ -142,6 +142,48 @@ void CountLeaves(int level, node_t* node)
         CountLeaves(++level, node->children[0]);
     if (node->children[1])
         CountLeaves(++level, node->children[1]);
+}
+
+void NumberLeafs_r(int depth, node_t* node)
+{
+    node_t* current_node = node;
+    int current_depth = depth;
+
+    if (current_node)
+    {
+        while (current_node->planenum != -1)
+        {
+            NumberLeafs_r(++current_depth, current_node->children[0]);
+            current_node = current_node->children[1];
+            ++current_depth;
+            if (!current_node)
+                return;
+        }
+
+        current_node->visleafnum = num_visleafs++;
+
+        if (current_node->leaf_type != LEAF_SOLID_AKA_OPAQUE)
+        {
+            portal_t* portals = current_node->portals;
+            if (portals)
+            {
+                do
+                {
+                    node_t* node0 = portals->nodes[0];
+                    if (node0 == current_node)
+                    {
+                        if (node0->leaf_type != LEAF_SOLID_AKA_OPAQUE && portals->nodes[1]->leaf_type != LEAF_SOLID_AKA_OPAQUE)
+                            ++num_visportals;
+                        portals = portals->next[0];
+                    }
+                    else
+                    {
+                        portals = portals->next[1];
+                    }
+                } while (portals);
+            }
+        }
+    }
 }
 
 void PrintLeafMetrics(node_t* node, const char* name)
