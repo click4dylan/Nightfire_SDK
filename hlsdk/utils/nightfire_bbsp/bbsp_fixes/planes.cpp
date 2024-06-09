@@ -3,6 +3,7 @@
 #include "log.h"
 #include "helpers.h"
 #include "textures.h"
+#include <vector>
 
 unsigned int ChoosePlaneFromList(node_t* node, face_t* list)
 {
@@ -16,7 +17,7 @@ unsigned int ChoosePlaneFromList(node_t* node, face_t* list)
     int value;             // Current value calculated for the plane
 
     for (split = list; split; split = split->next) {
-        if (!split->winding->Valid())
+        if (!split->winding->HasPoints())
             continue;
 
         plane = &gMappedPlanes[split->planenum];
@@ -24,7 +25,7 @@ unsigned int ChoosePlaneFromList(node_t* node, face_t* list)
         splits = 0;
 
         for (check = list; check; check = check->next) {
-            if (check != split && check->winding->Valid()) {
+            if (check != split && check->winding->HasPoints()) {
                 // Check if the planes are identical or opposite
                 if (check->planenum == split->planenum || (check->planenum ^ 1) == split->planenum) {
                     ++sameplane;
@@ -146,8 +147,43 @@ unsigned int ChooseMidPlaneFromList(node_t* node, int axis)
     return FindIntPlane(normal, dist);
 }
 
-//plane_s gMappedPlanes[MAX_MAP_PLANES];
-plane_s sorted_planes[MAX_MAP_PLANES * 2];
+class SortedPlaneList {
+private:
+    std::vector<const plane_t*> planes; 
+
+public:
+
+    std::vector<const plane_t*>::iterator FindInsertionPoint(const plane_t* newPlane) 
+    {
+        // Use binary search to find the plane or the insertion point
+        auto it = std::lower_bound(planes.begin(), planes.end(), newPlane,
+            [](const plane_t* a, const plane_t* b) 
+            {
+                return a->dist < b->dist;
+            });
+        
+        return it;
+    }
+
+    unsigned int FindMatchingPlane(std::vector<const plane_t*>::iterator it, const plane_t* newPlane)
+    {
+        for (; it != planes.end(); ++it)
+        {
+            // return close enough plane
+            if (!IsDifferentPlane(*it, newPlane))
+                return *it - gMappedPlanes;
+        }
+
+        return -1;
+    }
+
+    void InsertPlane(std::vector<const plane_t*>::iterator position, const plane_t* plane)
+    {
+        planes.insert(position, plane);
+    }
+};
+
+SortedPlaneList s_sorted_planes;
 
 unsigned int FindIntPlane(const vec_t* const normal, const vec_t dist)
 {
@@ -159,32 +195,49 @@ unsigned int FindIntPlane(const vec_t* const normal, const vec_t dist)
     SnapNormal(desired_plane.normal);
     desired_plane.dist = SnapPlaneDist(desired_plane.dist);
 
-    for (unsigned i = 0; i < gNumMappedPlanes; ++i)
-    {
-        plane_t& existing_plane = gMappedPlanes[i];
-        if (!IsDifferentPlane(&existing_plane, &desired_plane))
-            return i;
-    }
+    auto insertion_point = s_sorted_planes.FindInsertionPoint(&desired_plane);
+    unsigned int existing_plane_index = s_sorted_planes.FindMatchingPlane(insertion_point, &desired_plane);
+
+    if (existing_plane_index != -1)
+        return existing_plane_index;
 
     hlassume(gNumMappedPlanes < MAX_MAP_PLANES, assume_MAX_MAP_PLANES);
 
     desired_plane.closest_axis = (planetypes)PlaneTypeForNormal(desired_plane.normal);
+
+    unsigned int return_plane_index = gNumMappedPlanes;
     plane_t& new_plane = gMappedPlanes[gNumMappedPlanes++];
     plane_t& second_new_plane = gMappedPlanes[gNumMappedPlanes++];
 
-    plane_t mirrored_plane = { {-desired_plane.normal[0], -desired_plane.normal[1], -desired_plane.normal[2]}, -desired_plane.dist, desired_plane.closest_axis };
+    plane_t mirrored_plane;
+    mirrored_plane.normal[0] = -desired_plane.normal[0];
+    mirrored_plane.normal[1] = -desired_plane.normal[1]; 
+    mirrored_plane.normal[2] = -desired_plane.normal[2];
+    mirrored_plane.dist = -desired_plane.dist;
+    mirrored_plane.closest_axis = desired_plane.closest_axis;
+
+    plane_t* p1 = &new_plane;
+    plane_t* p2 = &second_new_plane;
 
     // always put axial planes facing positive first
     if (desired_plane.closest_axis <= last_axial && (desired_plane.normal[0] < 0.0 || desired_plane.normal[1] < 0.0 || desired_plane.normal[2] < 0.0))
     {
         new_plane = mirrored_plane;
         second_new_plane = desired_plane;
-        return gNumMappedPlanes - 1;
+        std::swap(p1, p2);
+        ++return_plane_index;
+    }
+    else
+    {
+        new_plane = desired_plane;
+        second_new_plane = mirrored_plane;
     }
 
-    new_plane = desired_plane;
-    second_new_plane = mirrored_plane;
-    return gNumMappedPlanes - 2;
+    s_sorted_planes.InsertPlane(insertion_point, p1);
+    insertion_point = s_sorted_planes.FindInsertionPoint(p2);
+    s_sorted_planes.InsertPlane(insertion_point, p2);
+
+    return return_plane_index;
 #else
     DWORD adr = 0x420B70;
     const vec_t* const Normal = normal;
@@ -282,10 +335,11 @@ int PlaneTypeForNormal(const vec3_t normal)
 
 int IsDifferentPlane(const plane_s* a1, const plane_s* a2)
 {
-    double X = fabs(a1->dist - a2->dist);
-    if (X > 0.5)
+    double dist_diff = fabs(a1->dist - a2->dist);
+    if (dist_diff > 0.5)
         return 1;
-    if (X <= DIST_EPSILON && fabs(a1->normal[0] - a2->normal[0]) <= NORMAL_EPSILON && fabs(a1->normal[1] - a2->normal[1]) <= NORMAL_EPSILON && fabs(a1->normal[2] - a2->normal[2]) <= NORMAL_EPSILON)
+
+    if (dist_diff <= DIST_EPSILON && VectorCompare(a1->normal, a2->normal))
         return 0;
     return -1;
 }
@@ -359,7 +413,7 @@ vec_t SnapPlaneDist(const vec_t dist, const vec_t epsilon)
    Returns qtrue if and only if the normal was adjusted.
  */
 
-bool SnapNormal(vec3_t normal, vec_t epsilon)
+bool SnapNormal(vec3_t& normal, vec_t epsilon)
 {
 #if Q3MAP2_EXPERIMENTAL_SNAP_NORMAL_FIX
     int i;

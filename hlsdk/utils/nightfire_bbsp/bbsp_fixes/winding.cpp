@@ -6,10 +6,6 @@
 #include "bsp_structs.h"
 #include "winding.h"
 
-//#undef BOGUS_RANGE
-//#undef ON_EPSILON
-//#define ON_EPSILON 0.01
-
 //replaced with C++
 #if 0
 DWORD windingconstructoradr = 0x412850;
@@ -46,68 +42,95 @@ Winding* AllocWinding(unsigned int numpoints)
 }
 #endif
 
-#define MAX_POINTS_ON_WINDING 128
-#define	SIDE_FRONT		0
-#define	SIDE_ON			2
-#define	SIDE_BACK		1
-#define	SIDE_CROSS		-2
-
 void Winding::RemoveColinearPoints()
 {
-    unsigned int    i;
-    unsigned int    nump;
-    int             j, k;
-    vec3_t          v1, v2, v3;
-    vec3_t          p[128];
+    vec3_t p[MAX_POINTS_ON_WINDING]{}; // temporary array to store points
+    unsigned int nump = 0; // number of points in the temporary array
 
-    // TODO: OPTIMIZE:  this could be 1/2 the number of vectornormalize calls by caching one of the previous values through the loop
-    // TODO: OPTIMIZE: Remove the modulo operations inside the loop and replace with compares
-    nump = 0;
-    for (i = 0; i < m_NumPoints; i++)
+    // First pass: zero out near-zero components
+    for (unsigned int i = 0; i < m_NumPoints; i++)
     {
-        j = (i + 1) % m_NumPoints;                  // i + 1
-        k = (i + m_NumPoints - 1) % m_NumPoints;    // i - 1 
-        VectorSubtract(m_Points[i], m_Points[j], v1);
-        VectorSubtract(m_Points[i], m_Points[k], v2);
-        VectorNormalize(v1);
-        VectorNormalize(v2);
-        VectorAdd(v1, v2, v3);
-        if (!VectorCompare(v3, vec3_origin))
+        vec3_t& point = m_Points[i];
+
+        if (fabs(point[0]) < NORMAL_EPSILON)
+            point[0] = 0;
+
+        if (fabs(point[1]) < NORMAL_EPSILON)
+            point[1] = 0;
+
+        if (fabs(point[2]) < NORMAL_EPSILON)
+            point[2] = 0;
+    }
+
+    // Second pass: remove colinear points
+    for (unsigned int i = 0; i < m_NumPoints; i++)
+    {
+        vec3_t& point = m_Points[i];
+        vec3_t& next = m_Points[(i + 1) % m_NumPoints];
+
+        vec3_t diff;
+        VectorSubtract(point, next, diff);
+
+        if (!VectorCompare(diff, vec3_origin))
         {
-            VectorCopy(m_Points[i], p[nump]);
+            VectorCopy(point, p[nump]);
             nump++;
         }
-#if 0
-        else
-        {
-            Log("v3 was (%4.3f %4.3f %4.3f)\n", v3[0], v3[1], v3[2]);
-        }
-#endif
     }
 
-    if (nump == m_NumPoints)
+    // Update the number of points
+    if (m_NumPoints != nump)
     {
-        return;
+        m_NumPoints = nump;
+        if (nump)
+            memcpy(m_Points, p, nump * sizeof(vec3_t));
     }
 
-#if 0
-    Warning("RemoveColinearPoints: Removed %u points, from %u to %u\n", m_NumPoints - nump, m_NumPoints, nump);
-    Warning("Before :\n");
-    Print();
-#endif
-    m_NumPoints = nump;
-    memcpy(m_Points, p, nump * sizeof(vec3_t));
+    if (!m_NumPoints)
+        return;
+
+    // Third pass: check for additional colinear points and remove them
+    unsigned int newNumPoints = 0;
+    for (unsigned int i = 0; i < m_NumPoints; ++i)
+    {
+        vec3_t& point = m_Points[i];
+        vec3_t& next = m_Points[(i + 1) % m_NumPoints];
+        vec3_t& prev = m_Points[(m_NumPoints + i - 1) % m_NumPoints];
+
+        vec3_t diffNext, diffPrev, sum;
+        VectorSubtract(point, next, diffNext);
+        VectorSubtract(point, prev, diffPrev);
+        VectorNormalize(diffNext);
+        VectorNormalize(diffPrev);
+
+        VectorAdd(diffPrev, diffNext, sum);
+
+        if (!VectorCompare(sum, vec3_origin))
+        {
+            VectorCopy(point, p[newNumPoints]);
+            ++newNumPoints;
+        }
+    }
+
+    // Final update of the number of points
+    if (newNumPoints < 3)
+        m_NumPoints = 0;
 
 #if 0
-    Warning("After :\n");
-    Print();
+    else
+        m_NumPoints = newNumPoints;
 
-    Warning("==========\n");
+    if (newNumPoints)
+        memcpy(m_Points, p, newNumPoints * sizeof(vec3_t));
 #endif
 }
 
+Winding* lastwinding{};
+
 Winding::~Winding()
 {
+    if (lastwinding == this)
+        lastwinding = nullptr;
     --g_numWindings;
     if (m_Points)
         delete[] m_Points;
@@ -116,6 +139,9 @@ Winding::~Winding()
 
 Winding::Winding(const Winding& other)
 {
+    if (this == lastwinding)
+        int breakp = 1;
+    lastwinding = this;
     ++g_numWindings;
     m_NumPoints = other.m_NumPoints;
     m_MaxPoints = max(other.m_MaxPoints, 8);//(m_NumPoints + 3) & ~3;   // groups of 4
@@ -127,6 +153,9 @@ Winding::Winding(const Winding& other)
 
 Winding::Winding()
 {
+    if (this == lastwinding)
+        int breakp = 1;
+    lastwinding = this;
     ++g_numWindings;
     m_NumPoints = 0;
     m_MaxPoints = 8;
@@ -136,6 +165,9 @@ Winding::Winding()
 
 Winding::Winding(const struct dface_s& face)
 {
+    if (this == lastwinding)
+        int breakp = 1;
+    lastwinding = this;
     ++g_numWindings;
 
     m_NumPoints = face.num_vertices;
@@ -156,6 +188,9 @@ Winding::Winding(const struct dface_s& face)
 
 Winding::Winding(const struct plane_s& plane)
 {
+    if (this == lastwinding)
+        int breakp = 1;
+    lastwinding = this;
     ++g_numWindings;
     vec3_t normal;
     vec_t dist;
@@ -167,6 +202,9 @@ Winding::Winding(const struct plane_s& plane)
 
 Winding::Winding(UINT32 numpoints)
 {
+    if (this == lastwinding)
+        int breakp = 1;
+    lastwinding = this;
     ++g_numWindings;
 
     if (numpoints >= 3)
@@ -232,96 +270,6 @@ vec_t Winding::getArea() const
 
 void Winding::initFromPlane(const vec3_t normal, const vec_t dist)
 {
-#if 0
-    int axis = -1;
-    double max = -BOGUS_RANGE;
-    vec3_t up = { 0.0, 0.0, 0.0 };
-
-    // Find the major axis
-    for (int i = 0; i < 3; ++i) {
-        double absNormal = fabs(normal[i]);
-        if (absNormal > max) {
-            max = absNormal;
-            axis = i;
-        }
-    }
-
-    if (axis == -1) {
-        Error("Winding::initFromPlane no major axis found\n");
-    }
-
-    // Set the up vector
-    if (axis == 0 || axis == 1) {
-        up[2] = 1.0;
-    }
-    else {
-        up[0] = 1.0;
-    }
-
-    // Project the up vector onto the plane
-    double dot = up[0] * normal[0] + up[1] * normal[1] + up[2] * normal[2];
-    up[0] -= dot * normal[0];
-    up[1] -= dot * normal[1];
-    up[2] -= dot * normal[2];
-
-    VectorNormalize(up);
-
-    // Set the initial points for the winding
-    vec3_t origin = {
-        normal[0] * dist,
-        normal[1] * dist,
-        normal[2] * dist
-    };
-
-    vec3_t right = {
-        up[1] * normal[2] - up[2] * normal[1],
-        up[2] * normal[0] - up[0] * normal[2],
-        up[0] * normal[1] - up[1] * normal[0]
-    };
-
-    VectorScale(up, 32768.0, up);
-    VectorScale(right, 32768.0, right);
-
-    m_NumPoints = 4;
-    m_MaxPoints = 8;
-    m_Points = new vec3_t[m_MaxPoints];
-
-    // Point 0
-    m_Points[0][0] = origin[0] - right[0];
-    m_Points[0][1] = origin[1] - right[1];
-    m_Points[0][2] = origin[2] - right[2];
-
-    m_Points[0][0] += up[0];
-    m_Points[0][1] += up[1];
-    m_Points[0][2] += up[2];
-
-    // Point 1
-    m_Points[1][0] = origin[0] + right[0];
-    m_Points[1][1] = origin[1] + right[1];
-    m_Points[1][2] = origin[2] + right[2];
-
-    m_Points[1][0] += up[0];
-    m_Points[1][1] += up[1];
-    m_Points[1][2] += up[2];
-
-    // Point 2
-    m_Points[2][0] = origin[0] + right[0];
-    m_Points[2][1] = origin[1] + right[1];
-    m_Points[2][2] = origin[2] + right[2];
-
-    m_Points[2][0] -= up[0];
-    m_Points[2][1] -= up[1];
-    m_Points[2][2] -= up[2];
-
-    // Point 3
-    m_Points[3][0] = origin[0] - right[0];
-    m_Points[3][1] = origin[1] - right[1];
-    m_Points[3][2] = origin[2] - right[2];
-
-    m_Points[3][0] -= up[0];
-    m_Points[3][1] -= up[1];
-    m_Points[3][2] -= up[2];
-#else
     int             i;
     vec_t           max, v;
     vec3_t          org, vright, vup;
@@ -383,7 +331,6 @@ void Winding::initFromPlane(const vec3_t normal, const vec_t dist)
 
     VectorSubtract(org, vright, m_Points[3]);
     VectorSubtract(m_Points[3], vup, m_Points[3]);
-#endif
 }
 
 void Winding::shiftPoints(unsigned int offset, unsigned int start_index)
@@ -461,9 +408,6 @@ void Winding::resize(UINT32 newsize)
     newsize = (newsize + 7) & 0xFFFFFFF8;
 
     vec3_t* newpoints = new vec3_t[newsize];
-
-    if (!newpoints)
-        DebugBreak(); //dylan added
 
     if (m_NumPoints >= newsize)
         m_NumPoints = newsize;
@@ -568,7 +512,7 @@ bool Winding::Clip(const bool divide, const vec3_t normal, const vec_t dist, Win
     sides[i] = sides[0];
     dists[i] = dists[0];
 
-#if 0
+#if 1
     // nightfire behavior
     if (!counts[0] && !counts[1])
     {
@@ -733,11 +677,22 @@ bool Winding::Clip(const bool divide, const vec3_t normal, const vec_t dist, Win
     
     if ((f->m_NumPoints > MAX_POINTS_ON_WINDING) || (b->m_NumPoints > MAX_POINTS_ON_WINDING)) // | instead of || for branch optimization
         Error("Winding::Clip : MAX_POINTS_ON_WINDING");
-#if 1
+
     // NIGHTFIRE fixme TODO , nightfire does not have these calls!
-    f->RemoveColinearPoints();
-    b->RemoveColinearPoints();
-#endif
+    //f->RemoveColinearPoints();
+    //b->RemoveColinearPoints();
+
+    if (!f->HasPoints())
+    {
+        delete f;
+        *front = nullptr;
+    }
+    if (!b->HasPoints())
+    {
+        delete b;
+        *back = nullptr;
+    }
+
     return true;
 }
 
@@ -775,6 +730,29 @@ bool Winding::Clip(const vec3_t normal, const vec_t dist, bool keepon)
     sides[i] = sides[0];
     dists[i] = dists[0];
 
+#if 1 
+    // nightfire logic
+    if (keepon)
+    {
+        if (!counts[0] && !counts[1])
+            return true;
+    }
+    else if (!counts[0])
+    {
+        if (m_Points)
+            delete[] m_Points;
+        m_Points = NULL;
+        m_NumPoints = 0;
+        m_MaxPoints = 0;
+        return false;
+    }
+
+    if (!counts[1])
+    {
+        return true;
+    }
+#else
+    // hl1 logic
     if (keepon && !counts[0] && !counts[1])
     {
         return true;
@@ -794,11 +772,12 @@ bool Winding::Clip(const vec3_t normal, const vec_t dist, bool keepon)
     {
         return true;
     }
+#endif
 
     unsigned maxpts = m_NumPoints + 8;                            // can't use counts[0]+2 because of fp grouping errors
     unsigned newNumPoints = 0;
     vec3_t newPoints[MAX_POINTS_ON_WINDING];
-    memset(newPoints, 0, sizeof(newPoints));
+    //memset(newPoints, 0, sizeof(newPoints)); // nightfire does not clear this
 
     for (i = 0; i < m_NumPoints; i++)
     {

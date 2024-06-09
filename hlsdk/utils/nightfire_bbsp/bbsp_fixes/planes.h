@@ -14,5 +14,5 @@ extern int PlaneTypeForNormal(const vec3_t normal);
 extern int IsDifferentPlane(const struct plane_s* a1, const struct plane_s* a2);
 extern unsigned int PlaneFromPoints(const vec3_t p0, const vec3_t p1, const vec3_t p2);
 extern vec_t SnapPlaneDist(const vec_t dist, const vec_t epsilon = ON_EPSILON);
-extern bool SnapNormal(vec3_t normal, vec_t epsilon = NORMAL_EPSILON);
+extern bool SnapNormal(vec3_t& normal, vec_t epsilon = NORMAL_EPSILON);
 extern bool PlaneEqual(const plane_s* plane1, const plane_s* plane2, double onepsilon = ON_EPSILON, double normalepsilon = NORMAL_EPSILON);

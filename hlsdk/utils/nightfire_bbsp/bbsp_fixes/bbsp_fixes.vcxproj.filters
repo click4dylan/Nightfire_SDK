@@ -90,12 +90,6 @@
     <ClInclude Include="messages.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="BBSP_Caller.h">
-      <Filter>Source Files\debugging</Filter>
-    </ClInclude>
-    <ClInclude Include="bytepatcher.h">
-      <Filter>Source Files\debugging</Filter>
-    </ClInclude>
     <ClInclude Include="outside.h">
       <Filter>Source Files</Filter>
     </ClInclude>

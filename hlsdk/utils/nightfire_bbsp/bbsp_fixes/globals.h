@@ -61,7 +61,7 @@ struct texturename_t
 inline unsigned int g_NumWaterModels = 0;
 //#define g_SetAllocNodeSize *(int*)0x8BE33FC
 //#define g_numthreads *(int*)0x429DE0
-#define NUM_SPECIAL_TEXTURES 15
+//#define NUM_SPECIAL_TEXTURES 15
 //#define g_SpecialTextures ((special_texture_t*)0x429DE8)
 //#define g_Program *(const char**)0x429ED8
 //#define g_Mapname ((char*)0x429EE0)

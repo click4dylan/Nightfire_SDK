@@ -405,19 +405,22 @@ void AddBrushBevels(brush_t* buildBrush)
         return;     // pure axial
 
     // test the non-axial plane edges
-    for (i = 6; i < buildBrush->numsides; i++) 
+    //FIXME: todo: q3 starts from 6!
+    for (i = 0; i < buildBrush->numsides; i++) 
     {
-        s = buildBrush->brushsides + i;
-        if (!*s)
+        face_t* face = buildBrush->brushsides[i]->original_face;
+        if (!face)
             continue;
-        face_t* face = (*s)->original_face;
+
+        if ((face->flags & CONTENTS_BSP) != 0)
+            continue;
 
         w = face->winding;
         if (!w)
             continue;
 
         // nightfire check
-        if (!w->Valid())
+        if (!w->HasPoints())
             continue;
 
         for (j = 0; j < w->m_NumPoints; j++) 

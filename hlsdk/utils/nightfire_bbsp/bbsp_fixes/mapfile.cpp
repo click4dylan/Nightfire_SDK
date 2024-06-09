@@ -659,6 +659,22 @@ void GetDefaultFlagsForTextureName(
     unsigned int* render_flags,
     unsigned int* brush_flags)
 {
+    /*
+    // for debugging
+    static bool printed = false;
+    if (!printed)
+    {
+        char tmp[1024];
+        for (int i = 0; i < ARRAYSIZE(g_SpecialTextures); ++i)
+        {
+            const auto tex = &g_SpecialTextures[i];
+            sprintf_s(tmp, "Special Texture: %s\nLeafType: %i\nRenderFlags: %#010x\nBrushFlags: %#010x\n\n", tex->name, tex->leaf_type, tex->renderflags, tex->brushflags);
+            OutputDebugStringA(tmp);
+        }
+        printed = true;
+    }
+    */
+
     // Loop through special textures
     for (unsigned int i = 0; i < ARRAYSIZE(g_SpecialTextures) - 1; ++i)
     {

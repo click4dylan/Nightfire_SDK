@@ -414,7 +414,7 @@ void SnapVerts(entity_t* ent)
         {
             side_t* side = brush->brushsides[j];
             face_t* final_face = side->final_face;
-            if (final_face && final_face->winding && final_face->winding->Valid()) 
+            if (final_face && final_face->winding && final_face->winding->HasPoints()) 
             {
                 Winding* winding = final_face->winding;
                 for (unsigned int k = 0; k < winding->m_NumPoints; ++k) 

@@ -148,7 +148,7 @@ void WritePortalFile_r(int depth, node_t* headnode)
     while (portals)
     {
         Winding* winding = portals->winding;
-        if (winding->Valid())
+        if (winding->HasPoints())
         {
             node_t* node0 = portals->nodes[0];
             node_t* node1 = portals->nodes[1];

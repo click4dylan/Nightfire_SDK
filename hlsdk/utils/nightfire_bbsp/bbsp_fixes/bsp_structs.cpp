@@ -27,14 +27,15 @@ node_s::~node_s()
 	if (children[1])
 		delete children[1];
 
-	portal_t* portal = portals;
-	while (portal) 
+	// Free portals
+	portal_t* p, * nextp;
+	for (p = portals; p; p = nextp)
 	{
-		portal_t* nextPortal = portal->next[portal->nodes[1] == this];
-		RemovePortalFromNode(portal, portal->nodes[portal->nodes[1] != this]);
-		if (portal)
-			delete portal;
-		portal = nextPortal;
+		int s = (p->nodes[1] == this);
+		nextp = p->next[s];
+
+		RemovePortalFromNode(p, p->nodes[!s]);
+		delete p;
 	}
 
 

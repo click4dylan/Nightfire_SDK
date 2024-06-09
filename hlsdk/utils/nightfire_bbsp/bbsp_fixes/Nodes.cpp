@@ -328,91 +328,80 @@ void CalcInternalNodes(node_t* node)
 }
 
 unsigned int g_PortalLog[MAX_MAP_PORTALS];
+unsigned int g_PortalCount = 0;
+
+void AddPortalPlaneToLog(unsigned int clipplane)
+{
+    //FIXME: nightfire has no hlassume error or even a bounds check for this!
+    if (g_PortalCount + 2 <= MAX_MAP_PORTALS)
+    {
+        g_PortalLog[g_PortalCount++] = clipplane;
+        g_PortalLog[g_PortalCount++] = clipplane ^ 1;
+        return;
+    }
+
+    Error("Error: exceeded MAX_MAP_PORTALS!");
+}
+
+bool FindPlaneInPortalPlaneLog(unsigned int clipplane)
+{
+    for (unsigned int i = 0; i < g_PortalCount; i += 2)
+    {
+        if (g_PortalLog[i] == clipplane || g_PortalLog[i + 1] == clipplane)
+            return true;
+    }
+    return false;
+}
 
 void MakeNodePortal(node_t* node)
 {
-    portal_t* new_portal;
-    portal_t* p;
-    plane_t* plane;
-    unsigned int clipplane;
-    Winding* w;
-    int side = 0;
+    Winding* w = new Winding(gMappedPlanes[node->planenum]);
 
-    plane = &gMappedPlanes[node->planenum];
-
-    // Initialize new winding for the node's plane
-    w = new Winding(*plane);
-
-    new_portal = new portal_t;
+    portal_t* new_portal = new portal_t;
     new_portal->planenum = node->planenum;
     new_portal->onnode = node;
 
-    unsigned int portalCount = 0;
+    g_PortalCount = 0;
+    unsigned int clipplane = node->planenum;
+    int side = SIDE_FRONT;
 
-    for (p = node->portals; p; p = p->next[side])
+    for (portal_t* p = node->portals; p; p = p->next[side])
     {
-        clipplane = p->planenum;
         if (p->nodes[0] == node)
         {
             clipplane = p->planenum;
-            side = 0;
+            side = SIDE_FRONT;
         }
         else if (p->nodes[1] == node)
         {
             clipplane = p->planenum ^ 1;
-            side = 1;
+            side = SIDE_BACK;
         }
         else
         {
             Error("MakeNodePortal: mislinked portal");
         }
 
-        // Check if the portal plane has already been processed
-        bool is_new_plane = true;
-        for (unsigned int i = 0; i < portalCount; i += 2)
+        if (FindPlaneInPortalPlaneLog(clipplane))
+            continue;
+
+        if (node->planenum == clipplane || node->planenum == (clipplane ^ 1))
         {
-            if (clipplane == g_PortalLog[i] || clipplane == g_PortalLog[i + 1])
-            {
-                is_new_plane = false;
-                break;
-            }
+            AddPortalPlaneToLog(clipplane);
+            continue;
         }
 
-        if (is_new_plane)
-        {
-            // Clip the portal with the current plane
-            w->Clip(gMappedPlanes[clipplane], true);
+        w->Clip(gMappedPlanes[clipplane], true);
 
-            // Check if the resulting winding is valid
-            if (w->Valid())
-            {
-                // Add the processed plane to the portal log
-                //FIXME: hlassume doesnt exist for this. nightfire had no count check!
-                if (portalCount < MAX_MAP_PORTALS) // Assuming there's a defined max size
-                {
-                    g_PortalLog[portalCount++] = clipplane;
-                    g_PortalLog[portalCount++] = clipplane ^ 1;
-                }
-                else
-                {
-                    Error("MakeNodePortal: portal log exceeded capacity");
-                    delete new_portal;
-                    delete w; // Clean up memory
-                    return;
-                }
-            }
-            else
-            {
-                // Print a warning if the portal was clipped away
-                Warning("MakeNodePortal: new portal was clipped away from node @ (%.0f,%.0f,%.0f)-(%.0f,%.0f,%.0f)",
-                    node->mins[0], node->mins[1], node->mins[2],
-                    node->maxs[0], node->maxs[1], node->maxs[2]);
-                // Free the portal memory
-                delete new_portal;
-                delete w; // Clean up memory
-                return;
-            }
+        if (!w->HasPoints())
+        {
+            Warning("MakeNodePortal: new portal was clipped away from node @ (%.0f,%.0f,%.0f)-(%.0f,%.0f,%.0f)", node->mins[0], node->mins[1], node->mins[2], node->maxs[0], node->maxs[1], node->maxs[2]);
+            delete new_portal;
+            delete w;
+            return;
         }
+       
+        AddPortalPlaneToLog(clipplane);
     }
 
     new_portal->winding = w;
@@ -495,6 +484,10 @@ void SplitNodePortals(node_t* node)
 
         if (!frontwinding)
         {
+            if (backwinding)
+                delete backwinding;
+            backwinding = nullptr;
+
             if (side == 0)
             {
                 AddPortalToNodes(p, b, other_node);
@@ -505,8 +498,13 @@ void SplitNodePortals(node_t* node)
             }
             continue;
         }
+
         if (!backwinding)
         {
+            if (frontwinding)
+                delete frontwinding;
+            frontwinding = nullptr;
+
             if (side == 0)
             {
                 AddPortalToNodes(p, f, other_node);

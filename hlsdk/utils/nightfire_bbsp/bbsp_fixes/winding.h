@@ -8,16 +8,17 @@
 #define	SIDE_BACK		1
 #define	SIDE_CROSS		-2
 #define	BOGUS_RANGE	32768.0  // was this in hl1: 10000.0
+#define MAX_POINTS_ON_WINDING 128
 
 class Winding
 {
 public:
     virtual ~Winding();
-    unsigned int m_NumPoints{};
-    vec3_t* m_Points{};
-    unsigned int m_MaxPoints{};
+    unsigned int m_NumPoints;
+    vec3_t* m_Points;
+    unsigned int m_MaxPoints;
 
-    bool Valid() { return m_NumPoints >= 3 && m_Points; }
+    bool HasPoints() { return m_NumPoints >= 3 && m_Points; }
 #if 0
     void Divide(bool unknown, vec_t* normal, Winding** front_face, Winding** back_face, double dist)
     {

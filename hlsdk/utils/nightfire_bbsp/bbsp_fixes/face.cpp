@@ -66,7 +66,7 @@ bool SplitFaceByNodePlane(face_t* face, unsigned int planenum, face_t** front, f
 #if 1
     *front = nullptr;
     *back = nullptr;
-    if (!face->winding->Valid())
+    if (!face->winding->HasPoints())
         return false;
     if (planenum == face->planenum)
     {
@@ -81,7 +81,7 @@ bool SplitFaceByNodePlane(face_t* face, unsigned int planenum, face_t** front, f
     const plane_t& plane = gMappedPlanes[planenum];
     Winding* new_front = nullptr;
     Winding* new_back = nullptr;
-    if (face->winding->Clip(plane, &new_front, &new_back))
+    if (face->winding->Divide(plane, &new_front, &new_back))
     {
         if (new_front)
             *front = new face_t(*face, new_front);
@@ -126,7 +126,7 @@ bool SplitFace(face_t* face, unsigned int plane, face_t** front, face_t** back)
     *back = nullptr;
     if (face->planenum != plane && face->planenum != (plane ^ 1))
     {
-        if (face->winding->Valid())
+        if (face->winding->HasPoints())
         {
             Winding* new_front = nullptr;
             Winding* new_back = nullptr;
@@ -166,7 +166,7 @@ void SplitFace(face_t* in, const vec3_t normal, const vec_t dist, face_t** front
     *back = nullptr;
     //if (originalFace->planenum != plane && originalFace->planenum != plane ^ 1)
     {
-        if (in->winding->Valid())
+        if (in->winding->HasPoints())
         {
             //unsigned int plane_test = FindIntPlane(normal, dist);
             //if (in->planenum == plane_test || in->planenum == (plane_test ^ 1))
@@ -749,7 +749,10 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
 void MarkFace(node_t* leaf_node, face_t* face)
 {
     if (!leaf_node->markfaces)
+    {
         leaf_node->markfaces = new std::set<face_t*>;
+        ++g_numNodesWithMarkFaces;
+    }
 
     leaf_node->markfaces->insert(face);
 }
@@ -759,7 +762,10 @@ void MarkBrush(node_t* leaf_node, brush_t* brush)
     if (leaf_node)
     {
         if (!leaf_node->markbrushes)
+        {
             leaf_node->markbrushes = new std::set<brush_t*>;
+            ++g_numNodesWithMarkBrushes;
+        }
 
         leaf_node->markbrushes->insert(brush);
     }
@@ -947,7 +953,7 @@ face_t* CombineFacesByPlane(face_t* face_fragments, face_t* original_face)
 
     for (const face_t* currentFace = face_fragments; currentFace; currentFace = currentFace->next)
     {
-        if (!currentFace->winding->Valid())
+        if (!currentFace->winding->HasPoints())
             continue;
 
         if (isFirstValidWinding)
@@ -961,7 +967,7 @@ face_t* CombineFacesByPlane(face_t* face_fragments, face_t* original_face)
 
         for (unsigned int pointIndex = 0; pointIndex < currentFace->winding->m_NumPoints; ++pointIndex)
         {
-            char sides[128]{ SIDE_FRONT };
+            char sides[MAX_POINTS_ON_WINDING]{ SIDE_FRONT };
             int numPointsInBack = final_face->winding->classifyPointAgainstPlaneEdges(sides, sizeof(sides), plane, currentFace->winding->m_Points[pointIndex]);
 
             if (numPointsInBack == 1)
@@ -996,7 +1002,7 @@ face_t* CombineFacesByPlane(face_t* face_fragments, face_t* original_face)
         }
     }
 
-    if (final_face->winding->Valid())
+    if (final_face->winding->HasPoints())
     {
         final_face->winding->RemoveColinearPoints();
         return final_face;
