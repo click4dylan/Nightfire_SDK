@@ -782,6 +782,9 @@ bool Winding::Clip(const vec3_t normal, const vec_t dist, bool keepon)
     vec3_t newPoints[MAX_POINTS_ON_WINDING];
     //memset(newPoints, 0, sizeof(newPoints)); // nightfire does not clear this
 
+    //if (m_NumPoints >= MAX_POINTS_ON_WINDING)
+    //    Error("Reached MAX_POINTS_ON_WINDING! #1");
+
     for (i = 0; i < m_NumPoints; i++)
     {
         const vec_t* p1 = m_Points[i];
@@ -853,6 +856,9 @@ bool Winding::Clip(const vec3_t normal, const vec_t dist, bool keepon)
 
         VectorCopy(mid, newPoints[newNumPoints]);
         newNumPoints++;
+
+        //if (newNumPoints >= MAX_POINTS_ON_WINDING)
+        //    Error("Reached MAX_POINTS_ON_WINDING! #2");
     }
 
     if (newNumPoints > maxpts)
