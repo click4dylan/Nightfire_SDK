@@ -6,9 +6,9 @@
 #include "Nodes.h"
 #include "face.h"
 
-node_t* FillOutside(entinfo_t* entinfo, node_t* node, int pass_num)
+node_t* FillOutside(mapinfo_t* mapfile, node_t* node, int pass_num)
 {
-    g_EntInfo = entinfo;
+    g_EntInfo = mapfile;
     g_bLeaked = false;
     bool inside = false;
 
@@ -22,12 +22,12 @@ node_t* FillOutside(entinfo_t* entinfo, node_t* node, int pass_num)
 
     PrintLeafMetrics(node, "Original tree");
 
-    for (unsigned int i = 1; i < entinfo->numentities; ++i)
+    for (unsigned int i = 1; i < mapfile->numentities; ++i)
     {
         if (g_bLeaked)
             break;
 
-        entity_t* entity = entinfo->entities[i];
+        entity_t* entity = mapfile->entities[i];
         vec_t origin[3];
         GetVectorForKey(entity, "origin", origin);
         const char* cl = ValueForKey(entity, "classname");
@@ -73,7 +73,7 @@ node_t* FillOutside(entinfo_t* entinfo, node_t* node, int pass_num)
 
     if (inside)
     {
-        PrintLeakInfoIfLeaked(entinfo, pass_num);
+        PrintLeakInfoIfLeaked(mapfile, pass_num);
         fclose(pointfile);
         fclose(linefile);
         pointfile = NULL;
@@ -100,13 +100,13 @@ node_t* FillOutside(entinfo_t* entinfo, node_t* node, int pass_num)
     return node;
 }
 
-void PrintLeakInfoIfLeaked(entinfo_t* entinfo, int pass_num)
+void PrintLeakInfoIfLeaked(mapinfo_t* mapfile, int pass_num)
 {
     if (g_bLeaked)
     {
         vec3_t origin;
-        GetVectorForKey(entinfo->entities[g_LeakEntity], "origin", origin);
-        const char* val_for_key = ValueForKey(entinfo->entities[g_LeakEntity], "classname");
+        GetVectorForKey(mapfile->entities[g_LeakEntity], "origin", origin);
+        const char* val_for_key = ValueForKey(mapfile->entities[g_LeakEntity], "classname");
         Warning("=== LEAK (pass %d) ===\nEntity %s @ (%4.0f,%4.0f,%4.0f)", pass_num, val_for_key, origin[0], origin[1], origin[2]);
         PrintOnce("\n"
             "  A LEAK is a hole in the map, where the inside of it is exposed to the\n"

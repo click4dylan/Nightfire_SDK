@@ -88,9 +88,9 @@ extern bool SplitFace(face_t* face, unsigned int plane, face_t** front, face_t**
 extern void SplitFace(face_t* in, const vec3_t normal, const vec_t dist, face_t** front, face_t** back);
 extern void SplitFaces(face_t* original_face, unsigned int node_planenum, int depth, face_t** dest_front_face, face_t** dest_back_face );
 extern bool SplitFaceByNodePlane(face_t* face, unsigned int planenum, face_t** front, face_t** back);
-extern void StripOutsideFaces(node_t* node, entity_t* ent, unsigned int brushflags);
-extern void MarkEmptyBrushFaces(unsigned int flag, entity_t* entity);
-extern void FreeBrushFaces(entity_t* entity, unsigned int flag);
+extern void StripOutsideFaceFragments(node_t* node, entity_t* ent, unsigned int brushflags);
+extern void MarkEmptyBrushFaces(entity_t* entity, unsigned int brushflags);
+extern void FreeBrushFaces(entity_t* entity, unsigned int brushflags);
 //extern void FreeFaceList(face_t* list);
 extern void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inverted, bool is_lighting_tree);
 extern node_t* ClearOutFaces_r(int depth, node_t* node);

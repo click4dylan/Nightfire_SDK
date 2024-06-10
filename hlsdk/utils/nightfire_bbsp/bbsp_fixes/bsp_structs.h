@@ -4,15 +4,6 @@
 #include "winding.h"
 #include <set>
 
-enum leaf_types_t : unsigned
-{
-    LEAF_EMPTY_AKA_NOT_OPAQUE = 1, //references original_face, player can enter
-    LEAF_SOLID_AKA_OPAQUE = 2, //references no surfaces, player cannot enter
-#ifdef BBSP_BLOCKLIGHT_SUPPORT
-    LEAF_BLOCKLIGHT
-#endif
-};
-
 /*
 struct LeafType
 {
@@ -23,76 +14,83 @@ struct LeafType
 
 enum surfaceflags_t
 {
-    CONTENTS_SOLID   = (1 << 0),                                                                  // 1 (0x00000001)
-    CONTENTS_UNKNOWN = (1 << 1),                                                                  // 2 (0x00000002)
-    SURF_SKY         = (1 << 2),                                                                  // 4 (0x00000004)
-    FLAG_KEEP        = (1 << 3),                                                                  // 8 (0x00000008)
-    CONTENTS_PORTAL  = (1 << 4),                                                                  // 16 (0x00000010)
-    CONTENTS_NODRAW  = (1 << 5),                                                                  // 32 (0x00000020)
-    CONTENTS_UNKNOWN2= (1 << 6),                                                                  // 64 (0x00000040)
+    CONTENTS_EMPTY    = (1 << 0),                                                                 // 1 (0x00000001)
+    CONTENTS_SOLID    = (1 << 1),                                                                 // 2 (0x00000002)
+    CONTENTS_SKY      = (1 << 2),                                                                 // 4 (0x00000004)
+    SURFACEFLAG_KEEP  = (1 << 3),                                                                 // 8 (0x00000008)
+    CONTENTS_PORTAL   = (1 << 4),                                                                 // 16 (0x00000010)
+    SURFACEFLAG_NODRAW = (1 << 5),                                                                // 32 (0x00000020)
+    CONTENTS_UNKNOWN2 = (1 << 6),                                                                 // 64 (0x00000040)
     CONTENTS_UNKNOWN3 = (1 << 7),                                                                 // 128 (0x00000080)
-    CONTENTS_BSP     = (1 << 8),                                                                  // 256 (0x00000100)
-    CONTENTS_DETAIL  = (1 << 9),                                                                  // 512 (0x00000200)
-    CONTENTS_ORIGIN  = (1 << 10),                                                                 // 1024 (0x00000400)
-    FLAG_UNKNOWN     =  (1 << 11),                                                                // 2048 (0x00000800)
-    CONTENTS_HINTSKIP  = (1 << 12),                                                               // 4096 (0x00001000)
+    CONTENTS_BSP      = (1 << 8),                                                                 // 256 (0x00000100)
+    CONTENTS_DETAIL   = (1 << 9),                                                                 // 512 (0x00000200)
+    CONTENTS_ORIGIN   = (1 << 10),                                                                // 1024 (0x00000400)
+    FLAG_UNKNOWN      = (1 << 11),                                                                // 2048 (0x00000800)
+    CONTENTS_HINTSKIP = (1 << 12),                                                                // 4096 (0x00001000)
     CONTENTS_UNKNOWN4 = (1 << 13),                                                                // 8192 (0x00002000)
     CONTENTS_UNKNOWN5 = (1 << 14),                                                                // 16384 (0x00004000)
     CONTENTS_UNKNOWN6 = (1 << 15),                                                                // 32768 (0x00008000)
-    CONTENTS_PLAYERCLIP = (1 << 16),                                                              // 65536 (0x00010000)
-    FLAG_NOIMPACTS     =(1 << 17),                                                                // 131072 (0x00020000)
-    FLAG_NODECALS     = (1 << 18),                                                                // 262144 (0x00040000)
-    FLAG_HASITEMCLIP  = (1 << 19),                                                                // 524288 (0x00080000)
+    CONTENTS_CLIP     = (1 << 16),                                                                // 65536 (0x00010000)
+    SURFACEFLAG_NOIMPACTS = (1 << 17),                                                            // 131072 (0x00020000)
+    SURFACEFLAG_NODECALS = (1 << 18),                                                             // 262144 (0x00040000)
+    CONTENTS_ITEMCLIP  = (1 << 19),                                                               // 524288 (0x00080000)
     CONTENTS_WATER    = (1 << 20),                                                                // 1048576 (0x00100000)
     CONTENTS_TRIGGER  =  (1 << 21)                                                                // 2097152 (0x00200000)
 };
 
 // bevel creation
-#define FLAG_BEVEL         (CONTENTS_NODRAW | CONTENTS_DETAIL | CONTENTS_BSP)                       // 800 (0x00000320)
+#define FLAG_BEVEL         (SURFACEFLAG_NODRAW | CONTENTS_DETAIL | CONTENTS_BSP)                    // 800 (0x00000320)
 
 // special textures flags
-#define SURFACEFLAG_HINT    (CONTENTS_SOLID | CONTENTS_NODRAW)                                      // 33 (0x00000021)
+#define SURFACEFLAG_HINT    (CONTENTS_EMPTY | SURFACEFLAG_NODRAW)                                   // 33 (0x00000021)
 #define BRUSHFLAG_HINT     (CONTENTS_BSP | CONTENTS_HINTSKIP)                                       // 4352 (0x00001100)
-#define SURFACEFLAG_NODRAW (CONTENTS_NODRAW)                                                        // 32 (0x00000020)
+//#define SURFACEFLAG_NODRAW (SURFACEFLAG_NODRAW)                                                   // 32 (0x00000020)
 #define BRUSHFLAG_NODRAW 0
-#define SURFACEFLAG_BSP     (CONTENTS_SOLID | CONTENTS_NODRAW)                                      // 33 (0x00000021)
+#define SURFACEFLAG_BSP     (CONTENTS_EMPTY | SURFACEFLAG_NODRAW)                                   // 33 (0x00000021)
 #define BRUSHFLAG_BSP      CONTENTS_BSP                                                             // 256 (0x00000100)
-#define SURFACEFLAG_PORTAL  (CONTENTS_SOLID | CONTENTS_PORTAL | CONTENTS_NODRAW)                    // 49 (0x00000031)
+#define SURFACEFLAG_PORTAL  (CONTENTS_EMPTY | CONTENTS_PORTAL | SURFACEFLAG_NODRAW)                 // 49 (0x00000031)
 #define BRUSHFLAG_PORTAL   CONTENTS_BSP                                                             // 256 (0x00000100)
-#define SURFACEFLAG_SKIP    (CONTENTS_NODRAW | CONTENTS_DETAIL)                                     // 544 (0x00000220)
+#define SURFACEFLAG_SKIP    (SURFACEFLAG_NODRAW | CONTENTS_DETAIL)                                  // 544 (0x00000220)
 #define BRUSHFLAG_SKIP     CONTENTS_HINTSKIP                                                        // 4096 (0x00001000)
-#define SURFACEFLAG_OPAQUE  CONTENTS_NODRAW                                                         // 32 (0x00000020)
+#define SURFACEFLAG_OPAQUE  SURFACEFLAG_NODRAW                                                      // 32 (0x00000020)
 #define BRUSHFLAG_OPAQUE   CONTENTS_DETAIL                                                          // 512 (0x00000200)
-#define SURFACEFLAG_CLIP    CONTENTS_NODRAW                                                         // 32 (0x00000020)
-#define BRUSHFLAG_CLIP     (CONTENTS_DETAIL | CONTENTS_PLAYERCLIP | FLAG_NOIMPACTS | FLAG_NODECALS) // 459264 (0x00070200)
-#define SURFACEFLAG_NPCCLIP CONTENTS_NODRAW                                                         // 32 (0x00000020)
-#define BRUSHFLAG_NPCCLIP  (CONTENTS_DETAIL | FLAG_NODECALS)                                        // 262656 (0x00040200)
-#define SURFACEFLAG_PLAYERCLIP CONTENTS_NODRAW                                                      // 32 (0x00000020)
-#define BRUSHFLAG_PLAYERCLIP (CONTENTS_DETAIL | CONTENTS_PLAYERCLIP)                                // 66048 (0x00010200)
-#define SURFACEFLAG_ENEMYCLIP CONTENTS_NODRAW                                                       // 32 (0x00000020)
-#define BRUSHFLAG_ENEMYCLIP (CONTENTS_DETAIL | FLAG_NOIMPACTS)                                      // 131584 (0x00020020)
-#define SURFACEFLAG_ITEMCLIP CONTENTS_NODRAW                                                        // 32 (0x00000020)
-#define BRUSHFLAG_ITEMCLIP (CONTENTS_DETAIL | FLAG_HASITEMCLIP)                                     // 524800 (0x00080020)
-#define SURFACEFLAG_ORIGIN  CONTENTS_NODRAW                                                         // 32 (0x00000020)
+#define SURFACEFLAG_CLIP    SURFACEFLAG_NODRAW                                                      // 32 (0x00000020)
+#define BRUSHFLAG_CLIP     (CONTENTS_DETAIL | CONTENTS_CLIP | SURFACEFLAG_NOIMPACTS | SURFACEFLAG_NODECALS) // 459264 (0x00070200)
+#define SURFACEFLAG_NPCCLIP SURFACEFLAG_NODRAW                                                      // 32 (0x00000020)
+#define BRUSHFLAG_NPCCLIP  (CONTENTS_DETAIL | SURFACEFLAG_NODECALS)                                 // 262656 (0x00040200)
+#define SURFACEFLAG_PLAYERCLIP SURFACEFLAG_NODRAW                                                   // 32 (0x00000020)
+#define BRUSHFLAG_PLAYERCLIP (CONTENTS_DETAIL | CONTENTS_CLIP)                                      // 66048 (0x00010200)
+#define SURFACEFLAG_ENEMYCLIP SURFACEFLAG_NODRAW                                                    // 32 (0x00000020)
+#define BRUSHFLAG_ENEMYCLIP (CONTENTS_DETAIL | SURFACEFLAG_NOIMPACTS)                               // 131584 (0x00020020)
+#define SURFACEFLAG_ITEMCLIP SURFACEFLAG_NODRAW                                                     // 32 (0x00000020)
+#define BRUSHFLAG_ITEMCLIP (CONTENTS_DETAIL | CONTENTS_ITEMCLIP)                                    // 524800 (0x00080020)
+#define SURFACEFLAG_ORIGIN  SURFACEFLAG_NODRAW                                                      // 32 (0x00000020)
 #define BRUSHFLAG_ORIGIN   CONTENTS_ORIGIN                                                          // 1024 (0x00000400)
-#define SURFACEFLAG_SKY     (SURF_SKY | FLAG_NOIMPACTS | FLAG_NODECALS)                             // 262148 (0x00040004)
+#define SURFACEFLAG_SKY     (CONTENTS_SKY | SURFACEFLAG_NOIMPACTS | SURFACEFLAG_NODECALS)           // 262148 (0x00040004)
 #define BRUSHFLAG_SKY      (CONTENTS_BSP | FLAG_UNKNOWN)                                            // 2304 (0x00000900)
-#define SURFACEFLAG_AAATRIGGER CONTENTS_NODRAW                                                      // 32 (0x00000020)
+#define SURFACEFLAG_AAATRIGGER SURFACEFLAG_NODRAW                                                   // 32 (0x00000020)
 #define BRUSHFLAG_AAATRIGGER (CONTENTS_DETAIL | CONTENTS_TRIGGER)                                   // 2621440 (0x00200200)
-#define SURFACEFLAG_TRIGGER	CONTENTS_NODRAW                                                         // 32 (0x00000020)
+#define SURFACEFLAG_TRIGGER	SURFACEFLAG_NODRAW                                                      // 32 (0x00000020)
 #define BRUSHFLAG_TRIGGER (CONTENTS_DETAIL | CONTENTS_TRIGGER)                                      // 2621440 (0x00200200)
-#define SURFACEFLAG_LIQUIDS (CONTENTS_PLAYERCLIP | FLAG_NODECALS)                                   // 327680 (0x00050000)
+#define SURFACEFLAG_LIQUIDS (CONTENTS_CLIP | SURFACEFLAG_NODECALS)                                  // 327680 (0x00050000)
 #define BRUSHFLAG_LIQUIDS  CONTENTS_WATER                                                           // 1048576 (0x00100000)
 
 //new
 #ifdef BBSP_NULL_SUPPORT
-#define SURFACEFLAG_NULL (CONTENTS_NODRAW | CONTENTS_DETAIL)
+#define SURFACEFLAG_NULL (SURFACEFLAG_NODRAW | CONTENTS_DETAIL)
 #define BRUSHFLAG_NULL 0
 #endif
 #ifdef BBSP_BLOCKLIGHT_SUPPORT
-#define SURFACEFLAG_BLOCKLIGHT (CONTENTS_NODRAW | FLAG_NODECALS | CONTENTS_PLAYERCLIP)
-#define BRUSHFLAG_BLOCKLIGHT 0
+#define SURFACEFLAG_BLOCKLIGHT (SURFACEFLAG_NODRAW | SURFACEFLAG_NODECALS | SURFACEFLAG_NOIMPACTS)
+#define BRUSHFLAG_BLOCKLIGHT CONTENTS_DETAIL
 #endif
+
+#define MAX_TEXTURE_LENGTH 64
+
+struct texturename_t
+{
+    char str[MAX_TEXTURE_LENGTH];
+};
 
 typedef struct dleaf_s
 {
@@ -137,14 +135,14 @@ typedef struct entity_s
     struct brush_s* CreateNewBrush();
 } entity_t;
 
-struct entinfo_t
+struct mapinfo_t
 {
     entity_t** entities{};
     unsigned int numentities{};
     unsigned int numalloced{};
 
-    entinfo_t();
-    ~entinfo_t();
+    mapinfo_t();
+    ~mapinfo_t();
 };
 
 typedef struct dmodel_s
@@ -164,22 +162,24 @@ typedef struct dbrushside_s
     unsigned int plane{};
 } dbrushside_t;
 
+/*
 typedef struct mtexture_s
 {
-    char name[64];
+    char name[MAX_TEXTURE_LENGTH];
     unsigned int index_in_memory;
     int unknown2;
 } mtexture_t;
 
 struct texture_projection_t
 {
-    char texturename[64];
+    char texturename[MAX_TEXTURE_LENGTH];
     double vecs[2][4];
 };
+*/
 
 struct brush_texture_t
 {
-    char name[64]{};
+    char name[MAX_TEXTURE_LENGTH]{};
     vec3_t uaxis{}; // [s/t][xyz offset]
     vec3_t vaxis{};
     vec_t ushift{};
@@ -187,18 +187,14 @@ struct brush_texture_t
     vec_t uscale{};
     vec_t vscale{};
     unsigned int surfaceflags{};
-    char material[64]{};
+    char material[MAX_TEXTURE_LENGTH]{};
     vec_t lightmaprotation{};
     vec_t lightmapscale{};
-#ifdef SUBDIVIDE
-    vec3_t ulightmapaxis{};
-    vec3_t vlightmapaxis{};
-#endif
 };
 
 struct texinfo_t
 {
-    char name[64]{};
+    char name[MAX_TEXTURE_LENGTH]{};
     double vecs[2][4]{};                            // [s/t][xyz offset]  (x, y, z, translation)
     int unused{};
     unsigned int flags{};
@@ -228,6 +224,8 @@ struct texinfo_t
     }
 };
 
+// leftover from reversing
+/*
 struct markbrush_t
 {
     markbrush_t* next;
@@ -244,6 +242,7 @@ struct markface_t
     bool initialized_by_markbrush_constructor;
     bool initialized_by_alloc_markface;
 };
+*/
 
 typedef struct face_s
 {
@@ -375,7 +374,7 @@ typedef struct node_s
     vec3_t mins{};
     vec3_t maxs{};
     portal_t* portals{};
-    unsigned int leaf_type{};
+    unsigned int contents{};
     struct node_s* children[2]{}; // only valid for decision nodes, 0 is left, 1 is right
     bool valid{};
     unsigned int visleafnum{}; // -1 = solid
@@ -444,7 +443,7 @@ typedef struct brush_s
     side_t** brushsides = nullptr;
     unsigned numsides = 0;
     unsigned int sidecapacity = 0;
-    unsigned int leaf_type = 0;
+    unsigned int contents = 0;
     unsigned int brushflags = 0;
     bool built_draw_brush = 0;
     unsigned int output_num = 0;
@@ -461,7 +460,7 @@ typedef struct brush_s
 struct special_texture_t
 {
     const char* name;
-    leaf_types_t leaf_type;
+    unsigned int contents;
     unsigned int renderflags;
     unsigned int brushflags;
 };

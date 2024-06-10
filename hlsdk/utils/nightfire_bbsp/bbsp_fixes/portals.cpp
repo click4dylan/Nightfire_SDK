@@ -128,50 +128,56 @@ void RemovePortalFromNode(portal_t* portal, node_t* l)
     }
 }
 
-void WritePortalFile_r(int depth, node_t* headnode)
+void WritePortalFile_r(int depth, node_t* node)
 {
-    if (!headnode)
+    if (!node)
         return;
 
     // Traverse the BSP tree until a leaf node is reached
-    while (headnode->planenum != -1)
+    if (node->planenum != PLANENUM_LEAF)
     {
-        depth++;
-        WritePortalFile_r(depth, headnode->children[0]);
-        headnode = headnode->children[1];
-        if (!headnode)
-            return;
+        WritePortalFile_r(++depth, node->children[0]);
+        WritePortalFile_r(++depth, node->children[1]);
     }
 
-    // Process portals of the leaf node
-    portal_t* portals = headnode->portals;
-    while (portals)
-    {
-        Winding* winding = portals->winding;
-        if (winding->HasPoints())
-        {
-            node_t* node0 = portals->nodes[0];
-            node_t* node1 = portals->nodes[1];
-            if (node0 == headnode && node0->leaf_type != LEAF_SOLID_AKA_OPAQUE && node1->leaf_type != LEAF_SOLID_AKA_OPAQUE)
-            {
-                plane_t* plane = &gMappedPlanes[portals->planenum];
-                vec3_t winding_normal;
-                vec_t winding_dist;
-                portals->winding->getPlane(winding_normal, winding_dist);
+    //if (node->contents == CONTENTS_SOLID)
+        //return;
 
-                if (DotProduct(winding_normal, plane->normal) >= 0.99)
-                    fprintf(portalfile, "%i %u %i %i ", portals->planenum, winding->m_NumPoints, node0->visleafnum, node1->visleafnum);
+    for (portal_t* p = node->portals; p;)
+    {
+        Winding* w = p->winding;
+        if (w->HasPoints() && p->nodes[0] == node)
+        {
+            if (p->nodes[0]->contents != CONTENTS_SOLID && p->nodes[1]->contents != CONTENTS_SOLID)
+            {
+                // write out to the file
+
+                // sometimes planes get turned around when they are very near
+                // the changeover point between different axis.  interpret the
+                // plane the same way vis will, and flip the side orders if needed
+                plane_t plane2;
+                p->winding->getPlane(plane2);
+
+                if (DotProduct(gMappedPlanes[p->planenum].normal, plane2.normal) < 1.0 - ON_EPSILON)
+                {
+                    // backwards...
+                    fprintf(portalfile, "%i %u %i %i ", p->planenum ^ 1, w->m_NumPoints, p->nodes[1]->visleafnum, p->nodes[0]->visleafnum);
+                }
                 else
-                    fprintf(portalfile, "%i %u %i %i ", portals->planenum ^ 1, winding->m_NumPoints, node1->visleafnum, node0->visleafnum);
-                for (unsigned int i = 0; i < winding->m_NumPoints; ++i)
-                    fprintf(portalfile, "(%f %f %f) ", winding->m_Points[i][0], winding->m_Points[i][1], winding->m_Points[i][2]);
+                {
+                    fprintf(portalfile, "%i %u %i %i ", p->planenum, w->m_NumPoints, p->nodes[0]->visleafnum, p->nodes[1]->visleafnum);
+                }
+                for (unsigned int i = 0; i < w->m_NumPoints; ++i)
+                {
+                    fprintf(portalfile, "(%f %f %f) ", w->m_Points[i][0], w->m_Points[i][1], w->m_Points[i][2]);
+                }
                 fprintf(portalfile, "\n");
             }
         }
-        if (portals->nodes[0] == headnode)
-            portals = portals->next[0];
+        if (p->nodes[0] == node)
+            p = p->next[0];
         else
-            portals = portals->next[1];
+            p = p->next[1];
     }
 }
 
@@ -209,10 +215,10 @@ void MakeHeadnodePortals(node_t* node)
 
     // Create a solid leaf node
     g_OutsideNode = new node_t;
-    g_OutsideNode->leaf_type = LEAF_SOLID_AKA_OPAQUE;
-    g_OutsideNode->planenum = -1;
+    g_OutsideNode->contents = CONTENTS_SOLID;
+    g_OutsideNode->planenum = PLANENUM_LEAF;
 
-    // Create portals
+    // Create p
     portal_t* portals[6];
     unsigned int planes[6];
 
@@ -257,8 +263,7 @@ void MakeHeadnodePortals(node_t* node)
             if (j == i)
                 continue;
 
-            plane_t* plane = &gMappedPlanes[planes[j]];
-            portals[i]->winding->Clip(plane->normal, plane->dist, true);
+            portals[i]->winding->Clip(gMappedPlanes[planes[j]], true);
         }
     }
 }

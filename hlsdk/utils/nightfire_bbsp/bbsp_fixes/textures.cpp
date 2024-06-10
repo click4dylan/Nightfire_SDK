@@ -255,16 +255,19 @@ unsigned int GetTextureIndex(const char* src)
 
     for (texture_index = 0; texture_index < g_numDTextures; ++texture_index)
     {
-        const char* tex = g_dtextures[texture_index];
+        const char* tex = g_dtextures[texture_index].str;
         if (!_stricmp(tex, src))
             break;
     }
 
     if (texture_index == g_numDTextures)
     {
-        safe_strncpy(g_dtextures[texture_index], src, 64);
+        // add new texture
+        safe_strncpy(g_dtextures[texture_index].str, src, MAX_TEXTURE_LENGTH);
         ++g_numDTextures;
     }
+
+    // increment num times this texture was used
     ++g_TextureReferenceCount[texture_index];
     return texture_index;
 }
@@ -275,14 +278,15 @@ unsigned int GetMaterialIndex(const char* src)
 
     for (material_index = 0; material_index < g_numDMaterials; ++material_index)
     {
-        const char* tex = g_dmaterials[material_index];
+        const char* tex = g_dmaterials[material_index].str;
         if (!_stricmp(tex, src))
             break;
     }
 
     if (material_index == g_numDMaterials)
     {
-        safe_strncpy(g_dmaterials[material_index], src, 64);
+        // add new material
+        safe_strncpy(g_dmaterials[material_index].str, src, MAX_TEXTURE_LENGTH);
         ++g_numDMaterials;
     }
     return material_index;
@@ -316,7 +320,7 @@ texinfo_t* TexinfoForBrushTexture(side_t* side, const vec3_t origin)
 {
     texinfo_t tx{};
     //memset(&tx, 0, sizeof(tx));
-    safe_strncpy(tx.name, side->td.name, 64);
+    safe_strncpy(tx.name, side->td.name, MAX_TEXTURE_LENGTH);
 
     // Ensure scales are not zero
     if (side->td.uscale == 0.0)

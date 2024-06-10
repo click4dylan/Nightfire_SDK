@@ -37,6 +37,7 @@ public:
 private:
     bool Clip(const bool divide, const vec3_t normal, const vec_t dist, Winding** front, Winding** back);
 public:
+    void getPlane(struct plane_s& dest) const;
     void getPlane(vec3_t& normal, vec_t& dist) const;
     void addPoint(const vec3_t newpoint);
     void insertPoint(const vec3_t newpoint, const unsigned int offset);

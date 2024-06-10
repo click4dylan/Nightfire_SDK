@@ -157,9 +157,9 @@ int      FastChecksum(const void* const buffer, int bytes)
 #define LUMP_BRUSHSIDES 16
 #define LUMP_TEXMATRIX 17
 
-int      CopyLump(int lump, void* dest, int size, const dheader_t* const header)
+int CopyLump(int lump, void* dest, int size, const dheader_t* const header)
 {
-    int             length, ofs;
+    int length, ofs;
 
     length = header->lumps[lump].length;
     ofs = header->lumps[lump].offset;
@@ -225,8 +225,8 @@ void LoadBSPImage(dheader_t* const header)
     g_dfaces_checksum = FastChecksum(g_dFaces, sizeof(dface_t) * g_numDFaces);
     g_dmarksurfaces_checksum = FastChecksum(g_dmarksurfaces, sizeof(int) * g_numDMarkSurfaces);
     g_dmarkbrushes_checksum = FastChecksum(g_dmarkbrushes, sizeof(int) * g_numDMarkBrushes);
-    g_dtextures_checksum = FastChecksum(g_dtextures[0], g_numDTextures * sizeof(texturename_t));
-    g_dmaterials_checksum = FastChecksum(g_dmaterials[0], g_numDMaterials * sizeof(texturename_t));
+    g_dtextures_checksum = FastChecksum(g_dtextures, g_numDTextures * sizeof(texturename_t));
+    g_dmaterials_checksum = FastChecksum(g_dmaterials, g_numDMaterials * sizeof(texturename_t));
     g_dbrushes_checksum = FastChecksum(g_dbrushes, sizeof(dbrush_t) * g_numDBrushes);
     g_dbrushsides_checksum = FastChecksum(g_dbrushsides, sizeof(dbrushside_t) * g_numDBrushSides);
     g_dtexmatrix_checksum = FastChecksum(g_dtexmatrix, sizeof(dtexmatrix_t) * g_numDTexMatrix);
@@ -242,7 +242,7 @@ void LoadBSPFile(const char* filename)
     LoadBSPImage((dheader_t* const)header);
 }
 
-void     AddLump(int len, FILE* bspfile, int lumpnum, const char* lumpname, void* data, dheader_t* header)
+void AddLump(int len, FILE* bspfile, int lumpnum, const char* lumpname, void* data, dheader_t* header)
 {
     lump_t* lump = &header->lumps[lumpnum];
     lump->offset = LittleLong(ftell(bspfile));
@@ -294,7 +294,7 @@ void WriteBSPFile(const char* const filename)
     fclose(bspfile);
 }
 
-void SetLightStyles(entinfo_t* ent)
+void SetLightStyles(mapinfo_t* ent)
 {
     unsigned int             stylenum;
     const char* t;
@@ -342,11 +342,11 @@ void SetLightStyles(entinfo_t* ent)
 
 }
 
-void WriteBSP(entinfo_t* entinfo, const char* filename)
+void WriteBSP(mapinfo_t* mapfile, const char* filename)
 {
-    SetModelNumbers(entinfo);
-    SetLightStyles(entinfo);
-    UnparseEntities(entinfo);
+    SetModelNumbers(mapfile);
+    SetLightStyles(mapfile);
+    UnparseEntities(mapfile);
     WriteBSPFile(filename);
 }
 
@@ -365,20 +365,20 @@ void WritePlanes()
     }
 }
 
-void     SetModelNumbers(entinfo_t* entinfo)
+void     SetModelNumbers(mapinfo_t* mapfile)
 {
     unsigned int             i;
     unsigned int             models;
     char            value[10];
 
     models = 1;
-    for (i = 1; i < entinfo->numentities; i++)
+    for (i = 1; i < mapfile->numentities; i++)
     {
-        if (entinfo->entities[i]->numbrushes)
+        if (mapfile->entities[i]->numbrushes)
         {
             safe_snprintf(value, sizeof(value), "*%i", models);
             models++;
-            SetKeyValue(entinfo->entities[i], "model", value);
+            SetKeyValue(mapfile->entities[i], "model", value);
         }
     }
 }
@@ -387,6 +387,7 @@ void FinishBSPFile()
 {
     WritePlanes();
     Verbose("--- FinishBSPFile ---\n");
+
     Verbose("Visible textures:\n");
 
     const char* texture = (const char*)g_dtextures;
@@ -419,30 +420,29 @@ void BeginBSPFile()
     g_numDMarkSurfaces = 0;
     g_numDNodes = 0;
     g_numDLeafs = 1;
-    g_dleafs[0].contents = LEAF_SOLID_AKA_OPAQUE;
+    g_dleafs[0].contents = CONTENTS_SOLID;
 }
 
-void StartCreatingBSP(entinfo_t* entinfo)
+void StartCreatingBSP(mapinfo_t* mapfile)
 {
-    unsigned int numentities; // ebp
-    unsigned int i; // esi
-
     BeginBSPFile();
-    numentities = entinfo->numentities;
-    if (numentities)
+
+    if (mapfile->numentities)
     {
-        WorldBSP(*entinfo->entities, entinfo, &g_dmodels[g_numDModels]);
+        WorldBSP(*mapfile->entities, mapfile, &g_dmodels[g_numDModels]);
         ++g_numDModels;
     }
-    for (i = 1; i < numentities; ++i)
+
+    for (unsigned int i = 1; i < mapfile->numentities; ++i)
     {
-        if (entinfo->entities[i]->numbrushes)
+        if (mapfile->entities[i]->numbrushes)
         {
             hlassume(g_numDModels < MAX_MAP_MODELS, assume_MAX_MAP_MODELS);
-            ModelBSP(entinfo->entities[i], &g_dmodels[g_numDModels], g_numDModels);
+            ModelBSP(mapfile->entities[i], &g_dmodels[g_numDModels], g_numDModels);
             ++g_numDModels;
         }
     }
+
     FinishBSPFile();
 }
 
@@ -466,7 +466,7 @@ void SetKeyValue(entity_t* ent, const char* const key, const char* const value)
     ep->value = _strdup(value);
 }
 
-void UnparseEntities(entinfo_t* entinfo)
+void UnparseEntities(mapinfo_t* mapfile)
 {
     char* buf;
     char* end;
@@ -478,9 +478,9 @@ void UnparseEntities(entinfo_t* entinfo)
     end = buf;
     *end = 0;
 
-    for (i = 0; i < entinfo->numentities; i++)
+    for (i = 0; i < mapfile->numentities; i++)
     {
-        ep = entinfo->entities[i]->epairs;
+        ep = mapfile->entities[i]->epairs;
         if (!ep)
         {
             continue;                                      // ent got removed
@@ -489,7 +489,7 @@ void UnparseEntities(entinfo_t* entinfo)
         strcat(end, "{\n");
         end += 2;
 
-        for (ep = entinfo->entities[i]->epairs; ep; ep = ep->next)
+        for (ep = mapfile->entities[i]->epairs; ep; ep = ep->next)
         {
             sprintf(line, "\"%s\" \"%s\"\n", ep->key, ep->value);
             strcat(end, line);

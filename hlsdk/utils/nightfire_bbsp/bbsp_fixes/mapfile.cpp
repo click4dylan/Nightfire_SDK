@@ -40,7 +40,7 @@ void FreeEntity(entity_t* ent)
 
 // replaced by C++
 #if 0
-void FreeMap(entinfo_t* ent)
+void FreeMap(mapinfo_t* ent)
 {
     if (ent)
     {
@@ -53,7 +53,7 @@ void FreeMap(entinfo_t* ent)
 }
 #endif
 
-unsigned int GetNumEngineEntities(entinfo_t* mapfile)
+unsigned int GetNumEngineEntities(mapinfo_t* mapfile)
 {
     unsigned int engineEntityCount = 0;
 
@@ -158,7 +158,7 @@ epair_t* ParseEpair()
     return e;
 }
 
-entity_t* AllocNewEntities(entinfo_t* mapfile)
+entity_t* AllocNewEntities(mapinfo_t* mapfile)
 {
     // Allocate a new entity
     entity_t* newEntity = new entity_t;
@@ -191,7 +191,7 @@ entity_t* AllocNewEntities(entinfo_t* mapfile)
     return newEntity;
 }
 
-bool ParseMapEntity(entinfo_t* map)
+bool ParseMapEntity(mapinfo_t* map)
 {
     bool result = GetToken(1);
     if (result)
@@ -339,7 +339,7 @@ void ParseBrush(entity_t *mapent)
         {
             CreateBrush(brush, mapent);
 
-            brush->leaf_type = LEAF_EMPTY_AKA_NOT_OPAQUE;
+            brush->contents = CONTENTS_EMPTY;
             brush->FreeSides();
 
             if (brush->entitynum) 
@@ -390,7 +390,7 @@ void ParseBrush(entity_t *mapent)
     GetVectorForKey(mapent, "origin", mapent->origin);
 }
 
-void ExportBevels(entinfo_t* entinfo) 
+void ExportBevels(mapinfo_t* mapfile) 
 {
     char FileName[MAX_PATH];
     safe_snprintf(FileName, MAX_PATH, "%s_bevel.map", g_Mapname);
@@ -400,9 +400,9 @@ void ExportBevels(entinfo_t* entinfo)
 
     fprintf(file, "{\n\"classname\" \"worldspawn\"\n\"mapversion\" \"510\"\n");
 
-    for (unsigned int i = 0; i < entinfo->numentities; ++i) 
+    for (unsigned int i = 0; i < mapfile->numentities; ++i) 
     {
-        entity_t* entity = entinfo->entities[i];
+        entity_t* entity = mapfile->entities[i];
         for (unsigned int j = 0; j < entity->numbrushes; ++j) 
         {
             brush_t* brush = entity->brushes[j];
@@ -465,12 +465,12 @@ void ExportBevels(entinfo_t* entinfo)
     Log("Completed\n");
 }
 
-entinfo_t* LoadMapFile(const char* filename)
+mapinfo_t* LoadMapFile(const char* filename)
 {
     Verbose("===LoadMapFile===\n");
     LoadScriptFile(filename);
     Verbose("Loading map '%s'\n", filename);
-    entinfo_t* mapfile = new entinfo_t;
+    mapinfo_t* mapfile = new mapinfo_t;
     g_MapVersion = 0;
     while (ParseMapEntity(mapfile))
     {
@@ -625,37 +625,37 @@ BrushFlags : 0x00200200
 #endif
 
 const special_texture_t g_SpecialTextures[] = {
-    {"special/bsp", LEAF_SOLID_AKA_OPAQUE, SURFACEFLAG_BSP, BRUSHFLAG_BSP},
-    {"special/portal", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_PORTAL, BRUSHFLAG_PORTAL},
-    {"special/nodraw", LEAF_SOLID_AKA_OPAQUE, SURFACEFLAG_NODRAW, BRUSHFLAG_NODRAW},
-    {"special/hint", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_HINT, BRUSHFLAG_HINT},
-    {"special/skip", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_SKIP, BRUSHFLAG_SKIP},
-    {"special/opaque", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_OPAQUE, BRUSHFLAG_OPAQUE},
-    {"special/clip", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_CLIP, BRUSHFLAG_CLIP},
-    {"special/playerclip", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_PLAYERCLIP, BRUSHFLAG_PLAYERCLIP},
-    {"special/npcclip", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_NPCCLIP, BRUSHFLAG_NPCCLIP},
-    {"special/enemyclip", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_ENEMYCLIP, BRUSHFLAG_ENEMYCLIP},
-    {"special/itemclip", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_ITEMCLIP, BRUSHFLAG_ITEMCLIP},
-    {"special/origin", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_ORIGIN, BRUSHFLAG_ORIGIN},
-    {"special/sky", LEAF_SOLID_AKA_OPAQUE, SURFACEFLAG_SKY, BRUSHFLAG_SKY},
-    {"special/aaatrigger", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_AAATRIGGER, BRUSHFLAG_AAATRIGGER},
-    {"special/trigger", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_TRIGGER, BRUSHFLAG_TRIGGER},
+    {"special/bsp", CONTENTS_SOLID, SURFACEFLAG_BSP, BRUSHFLAG_BSP},
+    {"special/portal", CONTENTS_EMPTY, SURFACEFLAG_PORTAL, BRUSHFLAG_PORTAL},
+    {"special/nodraw", CONTENTS_SOLID, SURFACEFLAG_NODRAW, BRUSHFLAG_NODRAW},
+    {"special/hint", CONTENTS_EMPTY, SURFACEFLAG_HINT, BRUSHFLAG_HINT},
+    {"special/skip", CONTENTS_EMPTY, SURFACEFLAG_SKIP, BRUSHFLAG_SKIP},
+    {"special/opaque", CONTENTS_EMPTY, SURFACEFLAG_OPAQUE, BRUSHFLAG_OPAQUE},
+    {"special/clip", CONTENTS_EMPTY, SURFACEFLAG_CLIP, BRUSHFLAG_CLIP},
+    {"special/playerclip", CONTENTS_EMPTY, SURFACEFLAG_PLAYERCLIP, BRUSHFLAG_PLAYERCLIP},
+    {"special/npcclip", CONTENTS_EMPTY, SURFACEFLAG_NPCCLIP, BRUSHFLAG_NPCCLIP},
+    {"special/enemyclip", CONTENTS_EMPTY, SURFACEFLAG_ENEMYCLIP, BRUSHFLAG_ENEMYCLIP},
+    {"special/itemclip", CONTENTS_EMPTY, SURFACEFLAG_ITEMCLIP, BRUSHFLAG_ITEMCLIP},
+    {"special/origin", CONTENTS_EMPTY, SURFACEFLAG_ORIGIN, BRUSHFLAG_ORIGIN},
+    {"special/sky", CONTENTS_SOLID, SURFACEFLAG_SKY, BRUSHFLAG_SKY},
+    {"special/aaatrigger", CONTENTS_EMPTY, SURFACEFLAG_AAATRIGGER, BRUSHFLAG_AAATRIGGER},
+    {"special/trigger", CONTENTS_EMPTY, SURFACEFLAG_TRIGGER, BRUSHFLAG_TRIGGER},
 
     //NEW
 #ifdef BBSP_NULL_SUPPORT
-    {"special/null", LEAF_SOLID_AKA_OPAQUE, SURFACEFLAG_NULL, BRUSHFLAG_NULL},
+    {"special/null", CONTENTS_SOLID, SURFACEFLAG_NULL, BRUSHFLAG_NULL},
 #endif
 #ifdef BBSP_BLOCKLIGHT_SUPPORT
-    {"special/blocklight", LEAF_BLOCKLIGHT, SURFACEFLAG_BLOCKLIGHT, BRUSHFLAG_BLOCKLIGHT},
+    {"special/blocklight", CONTENTS_EMPTY | CONTENTS_SOLID, SURFACEFLAG_BLOCKLIGHT, BRUSHFLAG_BLOCKLIGHT},
 #endif
 
     // add new things above this or it will break GetDefaultFlagsForTextureName
-    {"special/liquids", LEAF_EMPTY_AKA_NOT_OPAQUE, SURFACEFLAG_LIQUIDS, BRUSHFLAG_LIQUIDS}
+    {"special/liquids", CONTENTS_EMPTY, SURFACEFLAG_LIQUIDS, BRUSHFLAG_LIQUIDS}
 };
 
 void GetDefaultFlagsForTextureName(
     const char* texture,
-    leaf_types_t* leaf_type,
+    unsigned int* contents,
     unsigned int* render_flags,
     unsigned int* brush_flags)
 {
@@ -668,7 +668,7 @@ void GetDefaultFlagsForTextureName(
         for (int i = 0; i < ARRAYSIZE(g_SpecialTextures); ++i)
         {
             const auto tex = &g_SpecialTextures[i];
-            sprintf_s(tmp, "Special Texture: %s\nLeafType: %i\nRenderFlags: %#010x\nBrushFlags: %#010x\n\n", tex->name, tex->leaf_type, tex->renderflags, tex->brushflags);
+            sprintf_s(tmp, "Special Texture: %s\nLeafType: %i\nRenderFlags: %#010x\nBrushFlags: %#010x\n\n", tex->name, tex->contents, tex->renderflags, tex->brushflags);
             OutputDebugStringA(tmp);
         }
         printed = true;
@@ -680,7 +680,7 @@ void GetDefaultFlagsForTextureName(
     {
         if (!_stricmp(texture, g_SpecialTextures[i].name))
         {
-            *leaf_type = g_SpecialTextures[i].leaf_type;
+            *contents = g_SpecialTextures[i].contents;
             *render_flags = g_SpecialTextures[i].renderflags;
             *brush_flags = g_SpecialTextures[i].brushflags;
             return;
@@ -690,26 +690,26 @@ void GetDefaultFlagsForTextureName(
     // Check if the texture matches "liquids"
     if (_strnicmp(texture, "liquids", 7) == 0)
     {
-        *leaf_type = LEAF_EMPTY_AKA_NOT_OPAQUE;
+        *contents = CONTENTS_EMPTY;
         *render_flags = SURFACEFLAG_LIQUIDS;
         *brush_flags = BRUSHFLAG_LIQUIDS;
         return;
     }
 
     // Assign values to output parameters
-    *leaf_type = LEAF_SOLID_AKA_OPAQUE;
+    *contents = CONTENTS_SOLID;
     *render_flags = 0;
     *brush_flags = 0;
 }
 
 void ParseFlags(brush_t* brush, side_s* brush_side)
 {
-    unsigned int face_brush_flags;
-    leaf_types_t face_leaf_type;
-    GetDefaultFlagsForTextureName(brush_side->td.name, &face_leaf_type, &brush_side->td.surfaceflags, &face_brush_flags);
-    if (face_leaf_type > brush->leaf_type)
-        brush->leaf_type = face_leaf_type;
-    brush->brushflags |= face_brush_flags;
+    unsigned int texture_brushflags;
+    unsigned int contents;
+    GetDefaultFlagsForTextureName(brush_side->td.name, &contents, &brush_side->td.surfaceflags, &texture_brushflags);
+    if (contents > brush->contents)
+        brush->contents = contents;
+    brush->brushflags |= texture_brushflags;
     GetToken(false);
     brush_side->td.surfaceflags |= atol(g_token);
 }
@@ -759,14 +759,14 @@ void ParseTexture(brush_t* brush, side_s* brush_side)
 {
     GetToken(false);
     _strupr(g_token);
-    safe_strncpy(brush_side->td.name, g_token, 64);
+    safe_strncpy(brush_side->td.name, g_token, MAX_TEXTURE_LENGTH);
 }
 
 void ParseMaterial(brush_t* brush, side_s* brush_side)
 {
     GetToken(false);
     _strupr(g_token);
-    safe_strncpy(brush_side->td.material, g_token, 64);
+    safe_strncpy(brush_side->td.material, g_token, MAX_TEXTURE_LENGTH);
 }
 
 void ParseAxis(brush_t* brush, vec3_t axis, vec_t& shift, const char* axisName)
@@ -831,7 +831,7 @@ void HandleBrushFlags(brush_t* brush)
         HandleOriginBrush(brush);
    
     //FIXME
-    if (((brush->brushflags >> 8) & (CONTENTS_UNKNOWN | CONTENTS_SOLID)) == 0)
+    if (((brush->brushflags >> 8) & (CONTENTS_SOLID | CONTENTS_EMPTY)) == 0)
     {
         brush->brushflags |= CONTENTS_BSP;
     }
@@ -839,7 +839,7 @@ void HandleBrushFlags(brush_t* brush)
     bool found_keep = false;
     for (unsigned int i = 0; i < brush->numsides; ++i) 
     {
-        if ((brush->brushsides[i]->td.surfaceflags & FLAG_KEEP))
+        if ((brush->brushsides[i]->td.surfaceflags & SURFACEFLAG_KEEP))
         {
             found_keep = true;
             break;
@@ -849,8 +849,8 @@ void HandleBrushFlags(brush_t* brush)
     {
         for (unsigned int j = 0; j < brush->numsides; ++j)
         {
-            if (!(brush->brushsides[j]->td.surfaceflags & FLAG_KEEP))
-                brush->brushsides[j]->td.surfaceflags = CONTENTS_NODRAW;
+            if (!(brush->brushsides[j]->td.surfaceflags & SURFACEFLAG_KEEP))
+                brush->brushsides[j]->td.surfaceflags = SURFACEFLAG_NODRAW;
         }
     }
 }
@@ -858,13 +858,13 @@ void HandleBrushFlags(brush_t* brush)
 void HandleOriginBrush(brush_t* brush)
 {
     brush->brushflags = CONTENTS_ORIGIN;
-    brush->leaf_type = LEAF_EMPTY_AKA_NOT_OPAQUE;
+    brush->contents = CONTENTS_EMPTY;
 
     for (unsigned int i = 0; i < brush->numsides; ++i)
     {
         side_t* side = brush->brushsides[i];
         side->td = brush_texture_t();
-        side->td.surfaceflags = CONTENTS_NODRAW;
-        safe_strncpy(side->td.name, "special/origin", 64);
+        side->td.surfaceflags = SURFACEFLAG_NODRAW;
+        safe_strncpy(side->td.name, "special/origin", MAX_TEXTURE_LENGTH);
     }
 }

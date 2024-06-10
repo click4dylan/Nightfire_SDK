@@ -43,7 +43,7 @@ bool node_t::IsPortalLeaf()
 void WriteDrawNodes_r(int depth, const node_t* const node)
 {
     dnode_t* n;
-    int             i;
+    int i;
 
     // emit a node
     hlassume(g_numDNodes < MAX_MAP_NODES, assume_MAX_MAP_NODES);
@@ -65,7 +65,7 @@ void WriteDrawNodes_r(int depth, const node_t* const node)
     //
     for (i = 0; i < 2; i++)
     {
-        if (node->children[i]->planenum == -1)
+        if (node->children[i]->planenum == PLANENUM_LEAF)
         {
             //nightfire doesn't do this, fixme
 #if 0
@@ -210,9 +210,9 @@ void CountNodesAndLeafsByPlane(int level, node_t* node)
     if (node->planenum != -1) 
     {
         // It's a node
-        if (node->leaf_type == LEAF_EMPTY_AKA_NOT_OPAQUE)
+        if (node->contents == CONTENTS_EMPTY)
            ++g_numEmptyNodes;
-        else if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
+        else if (node->contents == CONTENTS_SOLID)
             ++g_numSolidNodes;
         CountNodesAndLeafsByPlane(++level, node->children[0]);
         CountNodesAndLeafsByPlane(++level, node->children[1]);
@@ -220,9 +220,9 @@ void CountNodesAndLeafsByPlane(int level, node_t* node)
     else 
     {
         // It's a leaf
-        if (node->leaf_type == LEAF_EMPTY_AKA_NOT_OPAQUE)
+        if (node->contents == CONTENTS_EMPTY)
             ++g_numEmptyLeafs;
-        else if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
+        else if (node->contents == CONTENTS_SOLID)
             ++g_numSolidLeafs;
     }
 }
@@ -231,9 +231,9 @@ void CountNodesAndLeafsByChildren(int level, node_t* node)
 {
     if (node->children[0])
     {
-        if (node->leaf_type == LEAF_EMPTY_AKA_NOT_OPAQUE)
+        if (node->contents == CONTENTS_EMPTY)
             ++g_numEmptyNodes;
-        else if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
+        else if (node->contents == CONTENTS_SOLID)
             ++g_numSolidNodes;
 
         if (node->children[0])
@@ -243,9 +243,9 @@ void CountNodesAndLeafsByChildren(int level, node_t* node)
     }
     else
     {
-        if (node->leaf_type == LEAF_EMPTY_AKA_NOT_OPAQUE)
+        if (node->contents == CONTENTS_EMPTY)
             ++g_numEmptyLeafs;
-        else if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
+        else if (node->contents == CONTENTS_SOLID)
             ++g_numSolidLeafs;
     }
 }
@@ -311,15 +311,17 @@ void SetAllFacesLeafNode(node_t* leafNode, entity_t* entity)
 
 void CalcInternalNodes_r(node_t* node)
 {
-    for (node_t* i = node; i->planenum != -1; i = i->children[1])
+    if (!node)
+        return; //FIXME: shouldn't be here
+
+    if (node->planenum != PLANENUM_LEAF)
     {
-        CalcInternalNodes_r(i->children[0]);
+        CalcInternalNodes_r(node->children[0]);
+        CalcInternalNodes_r(node->children[1]);
     }
 
     if (!node->occupied)
-    {
-        node->leaf_type = LEAF_SOLID_AKA_OPAQUE;
-    }
+        node->contents = CONTENTS_SOLID;
 }
 
 void CalcInternalNodes(node_t* node)

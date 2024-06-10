@@ -17,9 +17,9 @@ void WriteDrawLeaf(node_t* node)
 {
     dleaf_t* leaf = &g_dleafs[g_numDLeafs++];
     
-    leaf->contents = node->leaf_type & 0xFF;
+    leaf->contents = node->contents & 0xFF;
     if (!leaf->contents)
-        leaf->contents = LEAF_EMPTY_AKA_NOT_OPAQUE;
+        leaf->contents = CONTENTS_EMPTY;
 
     VectorCopy(node->mins, leaf->mins);
     VectorCopy(node->maxs, leaf->maxs);
@@ -34,7 +34,7 @@ void WriteDrawLeaf(node_t* node)
 
         for (const auto& markface : *node->markfaces) 
         {
-            if ((markface->flags & (CONTENTS_BSP | CONTENTS_NODRAW | CONTENTS_PORTAL | CONTENTS_UNKNOWN | CONTENTS_SOLID)) == 0)
+            if ((markface->flags & (CONTENTS_BSP | SURFACEFLAG_NODRAW | CONTENTS_PORTAL | CONTENTS_SOLID | CONTENTS_EMPTY)) == 0)
             {
                 WriteFace_AkaBuildDrawIndicesForFace(markface);
                 g_dmarksurfaces[g_numDMarkSurfaces++] = markface->outputnumber;
@@ -69,7 +69,7 @@ void WriteDrawLeaf(node_t* node)
 
 node_t* PointInLeaf(node_t* node, const vec3_t point)
 {
-    if (node->planenum == -1)
+    if (node->planenum == PLANENUM_LEAF)
         return node;
 
     const plane_t& plane = gMappedPlanes[node->planenum];
@@ -81,9 +81,9 @@ node_t* PointInLeaf(node_t* node, const vec3_t point)
     return PointInLeaf(node->children[1], point);
 }
 
-bool PlaceOccupant(const vec3_t point, node_t* headnode, unsigned int entindex)
+bool PlaceOccupant(const vec3_t point, node_t* node, unsigned int entindex)
 {
-    node_t* n = PointInLeaf(headnode, point);
+    node_t* n = PointInLeaf(node, point);
     MarkLeafOccupancyAndCheckLeaks(n, entindex);
     if (g_bLeaked)
     {
@@ -93,42 +93,46 @@ bool PlaceOccupant(const vec3_t point, node_t* headnode, unsigned int entindex)
     return true;
 }
 
-void MarkLeafOccupancyAndCheckLeaks(node_t* headnode, unsigned int occupancyValue)
+void MarkLeafOccupancyAndCheckLeaks(node_t* node, unsigned int occupancyValue)
 {
-    if (headnode == g_OutsideNode) 
+    if (node == g_OutsideNode)
     {
         g_bLeaked = true;
         return;
     }
 
-    if (!headnode->occupied && headnode->leaf_type != LEAF_SOLID_AKA_OPAQUE) 
+    if (node->contents == CONTENTS_SOLID)
+        return;
+
+    if (node->occupied)
+        return;
+
+    node->occupied = occupancyValue;
+
+    for (portal_t* p = node->portals; p;)
     {
-        headnode->occupied = occupancyValue;
+        int s = (p->nodes[0] == node);
 
-        for (portal_t* portal = headnode->portals; portal != nullptr; portal = portal->next[portal->nodes[1] == headnode]) 
+        MarkLeafOccupancyAndCheckLeaks(p->nodes[s], occupancyValue);
+
+        if (g_bLeaked)
         {
-            if (portal->nodes[0] == headnode)
-                MarkLeafOccupancyAndCheckLeaks(portal->nodes[1], occupancyValue);
-            else
-                MarkLeafOccupancyAndCheckLeaks(portal->nodes[0], occupancyValue);
-
-            if (g_bLeaked) 
-            {
-                MarkLeakTrail(portal);
-                return;
-            }
+            MarkLeakTrail(p);
+            return;
         }
+
+        p = p->next[!s];
     }
 }
 
 void CountLeaves(int level, node_t* node)
 {
-    if (node->planenum == -1)
+    if (node->planenum == PLANENUM_LEAF)
     {
         // It's a leaf
         if (node->occupied)
             ++g_numOccupiedLeafs;
-        if (node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
+        if (node->contents == CONTENTS_SOLID)
             ++g_numSolidLeafs2;
 
         ++g_numLeafs2;
@@ -142,42 +146,40 @@ void CountLeaves(int level, node_t* node)
 
 void NumberLeafs_r(int depth, node_t* node)
 {
-    node_t* current_node = node;
-    int current_depth = depth;
+    if (!node)
+        return;
 
-    if (current_node)
+    if (node->planenum != PLANENUM_LEAF)
     {
-        while (current_node->planenum != -1)
-        {
-            NumberLeafs_r(++current_depth, current_node->children[0]);
-            current_node = current_node->children[1];
-            ++current_depth;
-            if (!current_node)
-                return;
-        }
+        NumberLeafs_r(++depth, node->children[0]);
+        NumberLeafs_r(++depth, node->children[1]);
+        return;
+    }
 
-        current_node->visleafnum = num_visleafs++;
+    node->visleafnum = num_visleafs++;
 
-        if (current_node->leaf_type != LEAF_SOLID_AKA_OPAQUE)
+    if (node->contents == CONTENTS_SOLID)
+    {
+        // solid block, viewpoint never inside
+        
+        //FIXME: todo:
+        //node->visleafnum = -1; // nightfire is missing this
+        return;
+    }
+
+    for (portal_t* p = node->portals; p;)
+    {
+        if (p->nodes[0] == node)  // only write out from first leaf
         {
-            portal_t* portals = current_node->portals;
-            if (portals)
+            if (p->nodes[0]->contents != CONTENTS_SOLID && p->nodes[1]->contents != CONTENTS_SOLID)
             {
-                do
-                {
-                    node_t* node0 = portals->nodes[0];
-                    if (node0 == current_node)
-                    {
-                        if (node0->leaf_type != LEAF_SOLID_AKA_OPAQUE && portals->nodes[1]->leaf_type != LEAF_SOLID_AKA_OPAQUE)
-                            ++num_visportals;
-                        portals = portals->next[0];
-                    }
-                    else
-                    {
-                        portals = portals->next[1];
-                    }
-                } while (portals);
+                ++num_visportals;
             }
+            p = p->next[0];
+        }
+        else
+        {
+            p = p->next[1];
         }
     }
 }
@@ -200,11 +202,13 @@ void PrintLeafMetrics(node_t* node, const char* name)
 
 void AssignVisLeafNumbers_r(node_t* node)
 {
-    while (node->planenum != -1)
+    if (node->planenum == PLANENUM_LEAF)
     {
         node->visleafnum = g_numVisLeafs++;
-        AssignVisLeafNumbers_r(node->children[0]);
-        node = node->children[1];
+        return;
     }
+
     node->visleafnum = g_numVisLeafs++;
+    AssignVisLeafNumbers_r(node->children[0]);
+    AssignVisLeafNumbers_r(node->children[1]);
 }

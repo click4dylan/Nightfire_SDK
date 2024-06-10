@@ -13,6 +13,10 @@ developer_level_t g_developer = DEFAULT_DEVELOPER;
 bool            g_verbose = DEFAULT_VERBOSE;
 bool            g_log = DEFAULT_LOG;
 
+#define MAX_ERROR   2048
+#define MAX_WARNING 2048
+#define MAX_MESSAGE 2048
+
 unsigned long   g_clientid = 0;
 unsigned long   g_nextclientid = 0;
 
@@ -56,7 +60,7 @@ void Safe_WriteLog(const char* const message)
     }
 }
 
-void            WriteLog(const char* const message)
+void WriteLog(const char* const message)
 {
     Safe_WriteLog(message);
 
@@ -66,9 +70,9 @@ void            WriteLog(const char* const message)
 
 void Log(const char* const warning, ...)
 {
-    char            message[MAX_MESSAGE];
+    char message[MAX_MESSAGE];
 
-    va_list         argptr;
+    va_list argptr;
 
     va_start(argptr, warning);
     vsnprintf(message, MAX_MESSAGE, warning, argptr);
@@ -104,51 +108,53 @@ void LogTimeElapsed(float elapsed_time)
     }
 }
 
-void Warning(const char* Format, ...)
+void Warning(const char* warning, ...)
 {
-    char Buffer[2048]; // [esp+8h] [ebp-1000h] BYREF
-    char a1[2048]; // [esp+808h] [ebp-800h] BYREF
-    va_list ArgList; // [esp+1010h] [ebp+8h] BYREF
+    char message[MAX_WARNING];
+    char message2[MAX_MESSAGE];
+    va_list argptr;
 
-    va_start(ArgList, Format);
-    _vsnprintf(Buffer, 0x800u, Format, ArgList);
-    snprintf(a1, 0x800u, "Warning: %s\n", Buffer);
-    WriteLog(a1);
+    va_start(argptr, warning);
+    _vsnprintf(message, MAX_MESSAGE, warning, argptr);
+    va_end(argptr);
+
+    snprintf(message2, MAX_MESSAGE, "Warning: %s\n", message);
+    WriteLog(message2);
 }
 
 void ResetErrorLog()
 {
-    char FileName[260]; // [esp+0h] [ebp-104h] BYREF
+    char logfilename[MAX_PATH];
 
     if (g_log)
     {
-        safe_snprintf(FileName, 0x104u, "%s.err", g_Mapname);
-        _unlink(FileName);
+        safe_snprintf(logfilename, MAX_PATH, "%s.err", g_Mapname);
+        _unlink(logfilename);
     }
 }
 
 void ResetLog()
 {
-    char FileName[260]; // [esp+0h] [ebp-104h] BYREF
+    char logfilename[MAX_PATH];
 
     if (g_log)
     {
-        safe_snprintf(FileName, 260u, "%s.log", g_Mapname);
-        _unlink(FileName);
+        safe_snprintf(logfilename, MAX_PATH, "%s.log", g_Mapname);
+        _unlink(logfilename);
     }
 }
 
 void OpenLog(const int clientid)
 {
-    char FileName[MAX_PATH]; // [esp+0h] [ebp-104h] BYREF
+    char logfilename[MAX_PATH];
 
     if (g_log)
     {
-        safe_snprintf(FileName, MAX_PATH, "%s.log", g_Mapname);
-        CompileLog = fopen(FileName, "a");
+        safe_snprintf(logfilename, MAX_PATH, "%s.log", g_Mapname);
+        CompileLog = fopen(logfilename, "a");
         if (!CompileLog)
         {
-            fprintf(stderr, "ERROR: Could not open logfile %s", FileName);
+            fprintf(stderr, "ERROR: Could not open logfile %s", logfilename);
             fflush(stderr);
         }
     }
@@ -199,12 +205,12 @@ void DisplayDeveloperLevel()
 
 void LogArgs(int argc, const char** argv)
 {
-    int i; // esi
+    int i;
 
     Log("Command line: ");
     for (i = 0; i < argc; ++i)
     {
-        if (strchr(argv[i], 32))
+        if (strchr(argv[i], ' '))
             Log("\"%s\"", argv[i]);
         else
             Log("%s ", argv[i]);
@@ -397,8 +403,8 @@ void ResetPrintOnce()
 
 void PrintOnce(const char* const warning, ...)
 {
-    char            message[2048];
-    char            message2[2048];
+    char            message[MAX_WARNING];
+    char            message2[MAX_WARNING];
     va_list         argptr;
 
     if (count > 0) // make sure it only gets called once
@@ -408,10 +414,10 @@ void PrintOnce(const char* const warning, ...)
     count++;
 
     va_start(argptr, warning);
-    vsnprintf(message, 2048, warning, argptr);
+    vsnprintf(message, MAX_WARNING, warning, argptr);
     va_end(argptr);
 
-    safe_snprintf(message2, MAX_MESSAGE, "Error: %s\n", message);
+    safe_snprintf(message2, MAX_WARNING, "Error: %s\n", message);
     WriteLog(message2);
     LogError(message2);
 }
@@ -420,7 +426,7 @@ void LogError(const char* const message)
 {
     if (g_log && CompileLog)
     {
-        char            logfilename[MAX_PATH];
+        char logfilename[MAX_PATH];
         FILE* ErrorLog = NULL;
 
         safe_snprintf(logfilename, MAX_PATH, "%s.err", g_Mapname);
@@ -442,8 +448,8 @@ void LogError(const char* const message)
 
 void Error(const char* const error, ...)
 {
-    char            message[2048];
-    char            message2[2048];
+    char            message[MAX_ERROR];
+    char            message2[MAX_ERROR];
     va_list         argptr;
 
     char* wantint3 = getenv("WANTINT3");
@@ -459,7 +465,7 @@ void Error(const char* const error, ...)
     }
 
     va_start(argptr, error);
-    vsnprintf(message, 2048, error, argptr);
+    vsnprintf(message, MAX_ERROR, error, argptr);
     va_end(argptr);
 
     safe_snprintf(message2, MAX_MESSAGE, "Error: %s\n", message);
@@ -472,24 +478,24 @@ void Error(const char* const error, ...)
 
 void Fatal(assume_msgs msgid, const char* const warning, ...)
 {
-    char            message[2048];
-    char            message2[2048];
+    char message[MAX_WARNING];
+    char message2[MAX_WARNING];
 
-    va_list         argptr;
+    va_list argptr;
 
     va_start(argptr, warning);
-    vsnprintf(message, 2048, warning, argptr);
+    vsnprintf(message, MAX_WARNING, warning, argptr);
     va_end(argptr);
 
-    safe_snprintf(message2, MAX_MESSAGE, "Error: %s\n", message);
+    safe_snprintf(message2, MAX_WARNING, "Error: %s\n", message);
     WriteLog(message2);
     LogError(message2);
 
     {
-        char message[MAX_MESSAGE];
+        char message[MAX_WARNING];
         const MessageTable_t* msg = GetAssume(msgid);
 
-        safe_snprintf(message, MAX_MESSAGE, "%s\nDescription: %s\nHowto Fix: %s\n", msg->title, msg->text, msg->howto);
+        safe_snprintf(message, MAX_WARNING, "%s\nDescription: %s\nHowto Fix: %s\n", msg->title, msg->text, msg->howto);
         PrintOnce(message);
     }
 
@@ -509,7 +515,7 @@ void hlassume(bool exp, assume_msgs msgid)
 {
     if (!exp)
     {
-        char            message[MAX_MESSAGE];
+        char message[MAX_MESSAGE];
         const MessageTable_t* msg = GetAssume(msgid);
 
         safe_snprintf(message, MAX_MESSAGE, "%s\nDescription: %s\nHowto Fix: %s\n", msg->title, msg->text, msg->howto);

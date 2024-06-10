@@ -269,61 +269,55 @@ void SplitFaces(
     ++g_TimesCalledSplitFaces;
 }
 
-void StripOutsideFaces(node_t* node, entity_t* ent, unsigned int brushflags)
+void StripOutsideFaceFragments(node_t* node, entity_t* ent, unsigned int brushflags)
 {
     unsigned int keptFragments = 0;
     unsigned int discardedFragments = 0;
 
-    // Loop through all brushes in the entity
     for (unsigned int i = 0; i < ent->numbrushes; ++i)
     {
         brush_t* brush = ent->brushes[i];
 
-        // Check if the filter flag matches the brush's brushflags
         if ((brush->brushflags & brushflags) != 0)
         {
-            // Loop through all sides of the brush
             for (unsigned int j = 0; j < brush->numsides; ++j)
             {
-                side_t* brushSide = brush->brushsides[j];
-                face_t* faceFragments = brushSide->face_fragments;
-                face_t* keptFaceFragments = nullptr;
+                side_t* brushside = brush->brushsides[j];
+                face_t* prevfragment = nullptr;
+                face_t* nextfragment;
 
                 // Loop through all original_face of the side
-                while (faceFragments)
+                for (face_t* fragment = brushside->face_fragments; fragment; fragment = nextfragment)
                 {
-                    face_t* next = faceFragments->next;
+                    nextfragment = fragment->next;
 
-                    // Check if the originalFace's associated leaf node is solid
-                    if (faceFragments->leaf_node->leaf_type == LEAF_SOLID_AKA_OPAQUE)
+                    if (fragment->leaf_node->contents == CONTENTS_SOLID)
                     {
-                        // Free the originalFace if it's associated with a solid leaf node
-                        FreeFace(faceFragments);
+                        // Free the face if it's associated with a solid leaf node
+                        FreeFace(fragment);
                         ++discardedFragments;
+
+                        if (prevfragment)
+                            prevfragment->next = nextfragment;
+                        else
+                            brushside->face_fragments = nextfragment;
                     }
                     else
                     {
-                        // Keep the originalFace if it's not associated with a solid leaf node
-                        faceFragments->next = keptFaceFragments;
-                        keptFaceFragments = faceFragments;
+                        // Keep the face if it's not associated with a solid leaf node
+                        prevfragment = fragment;
                         ++keptFragments;
                     }
-
-                    faceFragments = next;
                 }
-
-                // Update the brush side's normal original_face with the kept originalFace fragments
-                brushSide->face_fragments = keptFaceFragments;
             }
         }
     }
 
-    // Output verbose information about kept and discarded originalFace fragments
     Verbose("%5i face fragments kept\n", keptFragments);
     Verbose("%5i face fragments discarded\n", discardedFragments);
 }
 
-void MarkEmptyBrushFaces(unsigned int flag, entity_t* entity)
+void MarkEmptyBrushFaces(entity_t* entity, unsigned int brushflags)
 {
     unsigned int totalFaces = 0;
     unsigned int removedFaces = 0;
@@ -331,42 +325,39 @@ void MarkEmptyBrushFaces(unsigned int flag, entity_t* entity)
     for (unsigned int brushIndex = 0; brushIndex < entity->numbrushes; ++brushIndex)
     {
         brush_t* brush = entity->brushes[brushIndex];
-        if ((brush->brushflags & flag) != 0)
+        if ((brush->brushflags & brushflags) != 0)
         {
             totalFaces += brush->numsides;
 
             for (unsigned int sideIndex = 0; sideIndex < brush->numsides; ++sideIndex)
             {
                 side_t* side = brush->brushsides[sideIndex];
-                face_t* face = side->original_face;
-
-                while (face != NULL)
+                
+                for (face_t* face = side->original_face; face; face = face->next)
                 {
-                    unsigned int faceFlags = face->flags;
-                    if ((faceFlags & (CONTENTS_DETAIL | CONTENTS_BSP | CONTENTS_NODRAW | CONTENTS_UNKNOWN)) == 0 && side->face_fragments == NULL)
+                    if (!side->face_fragments && (face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | SURFACEFLAG_NODRAW | CONTENTS_SOLID)) == 0)
                     {
                         ++removedFaces;
-                        face->flags |= CONTENTS_NODRAW;
-                        if ((flag & CONTENTS_BSP) != 0)
+                        face->flags |= SURFACEFLAG_NODRAW;
+                        if ((brushflags & CONTENTS_BSP) != 0)
                             face->flags |= CONTENTS_DETAIL;
                     }
-                    face = face->next;
                 }
             }
         }
     }
 
-    const char* surfaceTypeStr = GetSurfaceTypeStr(flag);
+    const char* surfaceTypeStr = GetSurfaceTypeStr(brushflags);
     Verbose("%5i %s faces removed\n", removedFaces, surfaceTypeStr);
     Verbose("%5i %s faces remaining\n", totalFaces - removedFaces, surfaceTypeStr);
 }
 
-void FreeBrushFaces(entity_t* entity, unsigned int flag)
+void FreeBrushFaces(entity_t* entity, unsigned int brushflags)
 {
     for (unsigned int i = 0; i < entity->numbrushes; ++i)
     {
         brush_t* brush = entity->brushes[i];
-        if ((brush->brushflags & flag) != 0)
+        if ((brush->brushflags & brushflags) != 0)
         {
             for (unsigned int s = 0; s < brush->numsides; ++s)
             {
@@ -426,17 +417,15 @@ void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inve
 
 #endif
 
-    while (list)
+    for (face_t* f = list; f; f = f->next)
     {
-        face_t* next = list->next;
         FilterFaceIntoTree_r(0, node, list->brushside, list, face_windings_are_inverted, is_lighting_tree);
-        list = next;
     }
 }
 
 void FilterFaceIntoTree_r(int depth, node_t* node, side_t* brushside, face_t* list, bool face_windings_are_inverted, bool is_in_lighting_stage)
 {
-    if (node->planenum == -1) //PLANENUM_LEAF
+    if (node->planenum == PLANENUM_LEAF)
     {
         if (face_windings_are_inverted)
         {
@@ -449,18 +438,18 @@ void FilterFaceIntoTree_r(int depth, node_t* node, side_t* brushside, face_t* li
             if (is_in_lighting_stage)
                 brush_contents = list->brush->brushflags & 0xFFFFFF00;
 
-            unsigned int brush_leaf_type = list->brush->leaf_type;
+            unsigned int brush_leaf_type = list->brush->contents;
 
-            if (!node->leaf_type)
-                node->leaf_type = LEAF_EMPTY_AKA_NOT_OPAQUE;
+            if (!node->contents)
+                node->contents = CONTENTS_EMPTY;
 
-            unsigned int combined_type = (brush_contents | node->leaf_type) & 0xFFFFFF00;
+            unsigned int combined_type = (brush_contents | node->contents) & 0xFFFFFF00;
 
             // Update node leaf type if brush leaf type is greater
-            if ((node->leaf_type & 0xFF) < (brush_leaf_type & 0xFF))
-                node->leaf_type = brush_leaf_type;
+            if ((node->contents & 0xFF) < (brush_leaf_type & 0xFF))
+                node->contents = brush_leaf_type;
 
-            node->leaf_type |= combined_type;
+            node->contents |= combined_type;
         }
         else
         {
@@ -495,15 +484,15 @@ node_t* ClearOutFaces(node_t* a1)
 
 node_t* ClearOutFaces_r(int depth, node_t* node)
 {
-    // Initialize the valid flag to false
+    // Initialize the valid brushflags to false
     node->valid = false;
 
     if (!node->children[0])
     {
         // Leaf node reached
-        if (node->leaf_type != LEAF_SOLID_AKA_OPAQUE)
+        if (node->contents != CONTENTS_SOLID)
         {
-            // Propagate valid flag through portals
+            // Propagate valid brushflags through portals
             for (portal_t* portal = node->portals, *pnext; portal; portal = pnext)
             {
                 if (portal->onnode)
@@ -518,18 +507,18 @@ node_t* ClearOutFaces_r(int depth, node_t* node)
         return node;
     }
 
-    // Recursively propagate the valid flag
+    // Recursively propagate the valid brushflags
     node->children[0] = ClearOutFaces_r(depth + 1, node->children[0]);
     node->children[1] = ClearOutFaces_r(depth + 1, node->children[1]);
 
     if (!node->valid)
     {
         // this node does not touch any interior leafs
-        if (node->children[0]->leaf_type == LEAF_SOLID_AKA_OPAQUE && node->children[1]->leaf_type == LEAF_SOLID_AKA_OPAQUE)
+        if (node->children[0]->contents == CONTENTS_SOLID && node->children[1]->contents == CONTENTS_SOLID)
         {
             // if both children are solid, just make this node solid
-            node->leaf_type = LEAF_SOLID_AKA_OPAQUE;
-            node->planenum = -1;
+            node->contents = CONTENTS_SOLID;
+            node->planenum = PLANENUM_LEAF;
 
             delete node->children[0];
             delete node->children[1];
@@ -558,26 +547,20 @@ void SetFacesLeafNode(node_t* node, entity_t* entity)
         {
             side_t* side = brush->brushsides[sideIndex];
 
-            face_t* originalFace = side->original_face;
-            if (originalFace)
-                originalFace->leaf_node = node;
+            if (side->original_face)
+                side->original_face->leaf_node = node;
 
-            face_t* extraFace = side->final_face;
-            if (extraFace)
-                extraFace->leaf_node = node;
+            if (side->final_face)
+                side->final_face->leaf_node = node;
 
-            face_t* normalFace = side->face_fragments;
-            while (normalFace != NULL)
+            for (face_t* fragment = side->face_fragments; fragment; fragment = fragment->next)
             {
-                normalFace->leaf_node = node;
-                normalFace = normalFace->next;
+                fragment->leaf_node = node;
             }
 
-            face_t* invertedFace = side->inverted_face_fragments;
-            while (invertedFace != NULL)
+            for (face_t* inverted_fragment = side->inverted_face_fragments; inverted_fragment; inverted_fragment = inverted_fragment->next)
             {
-                invertedFace->leaf_node = node;
-                invertedFace = invertedFace->next;
+                inverted_fragment->leaf_node = node;
             }
         }
     }
@@ -602,7 +585,7 @@ face_t* CopyFaceList(entity_t* ent, unsigned int brushflags)
                 face_t* face = brush->brushsides[sideIndex]->original_face;
 
                 // Check if the originalFace brushflags match the criteria
-                if ((face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | CONTENTS_UNKNOWN)) == 0)
+                if ((face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | CONTENTS_SOLID)) == 0)
                 {
                     // Copy the originalFace and add it to the list
                     face_t* dupFace = new face_t(*face);
@@ -680,7 +663,7 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
     dface_t* dface = &g_dFaces[g_numDFaces++];
 
     // Handle special face brushflags
-    if ((pFace->flags & (CONTENTS_NODRAW | CONTENTS_PORTAL | SURF_SKY | CONTENTS_UNKNOWN | CONTENTS_SOLID)) != 0)
+    if ((pFace->flags & (SURFACEFLAG_NODRAW | CONTENTS_PORTAL | CONTENTS_SKY | CONTENTS_SOLID | CONTENTS_EMPTY)) != 0)
         pFace->winding->ClearNumPoints();
 
     // Set face properties
@@ -779,27 +762,21 @@ void MarkFinalFaceFragments(node_t* node, entity_t* ent)
         for (unsigned int j = 0; j < brush->numsides; ++j)
         {
             side_t* side = brush->brushsides[j];
-            face_t* face_fragment = side->face_fragments;
-            while (face_fragment)
+            for (face_t* fragment = side->face_fragments; fragment; fragment = fragment->next)
             {
-                face_t* next = face_fragment->next;
 #ifdef SUBDIVIDE
                 if (g_nosubdiv || side->final_face->winding->m_NumPoints == 0)
-                    MarkFace(face_fragment->leaf_node, side->final_face);
+                    MarkFace(fragment->leaf_node, side->final_face);
                 else
-                    MarkFace(face_fragment->leaf_node, face_fragment);
+                    MarkFace(fragment->leaf_node, fragment);
 #else
-                MarkFace(face_fragment->leaf_node, side->final_face);
+                MarkFace(fragment->leaf_node, side->final_face);
 #endif
-                MarkBrush(face_fragment->leaf_node, brush);
-                face_fragment = next;
+                MarkBrush(fragment->leaf_node, brush);
             }
-            face_t* inverted_face_fragments = side->inverted_face_fragments;
-            while (inverted_face_fragments)
+            for (face_t* inverted_fragment = side->inverted_face_fragments; inverted_fragment; inverted_fragment = inverted_fragment->next)
             {
-                face_t* next = inverted_face_fragments->next;
-                MarkBrush(inverted_face_fragments->leaf_node, brush);
-                inverted_face_fragments = next;
+                MarkBrush(inverted_fragment->leaf_node, brush);
             }
         }
     }
@@ -813,13 +790,10 @@ void MarkFaceFragments(node_t* node, entity_t* ent)
         for (unsigned int j = 0; j < brush->numsides; ++j)
         {
             side_t* side = brush->brushsides[j];
-            face_t* face_fragments = side->face_fragments;
-            while (face_fragments)
+            for (face_t* fragment = side->face_fragments; fragment; fragment = fragment->next)
             {
-                face_t* next = face_fragments->next;
-                MarkFace(face_fragments->leaf_node, face_fragments);
-                MarkBrush(face_fragments->leaf_node, brush);
-                face_fragments = next;
+                MarkFace(fragment->leaf_node, fragment);
+                MarkBrush(fragment->leaf_node, brush);
             }
         }
     }
@@ -846,15 +820,15 @@ void SubdivideFace(face_t* f, face_t** prevptr)
 
     if (f->flags & CONTENTS_HINTSKIP)
         return;
-    if (f->flags & CONTENTS_SOLID)
+    if (f->flags & CONTENTS_EMPTY)
         return;
-    if (f->flags & CONTENTS_NODRAW)
+    if (f->flags & SURFACEFLAG_NODRAW)
         return;
     if (f->flags & CONTENTS_ORIGIN)
         return;
     if (f->flags & CONTENTS_WATER)
         return;
-    if (f->flags & SURF_SKY)
+    if (f->flags & CONTENTS_SKY)
         return;
 #if 0
     tex = &g_texinfo[f->texturenum];
@@ -875,7 +849,7 @@ void SubdivideFace(face_t* f, face_t** prevptr)
 
 #ifdef ZHLT_NULLTEX    // AJM
     if (f->facestyle == face_null)
-        return; // ideally these should have their tex_special flag set, so its here jic
+        return; // ideally these should have their tex_special brushflags set, so its here jic
 #endif
 #endif
 
@@ -1025,7 +999,7 @@ void GetFinalBrushFaces(entity_t* entity, int brushflags)
     {
         brush_t* brush = entity->brushes[i];
 
-        // Check if the brush flag matches the processing flag
+        // Check if the brush brushflags matches the processing brushflags
         if ((brush->brushflags & brushflags) != 0)
         {
             // Loop through each side of the brush
@@ -1036,7 +1010,7 @@ void GetFinalBrushFaces(entity_t* entity, int brushflags)
                 if (side->final_face)
                     FreeFace(side->final_face);
 
-                if ((side->original_face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | CONTENTS_NODRAW | CONTENTS_UNKNOWN)) != 0)
+                if ((side->original_face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | SURFACEFLAG_NODRAW | CONTENTS_SOLID)) != 0)
                 {
                     // clear face points
                     side->final_face = new face_t(*side->original_face, new Winding);

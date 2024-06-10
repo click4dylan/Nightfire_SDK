@@ -370,16 +370,19 @@ void Winding::shiftPoints(unsigned int offset, unsigned int start_index)
 
 void Winding::Invert()
 {
-    // Calculate the halfway point
-    unsigned int halfNumPoints = m_NumPoints / 2;
-
-    // Loop through each point pair up to the halfway point
-    for (unsigned int i = 0; i < halfNumPoints; ++i) {
-        unsigned int oppositeIndex = m_NumPoints - i - 1;
-
-        // Swap points
-        std::swap(m_Points[i], m_Points[oppositeIndex]);
+    vec3_t temp;
+    // swap point orders
+    for (unsigned i = 0; i < m_NumPoints / 2; i++)      // add points backwards
+    {
+        VectorCopy(m_Points[i], temp);
+        VectorCopy(m_Points[m_NumPoints - 1 - i], m_Points[i]);
+        VectorCopy(temp, m_Points[m_NumPoints - 1 - i]);
     }
+}
+
+void Winding::getPlane(plane_s& dest) const
+{
+    getPlane(dest.normal, dest.dist);
 }
 
 void Winding::getPlane(vec3_t& normal, vec_t& dist) const

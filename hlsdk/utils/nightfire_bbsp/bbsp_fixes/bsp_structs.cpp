@@ -48,12 +48,12 @@ node_s::~node_s()
 	--g_numNodesAllocated;
 }
 
-entinfo_t::entinfo_t()
+mapinfo_t::mapinfo_t()
 {
 	++g_numMapsAlloced;
 }
 
-entinfo_t::~entinfo_t()
+mapinfo_t::~mapinfo_t()
 {
 	if (entities)
 	{

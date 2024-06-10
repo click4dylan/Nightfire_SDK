@@ -30,7 +30,7 @@ extern void Safe_WriteLog(const char* const message);
 extern void WriteLog(const char* const message);
 extern void Log(const char* const message, ...);
 extern void LogTimeElapsed(float elapsed_time);
-extern void Warning(const char* Format, ...);
+extern void Warning(const char* warning, ...);
 extern void ResetErrorLog();
 extern void ResetLog();
 extern void OpenLog(const int clientid);

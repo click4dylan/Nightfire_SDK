@@ -128,7 +128,7 @@ inline void hlassume(bool check, BBSP_ERROR_CODES error_index)
 #endif
 
 
-inline void FixSlashes(char* result)
+inline void FlipSlashes(char* result)
 {
     if (*result)
     {
@@ -140,7 +140,7 @@ inline void FixSlashes(char* result)
     }
 }
 
-inline void StripFileExtension(char* str)
+inline void StripExtension(char* str)
 {
     unsigned int i; // eax
     char v2; // cl

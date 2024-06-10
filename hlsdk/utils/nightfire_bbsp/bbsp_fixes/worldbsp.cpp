@@ -41,7 +41,7 @@ void WriteLightingNodeAndLeafData(int depth, node_t* node)
         depth++;
     }
 
-    unsigned int leafType = node->leaf_type;
+    unsigned int leafType = node->contents;
     if((leafType & 0xFF) == 0)
         leafType = (leafType & 0xFFFFFF00) | 1;;
     fprintf(lightingfile, "LEAF %i %u\n", node->visleafnum, leafType);
@@ -108,8 +108,8 @@ void BuildLightingBSPTree(entity_t* ent)
         FilterBrushesIntoTree(node, ent, CONTENTS_DETAIL | CONTENTS_BSP);
 
         // Strip outside original_face_list and mark empty brush original_face_list
-        StripOutsideFaces(node, ent, CONTENTS_DETAIL);
-        MarkEmptyBrushFaces(CONTENTS_DETAIL, ent);
+        StripOutsideFaceFragments(node, ent, CONTENTS_DETAIL);
+        MarkEmptyBrushFaces(ent, CONTENTS_DETAIL);
 
         // Build marks and write the lighting file
         MarkFaceFragments(node, ent);
@@ -239,39 +239,34 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
     }
 }
 
-void WriteHullFile(const char* fileNamePrefix, entity_t* entity, int brushFlag, char appendMode, char writeFlag) 
+void WriteHullFile(const char* fileNamePrefix, entity_t* entity, int brushflags, bool append, bool write_final_faces)
 {
     char fileName[MAX_PATH];
     safe_snprintf(fileName, MAX_PATH, "%s%s", g_Mapname, fileNamePrefix);
-    const char* mode = (appendMode) ? "a+" : "w";
-    FILE* file = fopen(fileName, mode);
+
+    FILE* file = fopen(fileName, append ? "a+" : "w");
     if (!file)
         Error("Could not open hullfile '%s' for writing\n", fileName);
 
     for (unsigned int brushIndex = 0; brushIndex < entity->numbrushes; ++brushIndex)
     {
         brush_t* brush = entity->brushes[brushIndex];
-        if ((brushFlag & brush->brushflags) != 0) 
+        if ((brush->brushflags & brushflags) != 0)
         {
-            unsigned int numSides = brush->numsides;
-            for (unsigned int sideIndex = 0; sideIndex < numSides; ++sideIndex) 
+            for (unsigned int sideIndex = 0; sideIndex < brush->numsides; ++sideIndex)
             {
                 side_t* side = brush->brushsides[sideIndex];
-                face_t* original_face = (writeFlag) ? side->final_face : side->face_fragments;
-                while (original_face) 
+                face_t* face = (write_final_faces) ? side->final_face : side->face_fragments;
+                while (face)
                 {
-                    Winding* winding = original_face->winding;
-                    int numPoints = winding->m_NumPoints;
-                    fprintf(file, "%i %i %i %i\n", original_face->planenum, 0, -2, numPoints);
-                    for (int pointIndex = 0; pointIndex < numPoints; ++pointIndex) 
+                    Winding* winding = face->winding;
+                    fprintf(file, "%i %i %i %i\n", face->planenum, 0, -2, winding->m_NumPoints);
+                    for (unsigned int i = 0; i < winding->m_NumPoints; ++i)
                     {
-                        fprintf(file, "%5.2f %5.2f %5.2f\n",
-                            winding->m_Points[pointIndex][0],
-                            winding->m_Points[pointIndex][1],
-                            winding->m_Points[pointIndex][2]);
+                        fprintf(file, "%5.2f %5.2f %5.2f\n", winding->m_Points[i][0], winding->m_Points[i][1], winding->m_Points[i][2]);
                     }
                     fprintf(file, "\n");
-                    original_face = original_face->next;
+                    face = face->next;
                 }
             }
         }
@@ -470,30 +465,23 @@ void ModelBSP(entity_t* entity, dmodel_t* model, int modelbsp_index)
     face_t* inverted_face_fragments = CopyFaceList_Inverted(entity, CONTENTS_BSP);
     FilterFacesIntoTree(inverted_face_fragments, node, true, false);
     FilterBrushesIntoTree(node, entity, CONTENTS_DETAIL | CONTENTS_BSP);
-    StripOutsideFaces(node, entity, CONTENTS_DETAIL | CONTENTS_BSP);
-    MarkEmptyBrushFaces(CONTENTS_DETAIL | CONTENTS_BSP, entity);
+    StripOutsideFaceFragments(node, entity, CONTENTS_DETAIL | CONTENTS_BSP);
+    MarkEmptyBrushFaces(entity, CONTENTS_DETAIL | CONTENTS_BSP);
     GetFinalBrushFaces(entity, CONTENTS_DETAIL | CONTENTS_BSP);
     SnapVerts(entity);
-    SetAllFacesLeafNode(0, entity);
+    SetAllFacesLeafNode(nullptr, entity);
 
     delete node;
     
     node_t* model_node = new node_t;
     model_node->planenum = -1;
-    model_node->leaf_type = LEAF_EMPTY_AKA_NOT_OPAQUE;
+    model_node->contents = CONTENTS_EMPTY;
     SetAllFacesLeafNode(model_node, entity);
 
     CalcNodeBoundsFromBrushes(model_node, entity);
-    Verbose(
-        "  model bounds : (%.0f %.0f %.0f), (%.0f %.0f %.0f)\n",
-        model_node->mins[0],
-        model_node->mins[1],
-        model_node->mins[2],
-        model_node->maxs[0],
-        model_node->maxs[1],
-        model_node->maxs[2]);
+    Verbose("  model bounds : (%.0f %.0f %.0f), (%.0f %.0f %.0f)\n", model_node->mins[0], model_node->mins[1], model_node->mins[2], model_node->maxs[0], model_node->maxs[1], model_node->maxs[2]);
 
-    WriteHullFile(".p2", entity, CONTENTS_DETAIL | CONTENTS_BSP, 1, 1);
+    WriteHullFile(".p2", entity, CONTENTS_DETAIL | CONTENTS_BSP, APPEND, WRITE_FINAL_FACES);
     MarkFinalFaceFragments(model_node, entity);
     SetModelBounds(model, model_node->mins, model_node->maxs);
     EmitDrawNode_r(model_node);
@@ -503,7 +491,7 @@ void ModelBSP(entity_t* entity, dmodel_t* model, int modelbsp_index)
     model->numfaces = g_numDFaces - model->firstface;
 }
 
-void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
+void WorldBSP(entity_t* ent, mapinfo_t* info, dmodel_t* dmodel)
 {
     node_t* headnode; // Points to the head node of the BSP tree
     face_t* inverted_face_fragments; // Stores inverted original_face_list
@@ -521,10 +509,15 @@ void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
     bsp_faces = CopyFaceList(ent, CONTENTS_BSP);
     headnode = new node_t;
     CalcNodeBoundsFromFaces(headnode, bsp_faces);
-    Verbose("  inital world bounds : (%.0f %.0f %.0f), (%.0f %.0f %.0f)\n", headnode->mins[0], headnode->mins[1], headnode->mins[2], headnode->maxs[0], headnode->maxs[1], headnode->maxs[2]);
+
+    Verbose("  initial world bounds : (%.0f %.0f %.0f), (%.0f %.0f %.0f)\n", headnode->mins[0], headnode->mins[1], headnode->mins[2], headnode->maxs[0], headnode->maxs[1], headnode->maxs[2]);
 
     // Check if world bounds are valid
-    if (CalcWorldBounds(headnode->mins, headnode->maxs))
+    if (!CalcWorldBounds(headnode->mins, headnode->maxs))
+    {
+        Error("Bad world bounds\n");
+    }
+    else 
     {
         // Make headnode portals
         MakeHeadnodePortals(headnode);
@@ -550,17 +543,17 @@ void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
         Verbose("Final node contents\n");
         PrintNodeMetricsByPlane(headnode);
         FilterBrushesIntoTree(headnode, ent, CONTENTS_BSP);
-        StripOutsideFaces(headnode, ent, CONTENTS_BSP);
-        WriteHullFile(".p0", ent, CONTENTS_BSP, 0, 0);
-        MarkEmptyBrushFaces(CONTENTS_BSP, ent);
+        StripOutsideFaceFragments(headnode, ent, CONTENTS_BSP);
+        WriteHullFile(".p0", ent, CONTENTS_BSP, TRUNCATE, WRITE_FACE_FRAGMENTS);
+        MarkEmptyBrushFaces(ent, CONTENTS_BSP);
 
         // Handle additional details
         if (g_nofill || g_bLeaked)
         {
             FilterBrushesIntoTree(headnode, ent, CONTENTS_DETAIL);
-            StripOutsideFaces(headnode, ent, CONTENTS_DETAIL);
-            MarkEmptyBrushFaces(CONTENTS_DETAIL, ent);
-            WriteHullFile(".p1", ent, CONTENTS_DETAIL | CONTENTS_BSP, 0, 0);
+            StripOutsideFaceFragments(headnode, ent, CONTENTS_DETAIL);
+            MarkEmptyBrushFaces(ent, CONTENTS_DETAIL);
+            WriteHullFile(".p1", ent, CONTENTS_DETAIL | CONTENTS_BSP, TRUNCATE, WRITE_FACE_FRAGMENTS);
         }
         else
         {
@@ -570,14 +563,7 @@ void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
             bsp_frontfaces = CopyFaceList(ent, CONTENTS_BSP);
             headnode = new node_t;
             CalcNodeBoundsFromFaces(headnode, bsp_frontfaces);
-            Verbose(
-                "  final world bounds : (%f %f %f), (%f %f %f)\n",
-                headnode->mins[0],
-                headnode->mins[1],
-                headnode->mins[2],
-                headnode->maxs[0],
-                headnode->maxs[1],
-                headnode->maxs[2]);
+            Verbose("  final world bounds : (%f %f %f), (%f %f %f)\n", headnode->mins[0], headnode->mins[1], headnode->mins[2], headnode->maxs[0], headnode->maxs[1], headnode->maxs[2]);
 
             if (CalcWorldBounds(headnode->mins, headnode->maxs))
             {
@@ -592,9 +578,9 @@ void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
                 if (!g_bLeaked)
                     SetAllFacesLeafNode(0, ent);
                 FilterBrushesIntoTree(headnode, ent, CONTENTS_DETAIL | CONTENTS_BSP);
-                StripOutsideFaces(headnode, ent, CONTENTS_DETAIL | CONTENTS_BSP);
-                WriteHullFile(".p1", ent, CONTENTS_DETAIL | CONTENTS_BSP, 0, 0);
-                MarkEmptyBrushFaces(CONTENTS_DETAIL | CONTENTS_BSP, ent);
+                StripOutsideFaceFragments(headnode, ent, CONTENTS_DETAIL | CONTENTS_BSP);
+                WriteHullFile(".p1", ent, CONTENTS_DETAIL | CONTENTS_BSP, TRUNCATE, WRITE_FACE_FRAGMENTS);
+                MarkEmptyBrushFaces(ent, CONTENTS_DETAIL | CONTENTS_BSP);
             }
             else
             {
@@ -612,9 +598,9 @@ void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
         SnapVerts(ent);
 
         // Write hull files
-        WriteHullFile(".p2", ent, CONTENTS_BSP, 1, 0);
-        WriteHullFile(".p3", ent, CONTENTS_DETAIL, 1, 0);
-        WriteHullFile(".p4", ent, CONTENTS_DETAIL | CONTENTS_BSP, 1, 0);
+        WriteHullFile(".p2", ent, CONTENTS_BSP, APPEND, WRITE_FACE_FRAGMENTS);
+        WriteHullFile(".p3", ent, CONTENTS_DETAIL, APPEND, WRITE_FACE_FRAGMENTS);
+        WriteHullFile(".p4", ent, CONTENTS_DETAIL | CONTENTS_BSP, APPEND, WRITE_FACE_FRAGMENTS);
 
         // Build marks
         MarkFinalFaceFragments(headnode, ent);
@@ -627,10 +613,6 @@ void WorldBSP(entity_t* ent, entinfo_t* info, dmodel_t* dmodel)
 
         // Free memory
         delete headnode;
-    }
-    else
-    {
-        Error("Bad world bounds\n");
     }
 
     // Update model leaf and face counts

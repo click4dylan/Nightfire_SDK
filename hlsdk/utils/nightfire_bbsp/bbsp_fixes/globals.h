@@ -1,10 +1,6 @@
 #pragma once
-#include "bsp_structs.h"
 
-struct texturename_t
-{
-    char name[64];
-};
+#include "bsp_structs.h"
 
 #if Q3MAP2_EXPERIMENTAL_SNAP_NORMAL_FIX
 #define NIGHTFIRE_NORMAL_FIX
@@ -22,6 +18,8 @@ struct texturename_t
 #define NORMAL_EPSILON   0.00001
 #define ON_EPSILON       0.01
 #define EQUAL_EPSILON    0.001
+
+#define	PLANENUM_LEAF		-1
 
 #define MAX_WORLD_BOUNDS 16384
 #define	MAX_SWITCHED_LIGHTS	    32 
@@ -211,7 +209,7 @@ inline unsigned g_dmarkbrushes[MAX_MAP_MARKBRUSHES];
 //#define g_dmarksurfaces ((int*)0x44501C8)
 //#define g_dmarkbrushes ((int*)0x5B601E0)
 
-inline char g_dmaterials[MAX_MAP_MATERIALS][64];
+inline texturename_t g_dmaterials[MAX_MAP_MATERIALS];
 //#define g_dmaterials ((char*)0x45B150)
 //#define g_dmaterials  ((texturename_t*)0x45B150)
 //char g_dmaterials[1024][64]
@@ -299,7 +297,7 @@ inline unsigned g_numDTextures = 0;
 //#define g_numDMaterials *(int*)0x1EE21A0
 
 //#define g_numDTextures *(int*)0x5B501D8
-inline char g_dtextures[MAX_MAP_TEXTURES][64];
+inline texturename_t g_dtextures[MAX_MAP_TEXTURES];
 //char[1024][64]
 //#define g_dtextures ((char*)0x5B501E0)
 inline dtexmatrix_t g_dtexmatrix[MAX_MAP_TEXMATRIX];
@@ -343,8 +341,8 @@ inline char g_MapFileName[MAX_PATH];
 
 inline FILE* pointfile = nullptr;
 //#define pointfile *(FILE**)0x5DE06EC
-inline entinfo_t* g_EntInfo = nullptr;
-//#define g_EntInfo *(entinfo_t**)0x5DE06F0
+inline mapinfo_t* g_EntInfo = nullptr;
+//#define g_EntInfo *(mapinfo_t**)0x5DE06F0
 inline unsigned g_LeakEntity = 0;
 //#define g_LeakEntity *(int*)0x5DE06F4
 inline FILE* linefile = nullptr;

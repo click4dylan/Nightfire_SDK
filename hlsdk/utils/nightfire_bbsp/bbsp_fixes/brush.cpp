@@ -35,11 +35,10 @@ void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags)
             for (unsigned int sideIndex = 0; sideIndex < brush->numsides; ++sideIndex)
             {
                 side_t* side = brush->brushsides[sideIndex];
-                face_t* original_face = side->original_face;
 
-                if ((original_face->flags & CONTENTS_BSP) == 0) 
+                if ((side->original_face->flags & CONTENTS_BSP) == 0)
                 {
-                    face_t* newFace = new face_t(*original_face);
+                    face_t* newFace = new face_t(*side->original_face);
 #ifdef SUBDIVIDE
                     if (!g_nosubdiv)
                         FilterFacesIntoTree(newFace, node, false, false);
@@ -181,7 +180,7 @@ void WriteDrawBrush(brush_t* brush)
         dbrush_t* currentDBrush = &g_dbrushes[g_numDBrushes++];
 
         // Set the attributes of the draw brush
-        currentDBrush->flags = brush->brushflags ^ (unsigned __int8)(brush->leaf_type ^ brush->brushflags);
+        currentDBrush->flags = brush->brushflags ^ (unsigned __int8)(brush->contents ^ brush->brushflags);
         currentDBrush->firstbrushside = g_numDBrushSides;
         currentDBrush->numbrushsides = brush->numsides;
 

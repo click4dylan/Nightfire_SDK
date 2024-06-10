@@ -60,12 +60,12 @@ void ProcessArguments(int argc, const char** argv)
         }
         else if (!_stricmp(argv[i], "-notjunc"))
         {
-            g_notjunc = 1;
+            g_notjunc = true;
         }
 #ifdef SUBDIVIDE
         else if (!_stricmp(argv[i], "-nosubdiv"))
         {
-            g_nosubdiv = 1;
+            g_nosubdiv = true;
         }
         else if (!_stricmp(argv[i], "-subdivide"))
         {
@@ -83,15 +83,15 @@ void ProcessArguments(int argc, const char** argv)
 #endif
         else if (!_stricmp(argv[i], "-noclip"))
         {
-            g_noclip = 1;
+            g_noclip = true;
         }
         else if (!_stricmp(argv[i], "-nofill"))
         {
-            g_nofill = 1;
+            g_nofill = true;
         }
         else if (!_stricmp(argv[i], "-estimate"))
         {
-            g_estimate = 1;
+            g_estimate = true;
         }
         else if (!_stricmp(argv[i], "-dev"))
         {
@@ -103,19 +103,19 @@ void ProcessArguments(int argc, const char** argv)
         }
         else if (!_stricmp(argv[i], "-verbose"))
         {
-            g_verbose = 1;
+            g_verbose = true;
         }
         else if (!_stricmp(argv[i], "-noinfo"))
         {
-            g_info = 0;
+            g_info = false;
         }
         else if (!_stricmp(argv[i], "-leakonly"))
         {
-            g_bLeakOnly = 1;
+            g_bLeakOnly = true;
         }
         else if (!_stricmp(argv[i], "-chart"))
         {
-            g_chart = 1;
+            g_chart = true;
         }
         else if (!_stricmp(argv[i], "-low"))
         {
@@ -127,11 +127,11 @@ void ProcessArguments(int argc, const char** argv)
         }
         else if (!_stricmp(argv[i], "-nolog"))
         {
-            g_log = 0;
+            g_log = false;
         }
         else if (!_stricmp(argv[i], "-nolighting"))
         {
-            g_lighting = 0;
+            g_lighting = false;
         }
 #ifdef VARIABLE_LIGHTING_MAX_NODE_SIZE
         else if (!_stricmp(argv[i], "-lightingmaxnodesize"))
@@ -222,15 +222,15 @@ void ProcessArguments(int argc, const char** argv)
         }
         else if (!_stricmp(argv[i], "-onlyents"))
         {
-            g_onlyents = 1;
+            g_onlyents = true;
         }
         else if (!_stricmp(argv[i], "-nowater"))
         {
-            g_water = 0;
+            g_water = false;
         }
         else if (!_stricmp(argv[i], "-showbevels"))
         {
-            g_showbevels = 1;
+            g_showbevels = true;
         }
         else
         {
@@ -245,43 +245,40 @@ void ProcessArguments(int argc, const char** argv)
     }
 }
 
-void __stdcall UnlinkFiles()
+void UnlinkFiles()
 {
-    char FileName[260]; // [esp+0h] [ebp-104h] BYREF
+    char FileName[MAX_PATH];
 
     if (g_log)
     {
-        safe_snprintf(FileName, 260u, "%s.bsp", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.bsp", g_Mapname);
         _unlink(FileName);
-        safe_snprintf(FileName, 260u, "%s.inc", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.inc", g_Mapname);
         _unlink(FileName);
-        safe_snprintf(FileName, 260u, "%s.p0", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.p0", g_Mapname);
         _unlink(FileName);
-        safe_snprintf(FileName, 260u, "%s.p1", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.p1", g_Mapname);
         _unlink(FileName);
-        safe_snprintf(FileName, 260u, "%s.p2", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.p2", g_Mapname);
         _unlink(FileName);
-        safe_snprintf(FileName, 260u, "%s.p3", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.p3", g_Mapname);
         _unlink(FileName);
-        safe_snprintf(FileName, 260u, "%s.prt", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.prt", g_Mapname);
         _unlink(FileName);
-        safe_snprintf(FileName, 260u, "%s.pts", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.pts", g_Mapname);
         _unlink(FileName);
-        safe_snprintf(FileName, 260u, "%s.lin", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.lin", g_Mapname);
         _unlink(FileName);
-        safe_snprintf(FileName, 260u, "%s.wic", g_Mapname);
+        safe_snprintf(FileName, MAX_PATH, "%s.wic", g_Mapname);
         _unlink(FileName);
     }
 }
 
-int __cdecl main(int argc, const char** argv, const char** envp)
+int main(int argc, const char** argv, const char** envp)
 {
 #ifdef _DEBUG
     _CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
 #endif
-
-    double startTime, endTime;
-    entinfo_t* entinfo;
 
     g_Program = "bbsp";
 
@@ -300,8 +297,8 @@ int __cdecl main(int argc, const char** argv, const char** envp)
 
     //safe_snprintf(g_Mapname, sizeof(g_Mapname), g_Mapname);
 
-    FixSlashes(g_Mapname);
-    StripFileExtension(g_Mapname);
+    FlipSlashes(g_Mapname);
+    StripExtension(g_Mapname);
 
     if (!g_onlyents)
         UnlinkFiles();
@@ -315,39 +312,40 @@ int __cdecl main(int argc, const char** argv, const char** envp)
     LogStart(argc, argv);
     Settings();
 
+    // delete existing files
     safe_snprintf(g_portfilename, sizeof(g_portfilename), "%s.prt", g_Mapname);
     _unlink(g_portfilename);
+
     safe_snprintf(g_pointfilename, sizeof(g_pointfilename), "%s.pts", g_Mapname);
     _unlink(g_pointfilename);
+
     safe_snprintf(g_linefilename, sizeof(g_linefilename), "%s.lin", g_Mapname);
     _unlink(g_linefilename);
+
     safe_snprintf(g_MapFileName, sizeof(g_MapFileName), "%s.map", g_Mapname);
     safe_snprintf(g_bspfilename, sizeof(g_bspfilename), "%s.bsp", g_Mapname);
 
-    startTime = I_FloatTime();
+    double startTime = I_FloatTime();
 
+    mapinfo_t* mapfile;
     if (g_onlyents)
     {
         LoadBSPFile(g_bspfilename);
-        entinfo = LoadMapFile(g_MapFileName);
+        mapfile = LoadMapFile(g_MapFileName);
         if (g_chart)
-        {
             PrintBSPFileSizes();
-        }
     }
     else
     {
-        entinfo = LoadMapFile(g_MapFileName);
-        StartCreatingBSP(entinfo);
+        mapfile = LoadMapFile(g_MapFileName);
+        StartCreatingBSP(mapfile);
     }
 
-    WriteBSP(entinfo, g_bspfilename);
-    delete entinfo;
+    WriteBSP(mapfile, g_bspfilename);
+    delete mapfile;
 
-    endTime = I_FloatTime();
-    LogTimeElapsed(endTime - startTime);
+    LogTimeElapsed(I_FloatTime() - startTime);
     PrintAllocationData("Final allocation status (should all be 0)\n");
-
 
     return 0;
 }

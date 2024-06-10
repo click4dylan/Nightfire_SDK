@@ -13,21 +13,18 @@ FILE* SafeOpenWrite(const char* const filename)
     return f;
 }
 
-FILE* SafeOpenRead(const char* a1)
+FILE* SafeOpenRead(const char* filename)
 {
-    FILE* v1; // esi
-    char* v2; // eax
-    CHAR Buffer[260]; // [esp+4h] [ebp-104h] BYREF
+    char buffer[MAX_PATH];
 
-    v1 = fopen(a1, "rb");
-    if (!v1)
+    FILE* fp = fopen(filename, "rb");
+    if (!fp)
     {
-        GetCurrentDirectoryA(0x104u, Buffer);
-        Log("Current directory is '%s'\n", Buffer);
-        v2 = strerror(errno);
-        Error("Error opening %s (errno %d : %s)", a1, errno, v2);
+        GetCurrentDirectoryA(MAX_PATH, buffer);
+        Log("Current directory is '%s'\n", buffer);
+        Error("Error opening %s (errno %d : %s)", filename, errno, strerror(errno));
     }
-    return v1;
+    return fp;
 }
 
 void SafeRead(FILE* f, void* buffer, int count)
