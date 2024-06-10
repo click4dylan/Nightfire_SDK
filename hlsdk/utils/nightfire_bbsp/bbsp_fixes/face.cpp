@@ -416,10 +416,11 @@ void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inve
 */
 
 #endif
-
-    for (face_t* f = list; f; f = f->next)
+    face_t* next;
+    for (face_t* f = list; f; f = next)
     {
-        FilterFaceIntoTree_r(0, node, list->brushside, list, face_windings_are_inverted, is_lighting_tree);
+        next = f->next;
+        FilterFaceIntoTree_r(0, node, f->brushside, f, face_windings_are_inverted, is_lighting_tree);
     }
 }
 
@@ -461,12 +462,11 @@ void FilterFaceIntoTree_r(int depth, node_t* node, side_t* brushside, face_t* li
     }
     else
     {
-        face_t* front_face = nullptr;
-        face_t* back_face = nullptr;
+        face_t* front_face;
+        face_t* back_face;
 
         if (SplitFaceByNodePlane(list, node->planenum, &front_face, &back_face))
             FreeFace(list);
-
         if (front_face)
             FilterFaceIntoTree_r(++depth, node->children[0], brushside, front_face, face_windings_are_inverted, is_in_lighting_stage);
         if (back_face)
@@ -484,7 +484,7 @@ node_t* ClearOutFaces(node_t* a1)
 
 node_t* ClearOutFaces_r(int depth, node_t* node)
 {
-    // Initialize the valid brushflags to false
+    // will be set if any children touch it
     node->valid = false;
 
     if (!node->children[0])
@@ -511,22 +511,23 @@ node_t* ClearOutFaces_r(int depth, node_t* node)
     node->children[0] = ClearOutFaces_r(depth + 1, node->children[0]);
     node->children[1] = ClearOutFaces_r(depth + 1, node->children[1]);
 
-    if (!node->valid)
+    if (node->valid)
+        return node;
+
+    // this node does not touch any interior leafs
+    if (node->children[0]->contents == CONTENTS_SOLID && node->children[1]->contents == CONTENTS_SOLID)
     {
-        // this node does not touch any interior leafs
-        if (node->children[0]->contents == CONTENTS_SOLID && node->children[1]->contents == CONTENTS_SOLID)
-        {
-            // if both children are solid, just make this node solid
-            node->contents = CONTENTS_SOLID;
-            node->planenum = PLANENUM_LEAF;
+        // if both children are solid, just make this node solid
+        node->contents = CONTENTS_SOLID;
+        node->planenum = PLANENUM_LEAF;
 
-            delete node->children[0];
-            delete node->children[1];
-            node->children[0] = nullptr;
-            node->children[1] = nullptr;
-            return node;
-        }
-
+        delete node->children[0];
+        delete node->children[1];
+        node->children[0] = nullptr;
+        node->children[1] = nullptr;
+    }
+    else
+    {
         // Increment the count of false nodes
         ++g_numFalseNodes;
     }

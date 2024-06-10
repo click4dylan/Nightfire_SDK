@@ -11,7 +11,7 @@ extern void PrintNodeMetricsByPlane(node_t* node);
 extern void PrintNodeMetricsByChildren(node_t* node);
 extern void SetAllFacesLeafNode(node_t* leafNode, entity_t* entity);
 extern void CalcInternalNodes_r(node_t* node);
-extern void CalcInternalNodes(node_t* node);
+extern void MarkUnoccupiedLeafsAsSolid(node_t* node);
 extern void MakeNodePortal(node_t* node);
 extern void AddPortalToNodes(portal_t* p, node_t* front, node_t* back);
 extern unsigned int CalcNodePlane(node_t* node, int bsp_depth, face_t* face);

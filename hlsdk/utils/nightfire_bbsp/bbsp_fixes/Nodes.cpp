@@ -309,22 +309,18 @@ void SetAllFacesLeafNode(node_t* leafNode, entity_t* entity)
     }
 }
 
+//FIXME
 void CalcInternalNodes_r(node_t* node)
 {
-    if (!node)
-        return; //FIXME: shouldn't be here
+    node_t* i; // esi
 
-    if (node->planenum != PLANENUM_LEAF)
-    {
-        CalcInternalNodes_r(node->children[0]);
-        CalcInternalNodes_r(node->children[1]);
-    }
-
-    if (!node->occupied)
-        node->contents = CONTENTS_SOLID;
+    for (i = node; i->planenum != -1; i = i->children[1])
+        CalcInternalNodes_r(i->children[0]);
+    if (!i->occupied)
+        i->contents = CONTENTS_SOLID;
 }
 
-void CalcInternalNodes(node_t* node)
+void MarkUnoccupiedLeafsAsSolid(node_t* node)
 {
     CalcInternalNodes_r(node);
 }

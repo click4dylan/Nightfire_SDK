@@ -67,64 +67,6 @@ void WriteDrawLeaf(node_t* node)
     }
 }
 
-node_t* PointInLeaf(node_t* node, const vec3_t point)
-{
-    if (node->planenum == PLANENUM_LEAF)
-        return node;
-
-    const plane_t& plane = gMappedPlanes[node->planenum];
-    vec_t d = DotProduct(plane.normal, point) - plane.dist;
-
-    if (d > 0)
-        return PointInLeaf(node->children[0], point);
-
-    return PointInLeaf(node->children[1], point);
-}
-
-bool PlaceOccupant(const vec3_t point, node_t* node, unsigned int entindex)
-{
-    node_t* n = PointInLeaf(node, point);
-    MarkLeafOccupancyAndCheckLeaks(n, entindex);
-    if (g_bLeaked)
-    {
-        g_LeakEntity = entindex;
-        MarkLeakTrail(nullptr);
-    }
-    return true;
-}
-
-void MarkLeafOccupancyAndCheckLeaks(node_t* node, unsigned int occupancyValue)
-{
-    if (node == g_OutsideNode)
-    {
-        g_bLeaked = true;
-        return;
-    }
-
-    if (node->contents == CONTENTS_SOLID)
-        return;
-
-    if (node->occupied)
-        return;
-
-    node->occupied = occupancyValue;
-
-    for (portal_t* p = node->portals; p;)
-    {
-        int s = (p->nodes[0] == node);
-
-        MarkLeafOccupancyAndCheckLeaks(p->nodes[s], occupancyValue);
-
-        if (g_bLeaked)
-        {
-            MarkLeakTrail(p);
-            return;
-        }
-
-        p = p->next[!s];
-    }
-}
-
 void CountLeaves(int level, node_t* node)
 {
     if (node->planenum == PLANENUM_LEAF)
