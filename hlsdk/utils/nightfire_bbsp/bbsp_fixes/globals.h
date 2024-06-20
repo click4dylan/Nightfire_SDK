@@ -21,6 +21,10 @@
 
 #define	PLANENUM_LEAF		-1
 
+#define ANGLE_UP    -1
+#define ANGLE_DOWN  -2
+#define MAXLIGHTMAPS    4
+
 #define MAX_WORLD_BOUNDS 16384
 #define	MAX_SWITCHED_LIGHTS	    32 
 #define MAX_LIGHTTARGETS_NAME   64
@@ -30,6 +34,8 @@
 #define MAX_MAP_PLANES 262144
 #define MAX_MAP_NODES 262144
 #define MAX_MAP_FACES 262144
+//#define MAX_MAP_EDGES       256000
+//#define MAX_MAP_SURFEDGES   512000
 #define MAX_MAP_VERTS 262144
 #define MAX_MAP_NORMALS 262144
 #define MAX_MAP_INDICES 262142
@@ -42,7 +48,11 @@
 #define MAX_MAP_TEXTURES 1024
 #define MAX_MAP_MATERIALS 1024
 #define MAX_MAP_LEAVES 32000
+#define MAX_MAP_LEAFS MAX_MAP_LEAVES
 #define MAX_MAP_MODELS 1024
+
+//rad
+#define MAX_MAP_LIGHTINFO 64
 
 #define MAX_MAP_ENGINE_ENTITIES 1200
 
@@ -149,7 +159,7 @@ inline unsigned g_numMapsAlloced = 0;
 inline unsigned g_numEnts = 0;
 inline unsigned g_numEPairs = 0;
 #ifdef SUBDIVIDE
-inline int g_subdivide_size = 256;
+inline int g_subdivide_size = 240;
 inline bool g_nosubdiv = false;
 #endif
 inline bool g_nofill = false;
@@ -264,6 +274,9 @@ inline unsigned g_numDBrushSides = 0;
 inline unsigned g_numDModels = 0;
 inline unsigned g_numDMarkSurfaces = 0;
 inline unsigned g_lightdatasize = 0;
+#ifdef FIX_NORMALS_LUMP
+inline unsigned g_numDNormals = 0;
+#endif
 
 inline dleaf_t g_dleafs[MAX_MAP_LEAVES];
 
@@ -309,7 +322,7 @@ inline unsigned g_numDIndices = 0;
 
 inline dbrushside_t g_dbrushsides[MAX_MAP_BRUSHSIDES];
 inline char g_dvisdata[MAX_MAP_VISIBILITY];
-inline char g_dlightdata[MAX_MAP_LIGHTDATA];
+inline unsigned char g_dlightdata[MAX_MAP_LIGHTDATA];
 
 #ifdef ENFORCE_MAX_LIGHTMAP_SCALE
 #define MAX_LIGHTMAP_SCALE 16

@@ -150,8 +150,7 @@ void GetLightmapProjections(vec3_t out_s, face_t* face, vec3_t out_t)
 {
     vec_t maxs[2];
     vec_t mins[2];
-    vec3_t scaled_2;
-    vec3_t scaled_1;
+    vec3_t scaled_vecs[2];
 
     // Initialize vectors to zero
     out_s[0] = 0.0;
@@ -183,25 +182,22 @@ void GetLightmapProjections(vec3_t out_s, face_t* face, vec3_t out_t)
 
     VectorNormalize(out_s);
 
-    // Retrieve the lightmap rotation for the face
-    vec_t lightmap_rotation = face->brushside->td.lightmaprotation;
+    // Calculate the lightmap rotation matrix for the face
     matrix3x4_t rotation_matrix;
-    CalculatePlaneRotationMatrix(&rotation_matrix, plane->normal, lightmap_rotation);
+    CalculatePlaneRotationMatrix(&rotation_matrix, plane->normal, face->brushside->td.lightmaprotation);
 
-    // Rotate the s and t vectors
+    // Rotate the s and t vectors by the rotation
     VectorRotate(out_t, &rotation_matrix, out_t);
     VectorRotate(out_s, &rotation_matrix, out_s);
 
-    int incrementIndex = 0;
-    for (;;)
+    // Loop iteratively starting from 0:
+	// Scale s/t from the size of the face until lightmap width/height is < 128 units
+    for (unsigned int incrementIndex = 0; ; ++incrementIndex)
     {
         // Scale the vectors according to lightmap scale and base lightmap scale
-        vec_t lightmap_scale = face->brushside->td.lightmapscale;
-        if (lightmap_scale < (double)g_blscale)
-            lightmap_scale = (double)g_blscale;
+        vec_t lightmap_scale = max(face->brushside->td.lightmapscale, (vec_t)g_blscale);
 #ifdef MAX_LIGHTMAP_SCALE
-        if (lightmap_scale > MAX_LIGHTMAP_SCALE)
-            lightmap_scale = MAX_LIGHTMAP_SCALE;
+        lightmap_scale = min(lightmap_scale, (vec_t)MAX_LIGHTMAP_SCALE);
 #endif
 
         mins[0] = 999999.0;
@@ -209,44 +205,37 @@ void GetLightmapProjections(vec3_t out_s, face_t* face, vec3_t out_t)
         maxs[0] = -999999.0;
         maxs[1] = -999999.0;
 
-        double scale_factor = 1.0 / (incrementIndex * g_ilscale + lightmap_scale);
+        // note: HL1 is hardcoded to 16 lightmap_scale
+        vec_t multiplier = 1.0 / (lightmap_scale + (vec_t)(g_ilscale * incrementIndex));
 
-        VectorScale(out_t, scale_factor, scaled_2);
-        VectorScale(out_s, scale_factor, scaled_1);
+        VectorScale(out_s, multiplier, scaled_vecs[0]);
+        VectorScale(out_t, multiplier, scaled_vecs[1]);
 
         for (unsigned int i = 0; i < face->winding->m_NumPoints; ++i) 
         {
-            vec_t t_val = DotProduct(scaled_1, face->winding->m_Points[i]);
-            vec_t s_val = DotProduct(scaled_2, face->winding->m_Points[i]);
+            vec_t dots[2];
 
-            if (t_val < mins[0]) mins[0] = t_val;
-            if (t_val > maxs[0]) maxs[0] = t_val;
-            if (s_val < mins[1]) mins[1] = s_val;
-            if (s_val > maxs[1]) maxs[1] = s_val;
+            for (unsigned int j = 0; j < 2; ++j)
+            {
+                dots[j] = DotProduct(scaled_vecs[j], face->winding->m_Points[i]);
+                dots[j] = DotProduct(scaled_vecs[j], face->winding->m_Points[i]);
+                mins[j] = min(mins[j], dots[j]);
+                maxs[j] = max(maxs[j], dots[j]);
+            }
         }
-
-        // Check for range
-        bool in_range = true;
-
-        for (int i = 0; i < 2; ++i)
+       
+        for (unsigned int i = 0; i < 2; ++i)
         {
             mins[i] = floor(mins[i]);
             maxs[i] = ceil(maxs[i]);
-            if (maxs[i] - mins[i] >= 128.0) //FIXME: todo, ideal value for this?
-            {
-                in_range = false;
-                break;
-            }
         }
 
-        if (in_range)
+        if ((maxs[0] - mins[0] < 128.0) && (maxs[1] - mins[1] < 128.0))
             break;
-
-        ++incrementIndex;
     }
 
-    VectorCopy(scaled_1, out_s);
-    VectorCopy(scaled_2, out_t);
+    VectorCopy(scaled_vecs[0], out_s);
+    VectorCopy(scaled_vecs[1], out_t);
 }
 
 unsigned int GetTextureIndex(const char* src)

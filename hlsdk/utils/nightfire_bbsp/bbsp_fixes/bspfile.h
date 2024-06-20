@@ -1,6 +1,8 @@
 #pragma once
 #include "bsp_structs.h"
 
+extern int IntForKey(const entity_t* const ent, const char* const key);
+extern vec_t FloatForKey(const entity_t* const ent, const char* const key);
 extern const char* ValueForKey(const entity_t* const ent, const char* const key);
 extern void GetVectorForKey(const entity_t* const ent, const char* const key, vec3_t vec);
 extern int ArrayUsage(int size_of_item, const char* name_of_array, int num_items, int max_items);
@@ -18,4 +20,6 @@ extern void WritePlanes();
 extern void BeginBSPFile();
 extern void SetModelNumbers(mapinfo_t* mapfile);
 extern void SetKeyValue(entity_t* ent, const char* const key, const char* const value);
+extern mapinfo_t* ParseEntities();
+extern bool ParseEntity(mapinfo_t* map);
 extern void UnparseEntities(mapinfo_t* mapfile);

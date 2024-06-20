@@ -992,3 +992,27 @@ int Winding::classifyPointAgainstPlaneEdges(char* sides_buffer, const int max_si
 
     return backSideCount;
 }
+
+void Winding::getBounds(vec3_t& mins, vec3_t& maxs) const
+{
+    BoundingBox     bounds;
+    unsigned    x;
+
+    for (x = 0; x < m_NumPoints; x++)
+    {
+        bounds.add(m_Points[x]);
+    }
+    VectorCopy(bounds.m_Mins, mins);
+    VectorCopy(bounds.m_Maxs, maxs);
+}
+
+void Winding::getBounds(BoundingBox& bounds) const
+{
+    bounds.reset();
+    unsigned    x;
+
+    for (x = 0; x < m_NumPoints; x++)
+    {
+        bounds.add(m_Points[x]);
+    }
+}

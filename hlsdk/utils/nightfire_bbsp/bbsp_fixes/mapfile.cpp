@@ -302,9 +302,9 @@ void MakeBrushFaces(entity_t* ent, brush_t* brush)
 
         // Get texture info
         texinfo_t* info = TexinfoForBrushTexture(side, origin);
-        memcpy(side->original_face->vecs, info->vecs, sizeof(side->original_face->vecs));
-        side->original_face->texinfo = info;
-        side->original_face->flags = side->td.surfaceflags;
+        memcpy(face->vecs, info->vecs, sizeof(face->vecs));
+        face->texinfo = info;
+        face->flags = side->td.surfaceflags;
     }
 }
 
@@ -702,6 +702,12 @@ void GetDefaultFlagsForTextureName(
     *brush_flags = 0;
 }
 
+void ParseRotation(brush_t* brush, side_s* brush_side)
+{
+    GetToken(false);
+    float rotation = atof(g_token);
+}
+
 void ParseFlags(brush_t* brush, side_s* brush_side)
 {
     unsigned int texture_brushflags;
@@ -724,8 +730,9 @@ void ParseBrushSide(brush_t* brush, side_s* brush_side)
     ParseTexture(brush, brush_side);
     ParseAxis(brush, brush_side->td.uaxis, brush_side->td.ushift, "UAxis");
     ParseAxis(brush, brush_side->td.vaxis, brush_side->td.vshift, "VAxis");
-    ParseFlags(brush, brush_side);
+    ParseRotation(brush, brush_side);
     ParseScale(brush, brush_side);
+    ParseFlags(brush, brush_side);
     ParseMaterial(brush, brush_side);
     ParseLightmapInfo(brush, brush_side);
 }
@@ -796,8 +803,6 @@ void ParseAxis(brush_t* brush, vec3_t axis, vec_t& shift, const char* axisName)
 void ParseScale(brush_t* brush, side_s* brush_side)
 {
     GetToken(false);
-    
-    GetToken(false);
     brush_side->td.uscale = atof(g_token);
 
     GetToken(false);
@@ -867,4 +872,41 @@ void HandleOriginBrush(brush_t* brush)
         side->td.surfaceflags = SURFACEFLAG_NODRAW;
         safe_strncpy(side->td.name, "special/origin", MAX_TEXTURE_LENGTH);
     }
+}
+
+entity_t* EntityForModel(unsigned int modnum, mapinfo_t* map)
+{
+    int             i;
+    const char* s;
+    char            name[16];
+
+    sprintf(name, "*%i", modnum);
+    // search the entities for one using modnum
+    for (i = 0; i < map->numentities; i++)
+    {
+        s = ValueForKey(map->entities[i], "model");
+        if (!strcmp(s, name))
+        {
+            return map->entities[i];
+        }
+    }
+
+    return map->entities[0];
+}
+
+entity_t* FindTargetEntity(mapinfo_t* map, const char* const target)
+{
+    int             i;
+    const char* n;
+
+    for (i = 0; i < map->numentities; i++)
+    {
+        n = ValueForKey(map->entities[i], "targetname");
+        if (!strcmp(n, target))
+        {
+            return map->entities[i];
+        }
+    }
+
+    return NULL;
 }

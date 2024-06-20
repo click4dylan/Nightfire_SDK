@@ -93,6 +93,12 @@
     <ClInclude Include="outside.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="blockmem.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="boundingbox.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="hooks.cpp">
@@ -163,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="outside.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blockmem.cpp">
+      <Filter>Source Files\common</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

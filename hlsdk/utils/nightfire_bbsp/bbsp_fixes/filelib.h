@@ -52,5 +52,6 @@ extern FILE* SafeOpenRead(const char* filename);
 extern void SafeRead(FILE* f, void* buffer, int count);
 extern void SafeWrite(FILE* f, const void* const buffer, int count);
 extern int q_filelength(FILE* f);
+extern bool q_exists(const char* const filename);
 
 extern int LoadFile(const char* name, void** bufferptr);

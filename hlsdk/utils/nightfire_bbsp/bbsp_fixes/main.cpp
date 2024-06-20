@@ -342,6 +342,11 @@ int main(int argc, const char** argv, const char** envp)
     }
 
     WriteBSP(mapfile, g_bspfilename);
+
+#ifdef FIX_NORMALS_LUMP
+    //temporary 
+#endif
+
     delete mapfile;
 
     LogTimeElapsed(I_FloatTime() - startTime);

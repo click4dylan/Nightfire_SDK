@@ -15,6 +15,22 @@
 #include "bspfile.h"
 #include "scriplib.h"
 #include "filelib.h"
+#include "mapfile.h"
+
+#if defined(FIX_NORMALS_LUMP)
+#include <fstream>
+#endif
+
+
+int IntForKey(const entity_t* const ent, const char* const key)
+{
+    return atoi(ValueForKey(ent, key));
+}
+
+vec_t FloatForKey(const entity_t* const ent, const char* const key)
+{
+    return atof(ValueForKey(ent, key));
+}
 
 const char* ValueForKey(const entity_t* const ent, const char* const key)
 {
@@ -177,6 +193,10 @@ void SwapBSPFile(bool todisk)
     // not needed on windows..
 }
 
+#if defined(FIX_NORMALS_LUMP) && defined(BRAD)
+extern char g_source[_MAX_PATH];
+#endif
+
 void LoadBSPImage(dheader_t* const header)
 {
     unsigned int     i;
@@ -192,6 +212,29 @@ void LoadBSPImage(dheader_t* const header)
 
     g_numDModels = CopyLump(LUMP_MODELS, g_dmodels, sizeof(dmodel_t), header);
     g_numDVerts = CopyLump(LUMP_VERTEXES, g_dverts, sizeof(dvertex_t), header);
+#ifdef FIX_NORMALS_LUMP
+
+#if defined(BRAD)
+    char temp_normalfilename[MAX_PATH];
+    strcpy_s(temp_normalfilename, g_source);
+    StripExtension(temp_normalfilename);
+    DefaultExtension(temp_normalfilename, ".normals");
+
+    std::ifstream input(temp_normalfilename, std::ifstream::binary);
+    if (input.is_open())
+    {
+        input.read((char*)&g_numDNormals, sizeof(g_numDNormals));
+        input.read((char*)g_dnormals, sizeof(dnormal_t) * g_numDNormals);
+    }
+    else
+    {
+        Verbose("Couldn't open temporary .normals file!\n");
+    }
+#endif
+    // FIXME: TODO
+    // add this back when BVIS is hooked/rebuilt
+    //g_numDNormals = CopyLump(LUMP_NORMALS, g_dnormals, sizeof(dnormal_t), header);
+#endif
     g_numDIndices = CopyLump(LUMP_INDICES, g_dindices, sizeof(int), header);
     g_numDPlanes = CopyLump(LUMP_PLANES, g_dplanes, sizeof(dplane_t), header);
     g_numDLeafs = CopyLump(LUMP_LEAFS, g_dleafs, sizeof(dleaf_t), header);
@@ -217,7 +260,11 @@ void LoadBSPImage(dheader_t* const header)
 
     g_dmodels_checksum = FastChecksum(g_dmodels, sizeof(dmodel_t) * g_numDModels);
     g_dverts_checksum = FastChecksum(g_dverts, sizeof(dvertex_t) * g_numDVerts);
+#ifdef FIX_NORMALS_LUMP
+    g_dnormals_checksum = FastChecksum(g_dnormals, sizeof(dnormal_t) * g_numDNormals);
+#else
     g_dnormals_checksum = FastChecksum(g_dnormals, sizeof(dnormal_t) * g_numDVerts);
+#endif
     g_dindicies_checksum = FastChecksum(g_dindices, sizeof(int) * g_numDIndices);
     g_dplanes_checksum = FastChecksum(g_dplanes, sizeof(dplane_t) * g_numDPlanes);
     g_dleafs_checksum = FastChecksum(g_dleafs, sizeof(dleaf_t) * g_numDLeafs);
@@ -271,7 +318,28 @@ void WriteBSPFile(const char* const filename)
     AddLump(sizeof(dplane_t) * g_numDPlanes, bspfile, LUMP_PLANES, "LUMP_PLANES", g_dplanes, header);
     AddLump(sizeof(dleaf_t) * g_numDLeafs, bspfile, LUMP_LEAFS, "LUMP_LEAFS", g_dleafs, header);
     AddLump(sizeof(dvertex_t) * g_numDVerts, bspfile, LUMP_VERTEXES, "LUMP_VERTS", g_dverts, header);
-    AddLump(sizeof(dvertex_t) * g_numDVerts, bspfile, LUMP_NORMALS, "LUMP_NORMALS", g_dnormals, header);
+#ifdef FIX_NORMALS_LUMP
+    AddLump(sizeof(dnormal_t) * g_numDNormals, bspfile, LUMP_NORMALS, "LUMP_NORMALS", g_dnormals, header);
+#if !defined(BVIS) && !defined(BRAD)
+    char temp_normalfilename[MAX_PATH];
+    strcpy_s(temp_normalfilename, filename);
+    StripExtension(temp_normalfilename);
+    DefaultExtension(temp_normalfilename, ".normals");
+    std::ofstream output(temp_normalfilename, std::ofstream::trunc | std::ofstream::binary);
+    if (output.is_open())
+    {
+        Verbose("Writing temporary .normals file until BVIS is rebuilt/hooked\n");
+        output.write((const char*)&g_numDNormals, sizeof(g_numDNormals));
+        output.write((const char*)g_dnormals, sizeof(dnormal_t) * g_numDNormals);
+    }
+    else
+    {
+        Verbose("Couldn't write temporary .normals file!\n");
+    }
+#endif
+#else
+    AddLump(sizeof(dnormal_t) * g_numDVerts, bspfile, LUMP_NORMALS, "LUMP_NORMALS", g_dnormals, header);
+#endif
     AddLump(sizeof(int) * g_numDIndices, bspfile, LUMP_INDICES, "LUMP_INDICES", g_dindices, header);
     AddLump(sizeof(dnode_t) * g_numDNodes, bspfile, LUMP_NODES, "LUMP_NODES", g_dnodes, header);
     AddLump(sizeof(dface_t) * g_numDFaces, bspfile, LUMP_FACES, "LUMP_FACES", g_dFaces, header);
@@ -464,6 +532,60 @@ void SetKeyValue(entity_t* ent, const char* const key, const char* const value)
     ent->epairs = ep;
     ep->key = _strdup(key);
     ep->value = _strdup(value);
+}
+
+bool ParseEntity(mapinfo_t* map)
+{
+    epair_t* e;
+    entity_t* mapent;
+
+    if (!GetToken(true))
+    {
+        return false;
+    }
+
+    if (strcmp(g_token, "{"))
+    {
+        Error("ParseEntity: { not found");
+    }
+
+    mapent = AllocNewEntities(map);
+
+    while (1)
+    {
+        if (!GetToken(true))
+        {
+            Error("ParseEntity: EOF without closing brace");
+        }
+        if (!strcmp(g_token, "}"))
+        {
+            break;
+        }
+        e = ParseEpair();
+        e->next = mapent->epairs;
+        mapent->epairs = e;
+    }
+
+#ifdef ZHLT_INFO_COMPILE_PARAMETERS // AJM
+    if (!strcmp(ValueForKey(mapent, "classname"), "info_compile_parameters"))
+    {
+        Log("Map entity info_compile_parameters detected, using compile settings\n");
+        GetParamsFromEnt(mapent);
+    }
+#endif
+
+    return true;
+}
+
+mapinfo_t* ParseEntities()
+{
+    mapinfo_t* info = new mapinfo_t;
+    ParseFromMemory(g_dentdata, g_entdatasize);
+
+    while (ParseEntity(info))
+    {
+    }
+    return info;
 }
 
 void UnparseEntities(mapinfo_t* mapfile)

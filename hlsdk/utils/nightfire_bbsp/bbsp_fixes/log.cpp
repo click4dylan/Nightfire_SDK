@@ -6,6 +6,7 @@
 #include "log.h"
 #include "threads.h"
 #include "hlassert.h"
+#include "filelib.h"
 
 const char* g_Program = "Uninitialized variable ::g_Program";
 char            g_Mapname[MAX_PATH] = "Uninitialized variable ::g_Mapname";
@@ -520,5 +521,22 @@ void hlassume(bool exp, assume_msgs msgid)
 
         safe_snprintf(message, MAX_MESSAGE, "%s\nDescription: %s\nHowto Fix: %s\n", msg->title, msg->text, msg->howto);
         Error(message);
+    }
+}
+
+void CheckForErrorLog()
+{
+    if (g_log)
+    {
+        char            logfilename[_MAX_PATH];
+
+        safe_snprintf(logfilename, _MAX_PATH, "%s.err", g_Mapname);
+        if (q_exists(logfilename))
+        {
+            Log(">> There was a problem compiling the map.\n"
+                ">> Check the file %s.log for the cause.\n",
+                g_Mapname);
+            exit(1);
+        }
     }
 }

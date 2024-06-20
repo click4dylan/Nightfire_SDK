@@ -18,6 +18,37 @@
 #include "portals.h"
 #include "outside.h"
 
+/*
+BBSP lighting stage:
+1: gets a list of all the original .map faces.
+2: splits the world by a max 512 node unit size
+   note: relying on splitting faces by the node itself is flawed because it results in tri-fans,
+   the code should split the individual faces into fragments with a max face size of 512 (or lower preferably) before splitting along nodes
+3: does NOT merge the split (fragmented) faces back into one big face
+4: outputs the nodes data to a lighting file that rad will use later.
+
+BBSP final stage:
+1: gets a list of all the original .map faces.
+2: splits the world by a max user-defined (default 1024) node unit size
+   note: relying on splitting faces by the node itself is flawed because it results in tri-fans,
+   the code should split the individual faces into fragments with a max face size of 512 (or lower preferably) before splitting along nodes
+3: merges split/fragmented faces into one large face
+   note: this is flawed logic due to lightmaps having to be stretched to fit the face
+4: (HL1 and Nightfire): Generate texture matrix (s/t)
+5: (Nightfire): Generate a lightmap matrix (s/t) from the face's extents
+    For each face:
+    1: Get normalized s/t matrix vectors from the face's plane
+    2: Rotate the s/t matrix by the lightmap rotation set in the .map file
+    3: Get -ilscale and -blscale launch parameters (default 16)
+    4: If face_lightmap_scale in .map (default 16) is less than -blscale, set it to -blscale
+    Loop iteratively starting from 0:
+        Scale (multiply) s/t by 1 / (face_lightmap_scale + (iteration * -ilscale))
+        note: HL1 is hardcoded 1 / 16
+        Get total width and height of the lightmap by the dot product of s/t and the face's points
+        If the size is less than 128 units, this is the final lightmap s/t
+        Otherwise, restore s/t to before scaling and continue looping
+*/
+
 void SetModelBounds(dmodel_t* model, vec3_t& mins, vec3_t& maxs)
 {
     VectorCopy(mins, model->mins);
@@ -43,7 +74,7 @@ void WriteLightingNodeAndLeafData(int depth, node_t* node)
 
     unsigned int leafType = node->contents;
     if((leafType & 0xFF) == 0)
-        leafType = (leafType & 0xFFFFFF00) | 1;;
+        leafType = (leafType & 0xFFFFFF00) | CONTENTS_EMPTY;
     fprintf(lightingfile, "LEAF %i %u\n", node->visleafnum, leafType);
 }
 
@@ -195,7 +226,9 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
         ++g_numNodes;
 
 #ifdef SUBDIVIDE
+#if 0
         //TODO fixme: is it necessary to subdivide in this function?
+        // it doesn't appear to be required, at least for final face rendering
         if (!g_nosubdiv)
         {
             // subdivide large faces
@@ -214,6 +247,7 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
                 prevptr = &f->next;
             }
         }
+#endif
 #endif
 
         // Splitting the original_face into front and back
@@ -481,7 +515,12 @@ void ModelBSP(entity_t* entity, dmodel_t* model, int modelbsp_index)
     CalcNodeBoundsFromBrushes(model_node, entity);
     Verbose("  model bounds : (%.0f %.0f %.0f), (%.0f %.0f %.0f)\n", model_node->mins[0], model_node->mins[1], model_node->mins[2], model_node->maxs[0], model_node->maxs[1], model_node->maxs[2]);
 
+#if defined(SUBDIVIDE) && defined(NO_FACE_COMBINE)
+    bool should_write_final_faces = g_nosubdiv;
+    WriteHullFile(".p2", entity, CONTENTS_DETAIL | CONTENTS_BSP, APPEND, should_write_final_faces);
+#else
     WriteHullFile(".p2", entity, CONTENTS_DETAIL | CONTENTS_BSP, APPEND, WRITE_FINAL_FACES);
+#endif
     MarkFinalFaceFragments(model_node, entity);
     SetModelBounds(model, model_node->mins, model_node->maxs);
     EmitDrawNode_r(model_node);
@@ -598,9 +637,16 @@ void WorldBSP(entity_t* ent, mapinfo_t* info, dmodel_t* dmodel)
         SnapVerts(ent);
 
         // Write hull files
-        WriteHullFile(".p2", ent, CONTENTS_BSP, APPEND, WRITE_FACE_FRAGMENTS);
-        WriteHullFile(".p3", ent, CONTENTS_DETAIL, APPEND, WRITE_FACE_FRAGMENTS);
-        WriteHullFile(".p4", ent, CONTENTS_DETAIL | CONTENTS_BSP, APPEND, WRITE_FACE_FRAGMENTS);
+#if defined(SUBDIVIDE) && defined(NO_FACE_COMBINE)
+        bool should_write_final_faces = g_nosubdiv;
+        WriteHullFile(".p2", ent, CONTENTS_BSP, APPEND, should_write_final_faces);
+        WriteHullFile(".p3", ent, CONTENTS_DETAIL, APPEND, should_write_final_faces);
+        WriteHullFile(".p4", ent, CONTENTS_DETAIL | CONTENTS_BSP, APPEND, should_write_final_faces);
+#else
+        WriteHullFile(".p2", ent, CONTENTS_BSP, APPEND, WRITE_FINAL_FACES);
+        WriteHullFile(".p3", ent, CONTENTS_DETAIL, APPEND, WRITE_FINAL_FACES);
+        WriteHullFile(".p4", ent, CONTENTS_DETAIL | CONTENTS_BSP, APPEND, WRITE_FINAL_FACES);
+#endif
 
         // Build marks
         MarkFinalFaceFragments(headnode, ent);

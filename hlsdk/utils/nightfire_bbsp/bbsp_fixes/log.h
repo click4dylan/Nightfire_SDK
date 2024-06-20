@@ -52,3 +52,4 @@ extern void Error(const char* const error, ...);
 extern void Fatal(assume_msgs msgid, const char* const warning, ...);
 extern void CheckFatal();
 extern void hlassume(bool exp, assume_msgs msgid);
+extern void CheckForErrorLog();

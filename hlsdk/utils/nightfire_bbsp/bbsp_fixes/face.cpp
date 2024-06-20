@@ -676,16 +676,16 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
 
     // Get lightmap projections
 //FIXME: todo: i think brad.exe needs a rebuild for this to work properly
-//#ifdef HL2_LUXEL_METHOD
-//    dface->lightmap_info_projection_index = GetProjectionIndex(pFace->texinfo->lightmapVecsLuxelsPerWorldUnits[0], pFace->texinfo->lightmapVecsLuxelsPerWorldUnits[1]);
-//#else
+#ifdef HL2_LUXEL_METHOD
+    dface->lightmap_info_projection_index = GetProjectionIndex(pFace->texinfo->lightmapVecsLuxelsPerWorldUnits[0], pFace->texinfo->lightmapVecsLuxelsPerWorldUnits[1]);
+#else
     double s[4], t[4];
     GetLightmapProjections(s, pFace, t);
     s[3] = 0.0f;
     t[3] = 0.0f;
 
     dface->lightmap_info_projection_index = GetProjectionIndex(s, t);
-//#endif
+#endif
 
     unsigned int numPoints = pFace->winding->m_NumPoints;
     dface->first_vertex_index = g_numDVerts;
@@ -700,7 +700,11 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
         {
             hlassume(g_numDVerts < MAX_MAP_VERTS, assume_MAX_MAP_VERTS);
 
+#ifdef FIX_NORMALS_LUMP
+            dnormal_t* normal = &g_dnormals[g_numDNormals++];
+#else
             dnormal_t* normal = &g_dnormals[g_numDVerts];
+#endif
             dvertex_t* vertex = &g_dverts[g_numDVerts++];
             plane_t* plane = &gMappedPlanes[pFace->planenum];
 
@@ -713,6 +717,50 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
     if (numPoints >= 3)
     {
         unsigned numFaces = numPoints - 2;
+
+#ifdef OPTIMIZE_INDICES
+        unsigned int* new_indices = new unsigned int[3 * numFaces];
+        unsigned int num_indices = 0;
+        for (unsigned i = 0; i < numFaces; ++i)
+        {
+            new_indices[num_indices++] = 0;
+            new_indices[num_indices++] = i + 1;
+            new_indices[num_indices++] = i + 2;
+        }
+
+        bool found_existing_indices = false;
+        unsigned int* indices_end = &g_dindices[g_numDIndices];
+        for (unsigned int* existing_indices = g_dindices; existing_indices + (3 * numFaces) <= indices_end; existing_indices += 3)
+        {
+            if (!memcmp(existing_indices, new_indices, sizeof(unsigned int) * (3 * numFaces)))
+            {
+                // use existing indices
+                dface->first_indices_index = existing_indices - g_dindices;
+                dface->num_indicies = 3 * numFaces;
+                found_existing_indices = true;
+                break;
+            }
+        }
+
+        delete[] new_indices;
+
+        if (!found_existing_indices)
+        {
+            // Set the face indices
+            dface->first_indices_index = g_numDIndices;
+            dface->num_indicies = 3 * numFaces;
+
+            // Iterate and set indices
+            for (unsigned i = 0; i < numFaces; ++i)
+            {
+                hlassume(g_numDIndices < MAX_MAP_INDICES, assume_MAX_MAP_INDICES);
+
+                g_dindices[g_numDIndices++] = 0;
+                g_dindices[g_numDIndices++] = i + 1;
+                g_dindices[g_numDIndices++] = i + 2;
+            }
+        }
+#else
 
         // Set the face indices
         dface->first_indices_index = g_numDIndices;
@@ -727,6 +775,7 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
             g_dindices[g_numDIndices++] = i + 1;
             g_dindices[g_numDIndices++] = i + 2;
         }
+#endif
     }
 }
 
@@ -763,17 +812,24 @@ void MarkFinalFaceFragments(node_t* node, entity_t* ent)
         for (unsigned int j = 0; j < brush->numsides; ++j)
         {
             side_t* side = brush->brushsides[j];
+
             for (face_t* fragment = side->face_fragments; fragment; fragment = fragment->next)
             {
 #ifdef SUBDIVIDE
-                if (g_nosubdiv || side->final_face->winding->m_NumPoints == 0)
+                if (g_nosubdiv)
+                {
                     MarkFace(fragment->leaf_node, side->final_face);
+                    MarkBrush(fragment->leaf_node, brush);
+                }
                 else
+                {
                     MarkFace(fragment->leaf_node, fragment);
+                    MarkBrush(fragment->leaf_node, brush);
+                }
 #else
                 MarkFace(fragment->leaf_node, side->final_face);
-#endif
                 MarkBrush(fragment->leaf_node, brush);
+#endif
             }
             for (face_t* inverted_fragment = side->inverted_face_fragments; inverted_fragment; inverted_fragment = inverted_fragment->next)
             {
@@ -1019,7 +1075,14 @@ void GetFinalBrushFaces(entity_t* entity, int brushflags)
                 else
                 {
                     // combine fragments into one giant face
+#if defined(SUBDIVIDE) && defined(NO_FACE_COMBINE)
+                    if (!g_nosubdiv)
+                        side->final_face = new face_t(*side->original_face, new Winding);
+                    else
+                        side->final_face = CombineFacesByPlane(side->face_fragments, side->original_face);
+#else
                     side->final_face = CombineFacesByPlane(side->face_fragments, side->original_face);
+#endif
                 }
             }
         }

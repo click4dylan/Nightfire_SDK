@@ -2,6 +2,7 @@
 
 #include "vectors.h"
 //#include "bsp_structs.h"
+#include "boundingbox.h"
 
 #define	SIDE_FRONT		0
 #define	SIDE_ON			2
@@ -53,6 +54,8 @@ public:
     Winding(UINT32 numpoints);
     void getCenter(vec3_t& center) const;
     vec_t getArea() const;
+    void getBounds(vec3_t& mins, vec3_t& maxs) const;
+    void getBounds(BoundingBox& bounds) const;
     void Invert();
 };
 

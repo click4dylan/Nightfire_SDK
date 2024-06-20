@@ -1,11 +1,23 @@
 #pragma once
 #include <math.h>
+#include <float.h>
+
+#ifdef VEC_T_IS_FLOAT
+typedef float vec_t;
+typedef float vec3_t[3];
+typedef struct {
+    float m[3][4];
+} matrix3x4_t;
+
+#else
 
 typedef double vec_t;
 typedef double vec3_t[3];
 typedef struct {
     double m[3][4];
 } matrix3x4_t;
+
+#endif
 
 extern const vec3_t    vec3_origin;
 
@@ -30,6 +42,9 @@ extern const vec3_t    vec3_origin;
 #define VectorMultiply(a,b,c)    { (c)[0]=(a)[0]*(b)[0]; (c)[1]=(a)[1]*(b)[1]; (c)[2]=(a)[2]*(b)[2]; }
 #define VectorDivide(a,b,c)      { (c)[0]=(a)[0]/(b)[0]; (c)[1]=(a)[1]/(b)[1]; (c)[2]=(a)[2]/(b)[2]; }
 #define VectorLength(a)  sqrt((double) ((double)((a)[0] * (a)[0]) + (double)( (a)[1] * (a)[1]) + (double)( (a)[2] * (a)[2])) )
+#define VectorAvg(a)             ( ( (a)[0] + (a)[1] + (a)[2] ) / 3 )
+#define VectorMaximum(a) ( max( (a)[0], max( (a)[1], (a)[2] ) ) )
+#define VectorMinimum(a) ( min( (a)[0], min( (a)[1], (a)[2] ) ) )
 
 #define VectorMA(a, scale, b, dest) \
 { \
@@ -39,6 +54,15 @@ extern const vec3_t    vec3_origin;
 }
 
 #define VectorScale(a,b,c)       { (c)[0]=(a)[0]*(b);(c)[1]=(a)[1]*(b);(c)[2]=(a)[2]*(b); }
+
+inline bool isPointFinite(const vec_t* p)
+{
+    if (_finite(p[0]) && _finite(p[1]) && _finite(p[2]))
+    {
+        return true;
+    }
+    return false;
+}
 
 inline bool     VectorCompare(const vec3_t v1, const vec3_t v2)
 {

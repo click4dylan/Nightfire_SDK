@@ -13,3 +13,4 @@ extern void     UnGetToken();
 extern bool     TokenAvailable();
 extern bool IsScriptNonEmptyAndNotComment();
 extern void            LoadScriptFile(const char* const filename);
+extern void            ParseFromMemory(char* buffer, const int size);

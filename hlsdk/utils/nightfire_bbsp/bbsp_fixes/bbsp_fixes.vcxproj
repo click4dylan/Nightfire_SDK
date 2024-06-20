@@ -141,7 +141,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseEXE|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(DXSDK_DIR)\Include;$(IncludePath)</IncludePath>
+    <IncludePath>..\bbsp_fixes\;$(DXSDK_DIR)\Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(DXSDK_DIR)\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -160,7 +160,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;BBSPFIXES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;BBSPFIXES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;FIX_NORMALS_LUMP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -177,7 +177,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;BBSPFIXES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;BBSP_NULL_SUPPORT;BBSP_BLOCKLIGHT_SUPPORT;SUBDIVIDE;UNCLAMP_LIGHTMAP_SCALE;UNCLAMP_MAX_NODE_SIZE;VARIABLE_LIGHTING_MAX_NODE_SIZE;ENFORCE_MAX_LIGHTMAP_SCALE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;BBSPFIXES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;BBSP_BLOCKLIGHT_SUPPORT;BBSP_NULL_SUPPORT;UNCLAMP_LIGHTMAP_SCALE;UNCLAMP_MAX_NODE_SIZE;VARIABLE_LIGHTING_MAX_NODE_SIZE;ENFORCE_MAX_LIGHTMAP_SCALE;SUBDIVIDE;NO_FACE_COMBINE;OPTIMIZE_INDICES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -220,7 +220,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;BBSPFIXES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;BBSP_NULL_SUPPORT;BBSP_BLOCKLIGHT_SUPPORT;SUBDIVIDE;UNCLAMP_LIGHTMAP_SCALE;UNCLAMP_MAX_NODE_SIZE;VARIABLE_LIGHTING_MAX_NODE_SIZE;ENFORCE_MAX_LIGHTMAP_SCALE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;BBSPFIXES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;BBSP_NULL_SUPPORT;BBSP_BLOCKLIGHT_SUPPORT;SUBDIVIDE;UNCLAMP_LIGHTMAP_SCALE;UNCLAMP_MAX_NODE_SIZE;VARIABLE_LIGHTING_MAX_NODE_SIZE;ENFORCE_MAX_LIGHTMAP_SCALE;HL2_LUXEL_METHOD;FIX_NORMALS_LUMP;NO_FACE_COMBINE;OPTIMIZE_INDICES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -312,6 +312,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="blockmem.h" />
+    <ClInclude Include="boundingbox.h" />
     <ClInclude Include="brush.h" />
     <ClInclude Include="bspfile.h" />
     <ClInclude Include="bsp_structs.h" />
@@ -338,6 +340,7 @@
     <ClInclude Include="worldbsp.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="blockmem.cpp" />
     <ClCompile Include="brush.cpp" />
     <ClCompile Include="bspfile.cpp" />
     <ClCompile Include="bsp_structs.cpp" />

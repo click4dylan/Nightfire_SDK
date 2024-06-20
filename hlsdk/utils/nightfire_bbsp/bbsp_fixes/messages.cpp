@@ -41,6 +41,7 @@ static const MessageTable_t assumes[assume_last] = {
 
     // qbsp
     {"LEAK in the map", maperror, reference},
+    {"Odd Plane in Node", maperror, contact},
     //{"Exceeded MAX_LEAF_FACES", "This error is almost always caused by an invalid brush, by having huge rooms, or scaling a texture down to extremely small values (between -1 and 1)",
     // "Find the invalid brush.  Any imported prefabs, carved brushes, or vertex manipulated brushes should be suspect"},
     //{"Exceeded MAX_WEDGES", internallimit, contact},

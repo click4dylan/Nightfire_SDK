@@ -52,6 +52,23 @@ int q_filelength(FILE* f)
     return end;
 }
 
+bool q_exists(const char* const filename)
+{
+    FILE* f;
+
+    f = fopen(filename, "rb");
+
+    if (!f)
+    {
+        return false;
+    }
+    else
+    {
+        fclose(f);
+        return true;
+    }
+}
+
 int LoadFile(const char* name, void** bufferptr)
 {
     FILE* v2; // edi

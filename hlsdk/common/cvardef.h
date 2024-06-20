@@ -189,6 +189,25 @@ public:
 	virtual int getDefaultInt();
 	virtual float getDefaultFloat();
 	virtual const char* getDefaultString();
+
+	void toDefault()
+	{
+		switch (type)
+		{
+		case CVAR_BOOL:
+			setValueBool(*(bool*)default_value);
+			break;
+		case CVAR_INT:
+			setValueInt(*(int*)default_value);
+			break;
+		case CVAR_FLOAT:
+			setValueFloat(*(float*)default_value);
+			break;
+		case CVAR_STRING:
+			setValueString(default_value_str);
+			break;
+		}
+	}
 };
 
 
