@@ -24,7 +24,16 @@ void CalcBrushBounds(vec3_t& maxs_dest, vec3_t& mins_dest, const brush_t* brush)
 
 void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags) 
 {
+    // dylan added for debug clarity..
+    Verbose("%s...\n", __FUNCTION__);
+
     g_NumNonInvertedFaces = 0;
+
+#ifdef MERGE
+    face_t* list = CopyFaceList(ent, brushflags, CONTENTS_BSP);
+    FilterFacesIntoTree(list, node, false, false);
+    return;
+#else
 
     for (unsigned int brushIndex = 0; brushIndex < ent->numbrushes; ++brushIndex)
     {
@@ -51,6 +60,7 @@ void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags)
             }
         }
     }
+#endif
 }
 
 brush_s::brush_s()

@@ -17,6 +17,7 @@
 #include "planes.h"
 #include "portals.h"
 #include "outside.h"
+#include "merge.h"
 
 /*
 BBSP lighting stage:
@@ -181,8 +182,23 @@ void BuildBSPTree(bool makeNodePortals, node_t* node, face_t* bspFaces)
     g_numNodes = 0;
     g_numLeafs = 0;
     g_TimesCalledSplitFaces = 0;
+#ifdef MERGE
+    g_NumPlaneFacesMerged = 0;
+#endif
+#ifdef SUBDIVIDE
+    g_NumFacesSubdivided = 0;
+#endif
 
     BuildBspTree_r(0, node, bspFaces, makeNodePortals);
+
+#ifdef MERGE
+    if (!g_nomerge)
+        Verbose("%5u plane faces merged\n", g_NumPlaneFacesMerged);
+#endif
+#ifdef SUBDIVIDE
+    if (!g_nosubdiv)
+        Verbose("%5u faces subdivided\n", g_NumFacesSubdivided);
+#endif
 
     ResetPrintOnce();
 
@@ -225,29 +241,15 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
         node->planenum = planenum & 0xFFFFFFFE;
         ++g_numNodes;
 
-#ifdef SUBDIVIDE
-#if 0
-        //TODO fixme: is it necessary to subdivide in this function?
-        // it doesn't appear to be required, at least for final face rendering
-        if (!g_nosubdiv)
-        {
-            // subdivide large faces
-            face_t** prevptr = &original_face;
-            face_t* f;
-            while (1)
-            {
-                f = *prevptr;
-                if (!f || !f->winding)
-                {
-                    break;
-                }
-
-                SubdivideFace(f, prevptr);
-                f = *prevptr;
-                prevptr = &f->next;
-            }
-        }
+        // merge as much as possible
+#ifdef MERGE
+        if (!g_nomerge)
+            MergePlaneFaces(&original_face);
 #endif
+
+#ifdef SUBDIVIDE
+        if (!g_nosubdiv)
+            SubdivideFaces(&original_face);
 #endif
 
         // Splitting the original_face into front and back
@@ -495,7 +497,7 @@ void ModelBSP(entity_t* entity, dmodel_t* model, int modelbsp_index)
     Verbose("===ModelBSP (%d) (entity %d : %s)===\n", modelbsp_index, entity->index, classname);
     face_t* original_face = CopyFaceList(entity, CONTENTS_BSP);
     node_t* node = new node_t;
-    BuildBSPTree(0, node, original_face);
+    BuildBSPTree(false, node, original_face);
     face_t* inverted_face_fragments = CopyFaceList_Inverted(entity, CONTENTS_BSP);
     FilterFacesIntoTree(inverted_face_fragments, node, true, false);
     FilterBrushesIntoTree(node, entity, CONTENTS_DETAIL | CONTENTS_BSP);
@@ -560,7 +562,7 @@ void WorldBSP(entity_t* ent, mapinfo_t* info, dmodel_t* dmodel)
     {
         // Make headnode portals
         MakeHeadnodePortals(headnode);
-        BuildBSPTree(1, headnode, bsp_faces);
+        BuildBSPTree(true, headnode, bsp_faces);
         inverted_face_fragments = CopyFaceList_Inverted(ent, CONTENTS_BSP);
         FilterFacesIntoTree(inverted_face_fragments, headnode, true, false);
 
@@ -618,6 +620,9 @@ void WorldBSP(entity_t* ent, mapinfo_t* info, dmodel_t* dmodel)
                     SetAllFacesLeafNode(0, ent);
                 FilterBrushesIntoTree(headnode, ent, CONTENTS_DETAIL | CONTENTS_BSP);
                 StripOutsideFaceFragments(headnode, ent, CONTENTS_DETAIL | CONTENTS_BSP);
+                
+                //TODO: fixtjunc
+
                 WriteHullFile(".p1", ent, CONTENTS_DETAIL | CONTENTS_BSP, TRUNCATE, WRITE_FACE_FRAGMENTS);
                 MarkEmptyBrushFaces(ent, CONTENTS_DETAIL | CONTENTS_BSP);
             }

@@ -246,6 +246,7 @@ void Settings()
     const char* nofillSetting;
     const char* notjuncSetting;
     const char* nosubdivSetting;
+    const char* nomergeSetting;
     const char* lightingSetting;
 
     if (g_info)
@@ -302,7 +303,13 @@ void Settings()
         nosubdivSetting = g_nosubdiv ? "on" : "off";
         Log("nosubdiv            [ %7s ] [ %7s ]\n", nosubdivSetting, "off");
 
-        Log("subdivide size      [ %7d ] [ %7d ] (Min %d) (Max %d)\n", g_subdivide_size, 256, 1, 65536);
+        if (!g_nosubdiv)
+            Log("subdivide size      [ %7d ] [ %7d ] (Min %d) (Max %d)\n", g_subdivide_size, 256, 1, 65536);
+#endif
+
+#ifdef MERGE
+        nomergeSetting = g_nomerge ? "on" : "off";
+        Log("nomerge             [ %7s ] [ %7s ]\n", nomergeSetting, "off");
 #endif
 
         lightingSetting = g_lighting ? "on" : "off";

@@ -260,8 +260,11 @@ typedef struct face_s
     double vecs[2][4]{};
     struct node_s* leaf_node = nullptr;
     int unknown4 = 0;
-#ifdef SUBDIVIDE
+#if defined(SUBDIVIDE) && defined(_DEBUG)
     bool subdivided = false;
+#endif
+#if defined(MERGE) && defined(_DEBUG)
+    bool merged = false;
 #endif
 
 #ifdef BBSP_USE_CPP
@@ -404,6 +407,9 @@ typedef struct side_s
     struct brush_s* parent_brush{};
     bool built_draw_indices_for_side{};
     unsigned int draw_brush_side_index{};
+#ifdef MERGE
+    bool merged_side_into_another_brush{};
+#endif
 
     side_s();
     ~side_s();

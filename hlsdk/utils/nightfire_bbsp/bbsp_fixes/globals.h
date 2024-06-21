@@ -90,6 +90,13 @@ inline bool g_water = true;
 inline dbrush_t g_dbrushes[MAX_MAP_BRUSHES];
 inline bool g_onlyents = false;
 inline unsigned int g_TimesCalledSplitFaces = 0;
+#ifdef MERGE
+inline unsigned int g_NumPlaneFacesMerged = 0;
+inline bool g_nomerge = false;
+#endif
+#ifdef SUBDIVIDE
+inline unsigned int g_NumFacesSubdivided = 0;
+#endif
 inline unsigned g_numtexinfo = 0;
 inline texinfo_t g_texinfo[MAX_MAP_TEXINFO];
 
@@ -385,6 +392,8 @@ inline unsigned g_NumNonInvertedFaces = 0;
 //#define g_NumNonInvertedFaces *(int*)0x45B128
 
 #define MAX_NODE_SIZE g_MaxNodeSize
+#define	MAXEDGES			48                 // 32
+#define	MAXPOINTS			28                 // don't let a base face get past this
 
 // the exact bounding box of the brushes is expanded some for the headnode
 // volume.  is this still needed?

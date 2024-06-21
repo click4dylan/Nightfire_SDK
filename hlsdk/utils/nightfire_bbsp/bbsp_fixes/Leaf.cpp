@@ -21,6 +21,7 @@ void WriteDrawLeaf(node_t* node)
     if (!leaf->contents)
         leaf->contents = CONTENTS_EMPTY;
 
+    //FIXME: ZHLT_LARGERANGE
     VectorCopy(node->mins, leaf->mins);
     VectorCopy(node->maxs, leaf->maxs);
  

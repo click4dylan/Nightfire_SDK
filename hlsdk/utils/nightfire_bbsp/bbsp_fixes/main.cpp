@@ -16,6 +16,9 @@ void __declspec(noreturn) Usage()
 #ifdef SUBDIVIDE
     Log("    -nosubdiv      : Disables face subdivision\n");
 #endif
+#ifdef MERGE
+    Log("    -nomerge       : Disables face merging\n");
+#endif
     Log("    -maxnodesize # : Sets the maximum portal node size\n\n");
 #ifdef VARIABLE_LIGHTING_MAX_NODE_SIZE
     Log("    -lightingmaxnodesize # : Sets the maximum lighting portal node size\n\n");
@@ -63,7 +66,7 @@ void ProcessArguments(int argc, const char** argv)
             g_notjunc = true;
         }
 #ifdef SUBDIVIDE
-        else if (!_stricmp(argv[i], "-nosubdiv"))
+        else if (!_stricmp(argv[i], "-nosubdiv") || !_stricmp(argv[i], "-nosubdivide"))
         {
             g_nosubdiv = true;
         }
@@ -79,6 +82,12 @@ void ProcessArguments(int argc, const char** argv)
                 Log("Expected value of at least 1 for '-subdivide'\n");
                 Usage();
             }
+        }
+#endif
+#ifdef MERGE
+        else if (!_stricmp(argv[i], "-nomerge"))
+        {
+            g_nomerge = true;
         }
 #endif
         else if (!_stricmp(argv[i], "-noclip"))

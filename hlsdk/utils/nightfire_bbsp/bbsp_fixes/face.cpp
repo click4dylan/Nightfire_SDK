@@ -9,6 +9,7 @@
 #include "log.h"
 #include "planes.h"
 #include "cmdlib.h"
+#include "merge.h"
 
 DWORD a = 0x41D3C0;
 
@@ -271,6 +272,9 @@ void SplitFaces(
 
 void StripOutsideFaceFragments(node_t* node, entity_t* ent, unsigned int brushflags)
 {
+    // dylan added for debug clarity..
+    Verbose("%s...\n", __FUNCTION__);
+
     unsigned int keptFragments = 0;
     unsigned int discardedFragments = 0;
 
@@ -319,6 +323,9 @@ void StripOutsideFaceFragments(node_t* node, entity_t* ent, unsigned int brushfl
 
 void MarkEmptyBrushFaces(entity_t* entity, unsigned int brushflags)
 {
+    // dylan added for debug clarity..
+    Verbose("%s...\n", __FUNCTION__);
+
     unsigned int totalFaces = 0;
     unsigned int removedFaces = 0;
 
@@ -337,6 +344,10 @@ void MarkEmptyBrushFaces(entity_t* entity, unsigned int brushflags)
                 {
                     if (!side->face_fragments && (face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | SURFACEFLAG_NODRAW | CONTENTS_SOLID)) == 0)
                     {
+#ifdef MERGE
+                        if (side->merged_side_into_another_brush)
+                            continue;
+#endif
                         ++removedFaces;
                         face->flags |= SURFACEFLAG_NODRAW;
                         if ((brushflags & CONTENTS_BSP) != 0)
@@ -380,42 +391,32 @@ void FreeBrushFaces(entity_t* entity, unsigned int brushflags)
 
 void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inverted, bool is_lighting_tree)
 {
-    // subdivide large faces
-#ifdef SUBDIVIDE
-    if (!g_nosubdiv)
+    // dylan added this for debug printing clarity
+    Verbose("%s...\n", __FUNCTION__);
+
+    if (node->planenum != PLANENUM_LEAF && !face_windings_are_inverted)
     {
-        face_t** prevptr = &list;
-        face_t* f;
-        while (1)
+        // merge as much as possible
+#ifdef MERGE
+        if (!g_nomerge)
         {
-            f = *prevptr;
-            if (!f || !f->winding)
-            {
-                break;
-            }
-
-            SubdivideFace(f, prevptr);
-            f = *prevptr;
-            prevptr = &f->next;
+            g_NumPlaneFacesMerged = 0;
+            MergePlaneFaces(&list);
+            Verbose("%5u plane faces merged\n", g_NumPlaneFacesMerged);
         }
-    }
-
-/*
-    // print subdivide metrics
-    int num_faces = 0;
-    int num_subdivided = 0;
-    int num_corrugated = 0;
-    for (face_t* f = list; f; f = f->next)
-    {
-        if (f->subdivided)
-            ++num_subdivided;
-        if (!_stricmp(f->brushside->td.name, "2/CORRUGATED"))
-            ++num_corrugated;
-        ++num_faces;
-    }
-*/
-
 #endif
+
+        // subdivide large faces
+#ifdef SUBDIVIDE
+        if (!g_nosubdiv)
+        {
+            g_NumFacesSubdivided = 0;
+            SubdivideFaces(&list);
+            Verbose("%5u faces subdivided\n", g_NumFacesSubdivided);
+        }
+#endif
+    }
+
     face_t* next;
     for (face_t* f = list; f; f = next)
     {
@@ -567,7 +568,7 @@ void SetFacesLeafNode(node_t* node, entity_t* entity)
     }
 }
 
-face_t* CopyFaceList(entity_t* ent, unsigned int brushflags)
+face_t* CopyFaceList(entity_t* ent, unsigned int brushflags, unsigned int skipfaceflags)
 {
     face_t* copiedFaces = nullptr; // Pointer to the list of copied original_face
     unsigned int numCopiedFaces = 0; // Counter for the number of copied original_face
@@ -586,7 +587,7 @@ face_t* CopyFaceList(entity_t* ent, unsigned int brushflags)
                 face_t* face = brush->brushsides[sideIndex]->original_face;
 
                 // Check if the originalFace brushflags match the criteria
-                if ((face->flags & (CONTENTS_DETAIL | CONTENTS_BSP | CONTENTS_SOLID)) == 0)
+                if ((face->flags & skipfaceflags) == 0)
                 {
                     // Copy the originalFace and add it to the list
                     face_t* dupFace = new face_t(*face);
@@ -605,10 +606,10 @@ face_t* CopyFaceList(entity_t* ent, unsigned int brushflags)
     return copiedFaces;
 }
 
-face_t* CopyFaceList_Inverted(entity_t* ent, unsigned int brushflags)
+face_t* CopyFaceList_Inverted(entity_t* ent, unsigned int brushflags, unsigned int skipfaceflags)
 {
     // Copy the originalFace list with the given brushflags from the entity
-    face_t* face = CopyFaceList(ent, brushflags);
+    face_t* face = CopyFaceList(ent, brushflags, skipfaceflags);
 
     // Iterate over the copied original_face and invert their windings
     for (face_t* f = face; f != nullptr; f = f->next) 
@@ -856,9 +857,52 @@ void MarkFaceFragments(node_t* node, entity_t* ent)
     }
 }
 
+// for debugging
+unsigned int GetNumFacesFromList(face_t* list)
+{
+    unsigned int num_faces = 0;
+    for (face_t* f = list; f; f = f->next)
+    {
+        ++num_faces;
+    }
+    return num_faces;
+}
+
+// for debugging
+void PrintNumFacesFromList(face_t* list, const char* function_name, const char* stage)
+{
+    unsigned int num_faces = GetNumFacesFromList(list);
+    Verbose("%s: %5u faces %s\n", function_name, num_faces, stage);
+}
+
 // not used in nightfire
 #ifdef SUBDIVIDE
-void SubdivideFace(face_t* f, face_t** prevptr)
+
+void SubdivideFaces(face_t** list)
+{
+    if (g_nosubdiv)
+        return;
+    
+    face_t** prevptr = list;
+    face_t* f;
+    while (1)
+    {
+        f = *prevptr;
+        if (!f || !f->winding)
+        {
+            break;
+        }
+
+        if (SubdivideFace(f, prevptr))
+        {
+            ++g_NumFacesSubdivided;
+        }
+        f = *prevptr;
+        prevptr = &f->next;
+    }
+}
+
+bool SubdivideFace(face_t* f, face_t** prevptr)
 {
     vec_t           mins, maxs;
     vec_t           v;
@@ -875,40 +919,20 @@ void SubdivideFace(face_t* f, face_t** prevptr)
     // special (non-surface cached) original_face don't need subdivision
     tex = f->texinfo;
 
+    bool did_subdivide = false;
+
     if (f->flags & CONTENTS_HINTSKIP)
-        return;
+        return did_subdivide;
     if (f->flags & CONTENTS_EMPTY)
-        return;
+        return did_subdivide;
     if (f->flags & SURFACEFLAG_NODRAW)
-        return;
+        return did_subdivide;
     if (f->flags & CONTENTS_ORIGIN)
-        return;
+        return did_subdivide;
     if (f->flags & CONTENTS_WATER)
-        return;
+        return did_subdivide;
     if (f->flags & CONTENTS_SKY)
-        return;
-#if 0
-    tex = &g_texinfo[f->texturenum];
-
-    if (tex->flags & TEX_SPECIAL)
-    {
-        return;
-    }
-
-    if (f->facestyle == face_hint)
-    {
-        return;
-    }
-    if (f->facestyle == face_skip)
-    {
-        return;
-    }
-
-#ifdef ZHLT_NULLTEX    // AJM
-    if (f->facestyle == face_null)
-        return; // ideally these should have their tex_special brushflags set, so its here jic
-#endif
-#endif
+        return did_subdivide;
 
     for (axis = 0; axis < 2; axis++)
     {
@@ -964,14 +988,19 @@ void SubdivideFace(face_t* f, face_t** prevptr)
             *prevptr = back;
 
             // for debugging
+            did_subdivide = true;
+#ifdef _DEBUG
             front->subdivided = true;
             back->subdivided = true;
+#endif
 
             back->next = front;
             front->next = next;
             f = back;
         }
     }
+
+    return did_subdivide;
 }
 #endif
 
@@ -1048,8 +1077,11 @@ face_t* CombineFacesByPlane(face_t* face_fragments, face_t* original_face)
 
 void GetFinalBrushFaces(entity_t* entity, int brushflags)
 {
+    // dylan added for debug clarity..
+    Verbose("%s...\n", __FUNCTION__);
+
     // Measure elapsed time
-    I_FloatTime();
+    double startTime = I_FloatTime();
 
     // Loop through each brush in the entity
     for (unsigned int i = 0; i < entity->numbrushes; ++i)
@@ -1087,4 +1119,8 @@ void GetFinalBrushFaces(entity_t* entity, int brushflags)
             }
         }
     }
+
+    // dylan fixed, gbx forgot to add this
+    Verbose("%s : ", __FUNCTION__);
+    LogTimeElapsed(I_FloatTime() - startTime);
 }

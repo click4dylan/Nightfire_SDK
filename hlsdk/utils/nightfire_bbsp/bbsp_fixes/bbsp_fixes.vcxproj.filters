@@ -99,6 +99,9 @@
     <ClInclude Include="boundingbox.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="merge.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="hooks.cpp">
@@ -172,6 +175,9 @@
     </ClCompile>
     <ClCompile Include="blockmem.cpp">
       <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="merge.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
