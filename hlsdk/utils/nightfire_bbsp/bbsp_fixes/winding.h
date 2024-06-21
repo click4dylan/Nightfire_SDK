@@ -19,7 +19,7 @@ public:
     vec3_t* m_Points;
     unsigned int m_MaxPoints;
 
-    bool HasPoints() { return m_NumPoints >= 3 && m_Points; }
+    bool HasPoints() const { return m_NumPoints >= 3 && m_Points; }
 #if 0
     void Divide(bool unknown, vec_t* normal, Winding** front_face, Winding** back_face, double dist)
     {

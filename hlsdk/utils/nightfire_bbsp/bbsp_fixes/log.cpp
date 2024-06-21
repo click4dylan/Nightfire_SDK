@@ -248,6 +248,7 @@ void Settings()
     const char* nosubdivSetting;
     const char* nomergeSetting;
     const char* lightingSetting;
+    const char* nostripSetting;
 
     if (g_info)
     {
@@ -310,6 +311,11 @@ void Settings()
 #ifdef MERGE
         nomergeSetting = g_nomerge ? "on" : "off";
         Log("nomerge             [ %7s ] [ %7s ]\n", nomergeSetting, "off");
+#endif
+
+#ifdef STRIP
+        nostripSetting = g_nostrip ? "on" : "off";
+        Log("nostrip             [ %7s ] [ %7s ]\n", nostripSetting, "off");
 #endif
 
         lightingSetting = g_lighting ? "on" : "off";

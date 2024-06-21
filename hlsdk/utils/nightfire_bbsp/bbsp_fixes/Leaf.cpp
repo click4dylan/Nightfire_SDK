@@ -38,6 +38,7 @@ void WriteDrawLeaf(node_t* node)
             if ((markface->flags & (CONTENTS_BSP | SURFACEFLAG_NODRAW | CONTENTS_PORTAL | CONTENTS_SOLID | CONTENTS_EMPTY)) == 0)
             {
                 WriteFace_AkaBuildDrawIndicesForFace(markface);
+                hlassume(g_numDMarkSurfaces < MAX_MAP_MARKSURFACES, assume_MAX_MAP_MARKSURFACES);
                 g_dmarksurfaces[g_numDMarkSurfaces++] = markface->outputnumber;
             }
         }
@@ -59,6 +60,7 @@ void WriteDrawLeaf(node_t* node)
             if ((markbrush->brushflags & (CONTENTS_HINTSKIP | CONTENTS_ORIGIN)) == 0)
             {
                 WriteDrawBrush(markbrush);
+                hlassume(g_numDMarkBrushes < MAX_MAP_MARKBRUSHES, assume_MAX_MAP_MARKBRUSHES);
                 g_dmarkbrushes[g_numDMarkBrushes++] = markbrush->output_num;
             }
         }

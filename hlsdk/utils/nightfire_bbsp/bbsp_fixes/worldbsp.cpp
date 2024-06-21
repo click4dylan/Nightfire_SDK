@@ -241,15 +241,23 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
         node->planenum = planenum & 0xFFFFFFFE;
         ++g_numNodes;
 
+#if 0
         // merge as much as possible
 #ifdef MERGE
         if (!g_nomerge)
             MergePlaneFaces(&original_face);
 #endif
 
+#ifdef STRIP
+        // strip enclosed faces
+        if (!g_nostrip)
+            StripEnclosedFaces(&original_face);
+#endif
+
 #ifdef SUBDIVIDE
         if (!g_nosubdiv)
             SubdivideFaces(&original_face);
+#endif
 #endif
 
         // Splitting the original_face into front and back

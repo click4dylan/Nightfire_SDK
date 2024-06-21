@@ -46,7 +46,7 @@ face_s::face_s(const face_s& src)
         winding = new Winding(*src.winding);
     else
         winding = nullptr;
-#ifdef SUBDIVIDE
+#if defined(_DEBUG) && defined(SUBDIVIDE)
     subdivided = src.subdivided;
 #endif
 }
@@ -57,7 +57,7 @@ face_s::face_s(const face_s& src, Winding* src_winding)
     ++g_numFaces;
     memcpy(vecs, src.vecs, sizeof(vecs));
     winding = src_winding;
-#ifdef SUBDIVIDE
+#if defined(_DEBUG) && defined(SUBDIVIDE)
     subdivided = src.subdivided;
 #endif
 }
@@ -389,6 +389,220 @@ void FreeBrushFaces(entity_t* entity, unsigned int brushflags)
     }
 }
 
+bool DoFacesHaveOppositePlanes(const face_t* face1, const face_t* face2) 
+{
+    // Calculate the dot product
+    double dot = DotProduct(gMappedPlanes[face1->planenum].normal, gMappedPlanes[face2->planenum].normal);
+
+    // Check if the dot product is less than zero, meaning the normals are opposite
+    return dot < 0.0;
+}
+
+// Function to project a polygon onto an axis and return min/max projection values
+void ProjectPolygon(const Winding& polygon, const vec3_t& axis, vec_t& minProj, vec_t& maxProj)
+{
+    minProj = std::numeric_limits<double>::infinity();
+    maxProj = -std::numeric_limits<double>::infinity();
+
+    for (unsigned int i = 0; i < polygon.m_NumPoints; ++i)
+    {
+        vec3_t& vertex = polygon.m_Points[i];
+        vec_t projection = DotProduct(vertex, axis);
+        if (projection < minProj) minProj = projection;
+        if (projection > maxProj) maxProj = projection;
+    }
+}
+
+// Function to check if two faces overlap using Separating Axis Theorem (SAT)
+bool DoFacesOverlap(const face_t& face1, const face_t& face2) 
+{
+    // Check overlap along face1's normals
+    for (unsigned int i = 0; i < face1.winding->m_NumPoints; ++i) 
+    {
+        unsigned int nextIndex = (i + 1) % face1.winding->m_NumPoints;
+        vec3_t edge;
+        VectorSubtract(face1.winding->m_Points[nextIndex], face1.winding->m_Points[i], edge);
+        vec3_t axis;
+        CrossProduct(edge, gMappedPlanes[face1.planenum].normal, axis);
+
+        vec_t minProj1, maxProj1, minProj2, maxProj2;
+        ProjectPolygon(*face1.winding, axis, minProj1, maxProj1);
+        ProjectPolygon(*face2.winding, axis, minProj2, maxProj2);
+
+        if (maxProj1 < minProj2 || maxProj2 < minProj1) 
+        {
+            return false; // Separating axis found
+        }
+    }
+
+    // Check overlap along face2's normals
+    for (unsigned int i = 0; i < face2.winding->m_NumPoints; ++i)
+    {
+        unsigned int nextIndex = (i + 1) % face2.winding->m_NumPoints;
+        vec3_t edge;
+        VectorSubtract(face2.winding->m_Points[nextIndex], face2.winding->m_Points[i], edge);
+        vec3_t axis;
+        CrossProduct(edge, gMappedPlanes[face2.planenum].normal, axis);
+
+        vec_t minProj1, maxProj1, minProj2, maxProj2;
+        ProjectPolygon(*face1.winding, axis, minProj1, maxProj1);
+        ProjectPolygon(*face2.winding, axis, minProj2, maxProj2);
+
+        if (maxProj1 < minProj2 || maxProj2 < minProj1) 
+        {
+            return false; // Separating axis found
+        }
+    }
+
+    return true; // No separating axis found, faces overlap
+}
+
+bool IsFaceEnclosed(const face_t& innerFace, const face_t& outerFace) 
+{
+    // First, check for overlap
+    if (!DoFacesOverlap(innerFace, outerFace)) 
+    {
+        return false;
+    }
+
+    // Then, ensure all points of the inner face are within the outer face
+    for (unsigned int i = 0; i < innerFace.winding->m_NumPoints; ++i)
+    {
+        const vec3_t& point = innerFace.winding->m_Points[i];
+
+        vec_t innerProjection = DotProduct(point, gMappedPlanes[outerFace.planenum].normal);
+        vec_t minOuterProj, maxOuterProj;
+        ProjectPolygon(*outerFace.winding, gMappedPlanes[outerFace.planenum].normal, minOuterProj, maxOuterProj);
+
+        if (innerProjection < minOuterProj || innerProjection > maxOuterProj) 
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+const face_t* FindFaceThatEnclosesFace(face_t* f, const face_t* list)
+{
+    if (!f->winding->HasPoints())
+        return nullptr;
+
+    for (const face_t* b = list; b; b = b->next)
+    {
+        if (b == f)
+            continue;
+        if (!b->winding->HasPoints())
+            continue;
+        //if (b->planenum != f->planenum && b->planenum != (f->planenum ^ 1))
+        //    continue;
+        //if (b->planenum == f->planenum)
+        //    continue;
+        //if (!DoFacesHaveOppositePlanes(f, b))
+        //    continue;
+        if (f->flags != b->flags)
+            continue;
+        if ((f->brush->brushflags & (CONTENTS_BSP | CONTENTS_UNKNOWN2 | SURFACEFLAG_NODRAW | CONTENTS_PORTAL | CONTENTS_SKY | CONTENTS_SOLID | CONTENTS_EMPTY)) != 0)
+            continue;
+        if (b->planenum == f->planenum)
+        {
+            if (*f->texinfo != *b->texinfo)
+                continue;
+        }
+
+        //if (f->brushside == b->brushside)
+        //    continue;
+        //if (f->brush == b->brush)
+        //    continue;
+
+        //if ((f->flags & (CONTENTS_BSP | CONTENTS_UNKNOWN2 | SURFACEFLAG_NODRAW | CONTENTS_PORTAL | CONTENTS_SKY | CONTENTS_SOLID | CONTENTS_EMPTY)) != 0)
+        //    continue;
+
+#if 0
+        if (strstr(b->texinfo->name, "LAGZONE") && strstr(f->texinfo->name, "STORESIGN"))
+        {
+            char temp[128];
+            sprintf(temp, "Smaller face normal: %f %f %f\n", gMappedPlanes[f->planenum].normal[0], gMappedPlanes[f->planenum].normal[1], gMappedPlanes[f->planenum].normal[2]);
+            OutputDebugStringA(temp);
+            OutputDebugStringA("Smaller face winding points:\n");
+            for (unsigned int i = 0; i < f->winding->m_NumPoints; ++i)
+            {
+                const vec3_t& point = f->winding->m_Points[i];
+
+                sprintf(temp, "%f %f %f\n", point[0], point[1], point[2]);
+                OutputDebugStringA(temp);
+            }
+
+            sprintf(temp, "Larger face normal: %f %f %f\n", gMappedPlanes[b->planenum].normal[0], gMappedPlanes[b->planenum].normal[1], gMappedPlanes[b->planenum].normal[2]);
+            OutputDebugStringA(temp);
+            OutputDebugStringA("Larger face winding points:\n");
+            for (unsigned int i = 0; i < b->winding->m_NumPoints; ++i)
+            {
+                const vec3_t& point = b->winding->m_Points[i];
+
+                sprintf(temp, "%f %f %f\n", point[0], point[1], point[2]);
+                OutputDebugStringA(temp);
+            }
+
+            if (IsFaceEnclosed(*f, *b))
+                return b;
+        }
+#endif
+
+        if (IsFaceEnclosed(*f, *b))
+        {
+            return b;
+        }
+    }
+
+    return nullptr;
+}
+
+#ifdef STRIP
+void StripEnclosedFaces(face_t** list)
+{
+    if (g_nostrip)
+        return;
+
+    Verbose("%s...\n", __FUNCTION__);
+
+    double startTime = I_FloatTime();
+
+    unsigned int num_stripped = 0;
+
+    face_t* next;
+    face_t* prev = nullptr;
+    for (face_t* f = *list; f;)
+    {
+        next = f->next;
+
+        if (FindFaceThatEnclosesFace(f, *list))
+        {
+            FreeFace(f);
+
+            ++num_stripped;
+
+            if (prev)
+                prev->next = next; // bypass the removed face
+            else
+                *list = next; // update list head if the first face is removed
+        }
+        else
+        {
+            // move prev pointer forward only if f is not removed
+            prev = f;
+        }
+
+        f = next; // move to the next face
+    }
+
+    Verbose("%s : ", __FUNCTION__);
+    LogTimeElapsed(I_FloatTime() - startTime);
+
+    Verbose("%5u stripped enclosed faces\n", num_stripped);
+}
+#endif
+
 void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inverted, bool is_lighting_tree)
 {
     // dylan added this for debug printing clarity
@@ -396,6 +610,7 @@ void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inve
 
     if (node->planenum != PLANENUM_LEAF && !face_windings_are_inverted)
     {
+
         // merge as much as possible
 #ifdef MERGE
         if (!g_nomerge)
@@ -404,6 +619,12 @@ void FilterFacesIntoTree(face_t* list, node_t* node, bool face_windings_are_inve
             MergePlaneFaces(&list);
             Verbose("%5u plane faces merged\n", g_NumPlaneFacesMerged);
         }
+#endif
+
+#ifdef STRIP
+        // strip enclosed faces
+        if (!g_nostrip)
+            StripEnclosedFaces(&list);
 #endif
 
         // subdivide large faces

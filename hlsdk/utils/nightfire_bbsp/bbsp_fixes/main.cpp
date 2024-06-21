@@ -19,6 +19,9 @@ void __declspec(noreturn) Usage()
 #ifdef MERGE
     Log("    -nomerge       : Disables face merging\n");
 #endif
+#ifdef STRIP
+    Log("    -nostrip       : Disables coplanar enclosed face stripping\n");
+#endif
     Log("    -maxnodesize # : Sets the maximum portal node size\n\n");
 #ifdef VARIABLE_LIGHTING_MAX_NODE_SIZE
     Log("    -lightingmaxnodesize # : Sets the maximum lighting portal node size\n\n");
@@ -88,6 +91,12 @@ void ProcessArguments(int argc, const char** argv)
         else if (!_stricmp(argv[i], "-nomerge"))
         {
             g_nomerge = true;
+        }
+#endif
+#ifdef STRIP
+        else if (!_stricmp(argv[i], "-nostrip"))
+        {
+            g_nostrip = true;
         }
 #endif
         else if (!_stricmp(argv[i], "-noclip"))

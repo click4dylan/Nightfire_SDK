@@ -113,3 +113,10 @@ extern face_t* CombineFacesByPlane(face_t* face_fragments, face_t* original_face
 extern void GetFinalBrushFaces(entity_t* entity, int brushflags);
 extern unsigned int GetNumFacesFromList(face_t* list);
 extern void PrintNumFacesFromList(face_t* list, const char* function_name, const char* stage);
+#ifdef STRIP
+extern void StripEnclosedFaces(face_t** list);
+#endif
+extern const face_t* FindFaceThatEnclosesFace(face_t* f, const face_t* list);
+extern bool DoFacesHaveOppositePlanes(const face_t* face1, const face_t* face2);
+extern bool DoFacesOverlap(const face_t& face1, const face_t& face2);
+extern bool IsFaceEnclosed(const face_t& innerFace, const face_t& outerFace);

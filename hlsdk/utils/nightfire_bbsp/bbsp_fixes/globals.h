@@ -97,6 +97,9 @@ inline bool g_nomerge = false;
 #ifdef SUBDIVIDE
 inline unsigned int g_NumFacesSubdivided = 0;
 #endif
+#ifdef STRIP
+inline bool g_nostrip = false;
+#endif
 inline unsigned g_numtexinfo = 0;
 inline texinfo_t g_texinfo[MAX_MAP_TEXINFO];
 

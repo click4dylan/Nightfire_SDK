@@ -30,10 +30,10 @@ face_t* TryMerge(face_t* f1, face_t* f2)
     vec_t* p4;
     vec_t* back;
     face_t* newf;
-    int             i;
-    int             j;
-    int             k;
-    int             l;
+    unsigned int             i;
+    unsigned int             j;
+    unsigned int             k;
+    unsigned int             l;
     vec3_t          normal;
     vec3_t          delta;
     vec3_t          planenormal;
@@ -190,7 +190,7 @@ face_t* TryMerge(face_t* f1, face_t* f2)
 
 void CheckColinear(face_t* f)
 {
-    int i, j;
+    unsigned int i, j;
     vec_t v1, v2;
 
     for (i = 0; i < f->winding->m_NumPoints; i++) 
@@ -271,6 +271,10 @@ void MergePlaneFaces(face_t** list)
     if (g_nomerge)
         return;
 
+    Verbose("MergePlaneFaces...\n");
+
+    double startTime = I_FloatTime();
+
     face_t* f1;
     face_t* next;
     face_t* merged;
@@ -285,6 +289,9 @@ void MergePlaneFaces(face_t** list)
 
     // chain all of the non-empty faces to the plane
     *list = FreeMergeListScraps(merged);
+
+    Verbose("MergePlaneFaces : ");
+    LogTimeElapsed(I_FloatTime() - startTime);
 }
 
 #endif

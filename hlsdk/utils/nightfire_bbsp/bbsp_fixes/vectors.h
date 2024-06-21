@@ -5,6 +5,7 @@
 #ifdef VEC_T_IS_FLOAT
 typedef float vec_t;
 typedef float vec3_t[3];
+typedef float vec2_t[2];
 typedef struct {
     float m[3][4];
 } matrix3x4_t;
@@ -13,6 +14,7 @@ typedef struct {
 
 typedef double vec_t;
 typedef double vec3_t[3];
+typedef double vec2_t[2];
 typedef struct {
     double m[3][4];
 } matrix3x4_t;

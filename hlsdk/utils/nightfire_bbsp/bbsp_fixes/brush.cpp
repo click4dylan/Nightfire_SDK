@@ -30,37 +30,41 @@ void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags)
     g_NumNonInvertedFaces = 0;
 
 #ifdef MERGE
-    face_t* list = CopyFaceList(ent, brushflags, CONTENTS_BSP);
-    FilterFacesIntoTree(list, node, false, false);
-    return;
-#else
-
-    for (unsigned int brushIndex = 0; brushIndex < ent->numbrushes; ++brushIndex)
+    if (!g_nomerge)
     {
-        brush_t* brush = ent->brushes[brushIndex];
-
-        if ((brush->brushflags & brushflags) != 0)
-        {
-            for (unsigned int sideIndex = 0; sideIndex < brush->numsides; ++sideIndex)
-            {
-                side_t* side = brush->brushsides[sideIndex];
-
-                if ((side->original_face->flags & CONTENTS_BSP) == 0)
-                {
-                    face_t* newFace = new face_t(*side->original_face);
-#ifdef SUBDIVIDE
-                    if (!g_nosubdiv)
-                        FilterFacesIntoTree(newFace, node, false, false);
-                    else
-                        FilterFaceIntoTree_r(0, node, side, newFace, false, false);
-#else
-                    FilterFaceIntoTree_r(0, node, side, newFace, false, false);
+        face_t* list = CopyFaceList(ent, brushflags, CONTENTS_BSP);
+        FilterFacesIntoTree(list, node, false, false);
+    }
+    else
 #endif
+    {
+
+        for (unsigned int brushIndex = 0; brushIndex < ent->numbrushes; ++brushIndex)
+        {
+            brush_t* brush = ent->brushes[brushIndex];
+
+            if ((brush->brushflags & brushflags) != 0)
+            {
+                for (unsigned int sideIndex = 0; sideIndex < brush->numsides; ++sideIndex)
+                {
+                    side_t* side = brush->brushsides[sideIndex];
+
+                    if ((side->original_face->flags & CONTENTS_BSP) == 0)
+                    {
+                        face_t* newFace = new face_t(*side->original_face);
+#ifdef SUBDIVIDE
+                        if (!g_nosubdiv)
+                            FilterFacesIntoTree(newFace, node, false, false);
+                        else
+                            FilterFaceIntoTree_r(0, node, side, newFace, false, false);
+#else
+                        FilterFaceIntoTree_r(0, node, side, newFace, false, false);
+#endif
+                    }
                 }
             }
         }
     }
-#endif
 }
 
 brush_s::brush_s()
