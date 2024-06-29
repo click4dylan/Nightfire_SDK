@@ -398,87 +398,142 @@ bool DoFacesHaveOppositePlanes(const face_t* face1, const face_t* face2)
     return dot < 0.0;
 }
 
-// Function to project a polygon onto an axis and return min/max projection values
-void ProjectPolygon(const Winding& polygon, const vec3_t& axis, vec_t& minProj, vec_t& maxProj)
+bool IsPointInTriangle(const vec3_t P, const vec3_t A, const vec3_t B, const vec3_t C) 
 {
-    minProj = std::numeric_limits<double>::infinity();
-    maxProj = -std::numeric_limits<double>::infinity();
+    vec3_t AB, AC, AP;
+    VectorSubtract(B, A, AB);
+    VectorSubtract(C, A, AC);
+    VectorSubtract(P, A, AP);
 
-    for (unsigned int i = 0; i < polygon.m_NumPoints; ++i)
+    // Compute normal of the triangle ABC
+    vec3_t normal;
+    CrossProduct(AB, AC, normal);
+
+    vec_t p = DotProduct(normal, AP);
+
+    // Check if P lies in the same plane as the triangle
+    if (fabs(p) > NORMAL_EPSILON)
+        return false; // P is not in the same plane as ABC
+
+    // Compute vectors for the cross product test
+    vec3_t BC, BP, CA, CP;
+    VectorSubtract(C, B, BC);
+    VectorSubtract(P, B, BP);
+    VectorSubtract(A, C, CA);
+    VectorSubtract(P, C, CP);
+
+    // Check if P is inside the triangle using cross products
+    vec3_t cross1, cross2, cross3;
+    CrossProduct(AB, AP, cross1);
+    CrossProduct(BC, BP, cross2);
+    CrossProduct(CA, CP, cross3);
+
+    vec_t dot1, dot2, dot3;
+    dot1 = DotProduct(normal, cross1);
+    dot2 = DotProduct(normal, cross2);
+    dot3 = DotProduct(normal, cross3);
+
+    if (dot1 >= 0 && dot2 >= 0 && dot3 >= 0) 
     {
-        vec3_t& vertex = polygon.m_Points[i];
-        vec_t projection = DotProduct(vertex, axis);
-        if (projection < minProj) minProj = projection;
-        if (projection > maxProj) maxProj = projection;
+        return true; // P is inside or on the edge of the triangle
     }
+
+    return false; // P is outside the triangle
 }
 
-// Function to check if two faces overlap using Separating Axis Theorem (SAT)
-bool DoFacesOverlap(const face_t& face1, const face_t& face2) 
+#include <vector>
+
+void ComputeClippingPlanes(const Winding* innerWinding, std::vector<plane_t>& clippingPlanes) 
 {
-    // Check overlap along face1's normals
-    for (unsigned int i = 0; i < face1.winding->m_NumPoints; ++i) 
-    {
-        unsigned int nextIndex = (i + 1) % face1.winding->m_NumPoints;
-        vec3_t edge;
-        VectorSubtract(face1.winding->m_Points[nextIndex], face1.winding->m_Points[i], edge);
-        vec3_t axis;
-        CrossProduct(edge, gMappedPlanes[face1.planenum].normal, axis);
+    for (unsigned int i = 0; i < innerWinding->m_NumPoints; ++i) {
+        const vec3_t& p1 = innerWinding->m_Points[i];
+        const vec3_t& p2 = innerWinding->m_Points[(i + 1) % innerWinding->m_NumPoints];
 
-        vec_t minProj1, maxProj1, minProj2, maxProj2;
-        ProjectPolygon(*face1.winding, axis, minProj1, maxProj1);
-        ProjectPolygon(*face2.winding, axis, minProj2, maxProj2);
+        // Compute edge vector
+        vec3_t edge;// = p2 - p1;
+        VectorSubtract(p2, p1, edge);
 
-        if (maxProj1 < minProj2 || maxProj2 < minProj1) 
-        {
-            return false; // Separating axis found
-        }
+        // Compute a perpendicular vector to the edge (normal to the plane)
+        vec3_t normal; // Z-up coordinate system
+        vec3_t up;
+        up[0] = 0.0;
+        up[1] = 0.0;
+        up[2] = 1.0;
+        CrossProduct(edge, up, normal);
+        VectorNormalize(normal);
+
+        // Compute distance from origin to the plane
+        vec_t dist = DotProduct(normal, p1);
+
+        plane_t plane;
+        VectorCopy(normal, plane.normal);
+        plane.dist = dist;
+        clippingPlanes.push_back(plane);
     }
-
-    // Check overlap along face2's normals
-    for (unsigned int i = 0; i < face2.winding->m_NumPoints; ++i)
-    {
-        unsigned int nextIndex = (i + 1) % face2.winding->m_NumPoints;
-        vec3_t edge;
-        VectorSubtract(face2.winding->m_Points[nextIndex], face2.winding->m_Points[i], edge);
-        vec3_t axis;
-        CrossProduct(edge, gMappedPlanes[face2.planenum].normal, axis);
-
-        vec_t minProj1, maxProj1, minProj2, maxProj2;
-        ProjectPolygon(*face1.winding, axis, minProj1, maxProj1);
-        ProjectPolygon(*face2.winding, axis, minProj2, maxProj2);
-
-        if (maxProj1 < minProj2 || maxProj2 < minProj1) 
-        {
-            return false; // Separating axis found
-        }
-    }
-
-    return true; // No separating axis found, faces overlap
 }
 
 bool IsFaceEnclosed(const face_t& innerFace, const face_t& outerFace) 
 {
-    // First, check for overlap
-    if (!DoFacesOverlap(innerFace, outerFace)) 
-    {
+    if (!outerFace.winding->HasPoints() || !innerFace.winding->HasPoints())
         return false;
-    }
 
-    // Then, ensure all points of the inner face are within the outer face
+    unsigned int touchingEdges = 0;
+
     for (unsigned int i = 0; i < innerFace.winding->m_NumPoints; ++i)
     {
-        const vec3_t& point = innerFace.winding->m_Points[i];
+        const vec3_t& p = innerFace.winding->m_Points[i];
 
-        vec_t innerProjection = DotProduct(point, gMappedPlanes[outerFace.planenum].normal);
-        vec_t minOuterProj, maxOuterProj;
-        ProjectPolygon(*outerFace.winding, gMappedPlanes[outerFace.planenum].normal, minOuterProj, maxOuterProj);
+        bool found_point_inside_triangle = false;
 
-        if (innerProjection < minOuterProj || innerProjection > maxOuterProj) 
+        for (unsigned int j = 0; j < outerFace.winding->m_NumPoints; ++j)
         {
+            const vec3_t& o1 = outerFace.winding->m_Points[j];
+            const vec3_t& o2 = outerFace.winding->m_Points[(j + 1) % outerFace.winding->m_NumPoints];
+            const vec3_t& o3 = outerFace.winding->m_Points[(j + 2) % outerFace.winding->m_NumPoints];
+
+            if (IsPointInTriangle(p, o1, o2, o3))
+            {
+                found_point_inside_triangle = true;
+                break;
+            }
+        }
+
+        if (!found_point_inside_triangle)
             return false;
+
+#if 0
+        //TODO FIXME
+        // Check if edges are touching
+        for (unsigned int k = 0; k < outerFace.winding->m_NumPoints; ++k) 
+        {
+            const vec3_t& op1 = outerFace.winding->m_Points[k];
+            const vec3_t& op2 = outerFace.winding->m_Points[(k + 1) % outerFace.winding->m_NumPoints];
+            for (unsigned int l = 0; l < innerFace.winding->m_NumPoints; ++l) 
+            {
+                const vec3_t& ip1 = innerFace.winding->m_Points[l];
+                const vec3_t& ip2 = innerFace.winding->m_Points[(l + 1) % innerFace.winding->m_NumPoints];
+
+                if ((op1[0] == ip1[0] && op1[1] == ip1[1] && op1[2] == ip1[2] && op2[0] == ip2[0] && op2[1] == ip2[1] && op2[2] == ip2[2]) ||
+                    (op1[0] == ip2[0] && op1[1] == ip2[1] && op1[2] == ip2[2] && op2[0] == ip1[0] && op2[1] == ip1[1] && op2[2] == ip1[2])) 
+                {
+                    ++touchingEdges;
+                }
+            }
+        }
+#endif
+    }
+
+#if 0
+    if (touchingEdges >= 3) 
+    {
+        std::vector<plane_t> clippingPlanes;
+        ComputeClippingPlanes(innerFace.winding, clippingPlanes);
+        for (const auto& p : clippingPlanes)
+        {
+            outerFace.winding->Clip(p, true);
         }
     }
+#endif
 
     return true;
 }
@@ -494,6 +549,7 @@ const face_t* FindFaceThatEnclosesFace(face_t* f, const face_t* list)
             continue;
         if (!b->winding->HasPoints())
             continue;
+
         //if (b->planenum != f->planenum && b->planenum != (f->planenum ^ 1))
         //    continue;
         //if (b->planenum == f->planenum)
@@ -504,11 +560,15 @@ const face_t* FindFaceThatEnclosesFace(face_t* f, const face_t* list)
             continue;
         if ((f->brush->brushflags & (CONTENTS_BSP | CONTENTS_UNKNOWN2 | SURFACEFLAG_NODRAW | CONTENTS_PORTAL | CONTENTS_SKY | CONTENTS_SOLID | CONTENTS_EMPTY)) != 0)
             continue;
+
         if (b->planenum == f->planenum)
         {
             if (*f->texinfo != *b->texinfo)
                 continue;
         }
+
+        if (!DoFacesHaveOppositePlanes(f, b))
+            continue;
 
         //if (f->brushside == b->brushside)
         //    continue;
@@ -547,6 +607,28 @@ const face_t* FindFaceThatEnclosesFace(face_t* f, const face_t* list)
             if (IsFaceEnclosed(*f, *b))
                 return b;
         }
+#endif
+
+
+#ifdef _DEBUG
+        if (strstr(f->texinfo->name, "FLAG"))
+            int test = 1;
+
+        if (strstr(f->texinfo->name, "ISLE_WALL"))
+            int test = 1;
+
+        if (strstr(b->texinfo->name, "ISLE_WALL"))
+            int test2 = 1;
+
+        if (strstr(b->texinfo->name, "FLAG"))
+            int test = 1;
+
+        if (strstr(f->texinfo->name, "FLAG") && strstr(b->texinfo->name, "ISLE_WALL"))
+            int test = 1;
+        else if (strstr(f->texinfo->name, "ISLE_WALL") && strstr(b->texinfo->name, "FLAG"))
+            int test = 1;
+        //else
+        //    continue;
 #endif
 
         if (IsFaceEnclosed(*f, *b))
@@ -874,6 +956,9 @@ void AddFaceToBounds(const face_t* const f, vec3_t mins, vec3_t maxs)
     }
 }
 
+// disable warning for loss of floating point precision (the .bsp uses floats!)
+#pragma warning( disable : 4244 )
+
 void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
 {
     if (pFace->built_draw_indices_for_face)
@@ -1000,6 +1085,8 @@ void WriteFace_AkaBuildDrawIndicesForFace(face_t* pFace)
 #endif
     }
 }
+
+#pragma warning( default : 4244 )
 
 void MarkFace(node_t* leaf_node, face_t* face)
 {

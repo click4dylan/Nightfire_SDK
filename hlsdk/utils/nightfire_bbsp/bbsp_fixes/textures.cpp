@@ -281,6 +281,8 @@ unsigned int GetMaterialIndex(const char* src)
     return material_index;
 }
 
+// disable warning for loss of floating point precision (the .bsp uses floats!)
+#pragma warning( disable : 4244 )
 unsigned int GetProjectionIndex(double s[4], double t[4])
 {
     dtexmatrix_t output;
@@ -304,6 +306,7 @@ unsigned int GetProjectionIndex(double s[4], double t[4])
     g_numDTexMatrix+=1;
     return g_numDTexMatrix - 1;
 }
+#pragma warning( default : 4244 )
 
 texinfo_t* TexinfoForBrushTexture(side_t* side, const vec3_t origin) 
 {

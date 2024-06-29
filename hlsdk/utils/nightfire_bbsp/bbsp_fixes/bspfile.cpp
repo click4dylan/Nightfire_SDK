@@ -79,21 +79,16 @@ entity_t* FindTargetEntity(const char* const target)
 }
 #endif
 
-int ArrayUsage(int size_of_item, const char* name_of_array, int num_items, int max_items)
+#pragma warning( disable : 4244 )
+int ArrayUsage(const int size_of_item, const char* name_of_array, const int num_items, const int max_items)
 {
-    int v5; // esi
-    double v7; // [esp+8h] [ebp-8h]
-    float v8; // [esp+18h] [ebp+8h]
+    float           percentage = max_items ? num_items * 100.0 / max_items : 0.0;
 
-    if (max_items)
-        v7 = (double)num_items * 100.0 / (double)max_items;
-    else
-        v7 = 0.0;
-    v8 = v7;
-    v5 = size_of_item * num_items;
-    Log("%-12s  %7i/%-7i  %7i/%-7i  (%4.1f%%)\n", name_of_array, num_items, max_items, size_of_item * num_items, size_of_item * max_items, v8);
-    return v5;
+    Log("%-12s  %7i/%-7i  %7i/%-7i  (%4.1f%%)\n", name_of_array, num_items, max_items, num_items * size_of_item, max_items * size_of_item, percentage);
+
+    return num_items * size_of_item;
 }
+#pragma warning( default : 4244 )
 
 void PrintBSPFileSizes()
 {
@@ -418,6 +413,9 @@ void WriteBSP(mapinfo_t* mapfile, const char* filename)
     WriteBSPFile(filename);
 }
 
+// disable warning for loss of floating point precision (the .bsp uses floats!)
+#pragma warning( disable : 4244 )
+
 void WritePlanes()
 {
     g_numDPlanes = gNumMappedPlanes;
@@ -426,11 +424,11 @@ void WritePlanes()
         plane_t& in = gMappedPlanes[i];
         dplane_t& out = g_dplanes[i];
         out.closest_axis = in.closest_axis;
-        out.normal[0] = in.normal[0];
-        out.normal[1] = in.normal[1];
-        out.normal[2] = in.normal[2];
+        VectorCopy(in.normal, out.normal);
         out.dist = in.dist;
     }
+
+#pragma warning( default : 4244 )
 }
 
 void     SetModelNumbers(mapinfo_t* mapfile)

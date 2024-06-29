@@ -33,6 +33,7 @@ void FilterBrushesIntoTree(node_t* node, entity_t* ent, int brushflags)
     if (!g_nomerge)
     {
         face_t* list = CopyFaceList(ent, brushflags, CONTENTS_BSP);
+        
         FilterFacesIntoTree(list, node, false, false);
     }
     else

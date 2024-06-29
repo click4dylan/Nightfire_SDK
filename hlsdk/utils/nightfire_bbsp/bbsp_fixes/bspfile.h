@@ -5,7 +5,7 @@ extern int IntForKey(const entity_t* const ent, const char* const key);
 extern vec_t FloatForKey(const entity_t* const ent, const char* const key);
 extern const char* ValueForKey(const entity_t* const ent, const char* const key);
 extern void GetVectorForKey(const entity_t* const ent, const char* const key, vec3_t vec);
-extern int ArrayUsage(int size_of_item, const char* name_of_array, int num_items, int max_items);
+extern int ArrayUsage(const int size_of_item, const char* name_of_array, const int num_items, const int max_items);
 extern void PrintBSPFileSizes();
 extern void LoadBSPFile(const char* filename);
 extern int FastChecksum(const void* const buffer, int bytes);

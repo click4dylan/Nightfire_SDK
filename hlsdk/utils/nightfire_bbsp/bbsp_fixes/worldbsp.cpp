@@ -50,11 +50,14 @@ BBSP final stage:
         Otherwise, restore s/t to before scaling and continue looping
 */
 
+// disable warning for loss of floating point precision (the .bsp uses floats!)
+#pragma warning( disable : 4244 )
 void SetModelBounds(dmodel_t* model, vec3_t& mins, vec3_t& maxs)
 {
     VectorCopy(mins, model->mins);
     VectorCopy(maxs, model->maxs);
 }
+#pragma warning( default : 4244 )
 
 void WriteLightingNodeAndLeafData(int depth, node_t* node)
 {
@@ -114,7 +117,7 @@ void BuildLightingBSPTree(entity_t* ent)
     if (g_lighting)
     {
         // Store original max node size and set it to 512
-        originalMaxNodeSize = static_cast<double>(g_MaxNodeSize);
+        originalMaxNodeSize = g_MaxNodeSize;
 #ifdef VARIABLE_LIGHTING_MAX_NODE_SIZE
         g_MaxNodeSize = g_LightingMaxNodeSize;
 #else
@@ -163,7 +166,7 @@ void BuildLightingBSPTree(entity_t* ent)
         }
 
         // Restore the original max node size
-        g_MaxNodeSize = static_cast<unsigned __int64>(originalMaxNodeSize);
+        g_MaxNodeSize = originalMaxNodeSize;
     }
 }
 
@@ -242,8 +245,8 @@ void BuildBspTree_r(int bspdepth, node_t* node, face_t* original_face, bool make
         ++g_numNodes;
 
 #if 0
-        // merge as much as possible
 #ifdef MERGE
+        // merge as much as possible
         if (!g_nomerge)
             MergePlaneFaces(&original_face);
 #endif

@@ -29,7 +29,7 @@ extern unsigned long g_nextclientid;                       // Client id of next 
 extern void Safe_WriteLog(const char* const message);
 extern void WriteLog(const char* const message);
 extern void Log(const char* const message, ...);
-extern void LogTimeElapsed(float elapsed_time);
+extern void LogTimeElapsed(double elapsed_time);
 extern void Warning(const char* warning, ...);
 extern void ResetErrorLog();
 extern void ResetLog();

@@ -82,7 +82,7 @@ void Log(const char* const warning, ...)
     WriteLog(message);
 }
 
-void LogTimeElapsed(float elapsed_time)
+void LogTimeElapsed(double elapsed_time)
 {
     unsigned days = 0;
     unsigned hours = 0;

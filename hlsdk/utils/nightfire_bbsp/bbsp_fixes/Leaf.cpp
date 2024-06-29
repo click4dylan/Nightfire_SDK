@@ -13,6 +13,8 @@
 #include "portals.h"
 #include "log.h"
 
+// disable warning for loss of floating point precision (the .bsp uses floats!)
+#pragma warning( disable : 4244 )
 void WriteDrawLeaf(node_t* node) 
 {
     dleaf_t* leaf = &g_dleafs[g_numDLeafs++];
@@ -69,6 +71,8 @@ void WriteDrawLeaf(node_t* node)
         leaf->numdrawmarkbrushes = g_numDMarkBrushes - leaf->firstdrawmarkbrush_index;
     }
 }
+// disable warning for loss of floating point precision (the .bsp uses floats!)
+#pragma warning( default : 4244 )
 
 void CountLeaves(int level, node_t* node)
 {

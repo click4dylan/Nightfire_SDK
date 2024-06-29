@@ -335,7 +335,7 @@ inline char g_dvisdata[MAX_MAP_VISIBILITY];
 inline unsigned char g_dlightdata[MAX_MAP_LIGHTDATA];
 
 #ifdef ENFORCE_MAX_LIGHTMAP_SCALE
-#define MAX_LIGHTMAP_SCALE 16
+#define MAX_LIGHTMAP_SCALE 32
 #endif
 //#define g_dtexmatrix ((dtexmatrix_t*)0x1CE21A0)
 //#define g_numDTexMatrix *(int*)0x5C601E0

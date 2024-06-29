@@ -40,6 +40,9 @@ bool node_t::IsPortalLeaf()
     return !valid && children[0] == nullptr && children[1] == nullptr;
 }
 
+// disable warning for loss of floating point precision (the .bsp uses floats!)
+#pragma warning( disable : 4244 )
+
 void WriteDrawNodes_r(int depth, const node_t* const node)
 {
     dnode_t* n;
@@ -88,6 +91,8 @@ void WriteDrawNodes_r(int depth, const node_t* const node)
         }
     }
 }
+
+#pragma warning( default : 4244 )
 
 void EmitDrawNode_r(node_t* n)
 {

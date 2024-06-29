@@ -705,7 +705,10 @@ void GetDefaultFlagsForTextureName(
 void ParseRotation(brush_t* brush, side_s* brush_side)
 {
     GetToken(false);
-    float rotation = atof(g_token);
+#ifdef _DEBUG
+    double rotation = atof(g_token);
+    int breakpointme_in_debug = 1; // so we can see the value
+#endif
 }
 
 void ParseFlags(brush_t* brush, side_s* brush_side)
@@ -876,7 +879,7 @@ void HandleOriginBrush(brush_t* brush)
 
 entity_t* EntityForModel(unsigned int modnum, mapinfo_t* map)
 {
-    int             i;
+    unsigned int i;
     const char* s;
     char            name[16];
 
@@ -896,7 +899,7 @@ entity_t* EntityForModel(unsigned int modnum, mapinfo_t* map)
 
 entity_t* FindTargetEntity(mapinfo_t* map, const char* const target)
 {
-    int             i;
+    unsigned int i;
     const char* n;
 
     for (i = 0; i < map->numentities; i++)
